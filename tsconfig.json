@@ -1,36 +1,31 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "react-jsx",
-    "incremental": true,
-    "baseUrl": ".",
-
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
+    "target": "ES2020",                     // Modern JS target
+    "lib": ["dom", "dom.iterable", "esnext"], 
+    "allowJs": true,                        // Permite archivos JS en el proyecto
+    "checkJs": false,                       // No revisar JS con TS
+    "skipLibCheck": true,                   // Salta chequear librerías externas
+    "strict": true,                         // Activa todas las reglas estrictas de TS
+    "noEmit": true,                         // No genera archivos JS, solo type checking
+    "esModuleInterop": true,                // Para compatibilidad con imports comunes
+    "module": "esnext",                     // Módulos ESNext
+    "moduleResolution": "bundler",          // Para Next.js 13 App Router
+    "resolveJsonModule": true,              // Permite importar JSON como módulo
+    "isolatedModules": true,                // Compatible con Babel/Next.js
+    "jsx": "react-jsx",                     // JSX moderno (Next 13)
+    "incremental": true,                     // Compilación incremental
+    "baseUrl": ".",                          // Base para imports absolutos
     "paths": {
-      "@/*": ["./*"]
-    }
+      "@/*": ["./*"]                         // Permite usar "@/components/..."
+    },
+    "plugins": [
+      { "name": "next" }                     // Plugin oficial de Next.js
+    ]
   },
   "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
-    "**/*.mts"
-, "app/menu/[slug]"  ],
-  "exclude": ["node_modules"]
+    "next-env.d.ts",                         // Tipos automáticos de Next.js
+    "**/*.ts",                               // Todos los TS
+    "**/*.tsx"                               // Todos los TSX
+  ],
+  "exclude": ["node_modules", ".next", "out"] // Excluye módulos y build output
 }

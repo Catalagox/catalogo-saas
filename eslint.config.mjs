@@ -1,18 +1,21 @@
+// eslint.config.ts
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 
-const eslintConfig = defineConfig([
+export default defineConfig([
+  // Configuración recomendada de Next.js para rendimiento web
   ...nextVitals,
+  // Configuración recomendada para TypeScript en Next.js
   ...nextTs,
-  // Override default ignores of eslint-config-next.
+  // Ignorar archivos/carpetas que no necesitamos revisar
   globalIgnores([
-    // Default ignores of eslint-config-next:
-    ".next/**",
-    "out/**",
-    "build/**",
-    "next-env.d.ts",
+    ".next/**",         // Carpeta generada por Next.js
+    "out/**",           // Carpeta de export estático
+    "build/**",         // Carpeta de builds antiguos
+    "node_modules/**",  // Dependencias
+    "dist/**",          // Carpeta de distribución si existe
+    "next-env.d.ts",    // Archivo generado automáticamente
+    "*.config.js",      // Archivos de configuración (opcional)
   ]),
 ]);
-
-export default eslintConfig;

@@ -1,6 +1,8 @@
+// postcss.config.mjs
 const config = {
   plugins: {
-    "@tailwindcss/postcss": {},
+    tailwindcss: {},       // Plugin principal de Tailwind
+    autoprefixer: {},      // Añade prefijos automáticamente para compatibilidad con navegadores
   },
 };
 
