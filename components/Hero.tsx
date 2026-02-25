@@ -22,7 +22,7 @@ export default function Hero() {
 
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
            <Link
-  href="/registro"
+  href="/auth"
   className="px-8 py-3 rounded-xl bg-black text-white font-medium hover:opacity-80 transition inline-block"
 >
   Comenzar Gratis
@@ -304,7 +304,7 @@ export default function Hero() {
 
     {/* BOTÓN */}
     <div className="text-center mt-14">
-      <Link href="/registro"  className="px-10 py-4 rounded-2xl bg-white text-black font-semibold text-lg hover:scale-105 hover:shadow-xl transition-all duration-300">
+      <Link href="/auth"  className="px-10 py-4 rounded-2xl bg-white text-black font-semibold text-lg hover:scale-105 hover:shadow-xl transition-all duration-300">
         Crear mi Catálogo o Menú QR
       </Link>
     </div>
