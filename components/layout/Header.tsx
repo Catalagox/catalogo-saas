@@ -12,11 +12,11 @@ export default function Header() {
     <header className="w-full border-b bg-white relative z-50">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
 
-        {/* LOGO gpV8-pqi3iW-EnG */}
+        {/* LOGO gpV8-pqi3iW-EnG,   y!FuK4!6ppatW.4 */}
         <Link href="/" className="flex items-center gap-3">
           <Image
             src="/c.png"
-            alt="CatalogPro Logo"
+            alt="CatalogX"
             width={50}
             height={50}
           />
@@ -42,7 +42,7 @@ export default function Header() {
         <div className="hidden md:flex items-center gap-4">
 
           <Link
-            href="/login"
+            href="/auth"
             className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-medium border border-black text-black hover:bg-black hover:text-white transition"
           >
             <FaSignInAlt />
@@ -50,7 +50,7 @@ export default function Header() {
           </Link>
 
           <Link
-            href="/registro"
+            href="/auth"
             className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-medium bg-black text-white hover:opacity-80 transition"
           >
             <FaUserPlus />
