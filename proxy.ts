@@ -6,7 +6,7 @@ export const config = {
   matcher: ["/dashboard/:path*"],
 };
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   // Por ahora no hacemos nada, solo dejamos pasar
   // La autenticación se maneja en tu página /auth o en tu lógica de frontend
   return NextResponse.next();

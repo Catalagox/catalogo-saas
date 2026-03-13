@@ -38,7 +38,8 @@ export default function AuthPage() {
         subscription.current_period_end &&
         new Date(subscription.current_period_end) > now;
 
-      router.push(hasAccess ? "/dashboard" : "/suscripcion");
+      //router.push(hasAccess ? "/dashboard" : "/suscripcion");
+      router.push("/dashboard");
     };
 
     checkSession();
@@ -62,11 +63,11 @@ export default function AuthPage() {
         const user = data.user;
         if (!user) return;
 
-        const { data: subscription } = await supabase
+        /*const { data: subscription } = await supabase
           .from("subscriptions")
           .select("*")
           .eq("user_id", user.id)
-          .maybeSingle();
+          .maybeSingle(); 
 
         const now = new Date();
 
@@ -74,9 +75,10 @@ export default function AuthPage() {
           subscription &&
           subscription.status === "active" &&
           subscription.current_period_end &&
-          new Date(subscription.current_period_end) > now;
+          new Date(subscription.current_period_end) > now; */
 
-        router.push(hasAccess ? "/dashboard" : "/suscripcion");
+       // router.push(hasAccess ? "/dashboard" : "/suscripcion");
+       router.push("/dashboard");
       } else {
         // 🆕 REGISTRO
         const { data, error } = await supabase.auth.signUp({
@@ -93,7 +95,8 @@ export default function AuthPage() {
         }
 
         // Usuario nuevo siempre va a pagar
-        router.push("/suscripcion");
+       // router.push("/suscripcion");
+       router.push("/dashboard");
       }
     } catch (error: any) {
       alert(error.message);
