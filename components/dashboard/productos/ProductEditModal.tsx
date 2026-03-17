@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction, useRef } from "react";
+import { X, Upload, Save, Trash2, Camera } from "lucide-react";
 
-// Definimos el tipo aquí para asegurar consistencia
 type Producto = {
   id: string;
   nombre: string;
@@ -24,7 +24,6 @@ type Props = {
   categorias: Categoria[];
   previewImage: string | null;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  // Se actualiza el tipo para aceptar Dispatch del useState del padre
   setProducto: Dispatch<SetStateAction<Producto | null>>;
   onCancel: () => void;
   onSave: () => void;
@@ -39,84 +38,140 @@ export default function ProductEditModal({
   onCancel,
   onSave,
 }: Props) {
-  
-  // Función auxiliar para actualizar campos específicos sin romper el tipo
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const handleChange = (cambios: Partial<Producto>) => {
     setProducto((prev) => (prev ? { ...prev, ...cambios } : null));
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 p-6 rounded-xl w-full max-w-md overflow-y-auto max-h-[90vh]">
-        <h2 className="text-2xl font-semibold mb-4 text-center">
-          Editar producto
-        </h2>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+      {/* Overlay con desenfoque */}
+      <div 
+        className="absolute inset-0 bg-black/80 backdrop-blur-md transition-opacity" 
+        onClick={onCancel} 
+      />
 
-        {(previewImage || producto.imagen_url) && (
-          <Image
-            src={previewImage || producto.imagen_url || "/placeholder.png"}
-            alt={producto.nombre}
-            width={500}
-            height={300}
-            className="w-full h-48 object-cover rounded-lg mb-4"
-          />
-        )}
+      <div className="relative bg-gray-900 border border-gray-800 rounded-[2.5rem] w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+        
+        {/* Header del Modal */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-800 bg-gray-900/50">
+          <h2 className="text-xl font-bold text-white tracking-tight">Editar Producto</h2>
+          <button 
+            onClick={onCancel}
+            className="p-2 hover:bg-gray-800 rounded-full text-gray-400 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
-        <input
-          type="file"
-          accept="image/*"
-          className="w-full mb-4 text-white"
-          onChange={onFileChange}
-        />
+        <div className="p-6 overflow-y-auto max-h-[75vh] space-y-6">
+          
+          {/* Sección de Imagen */}
+          <div className="relative group">
+            <div 
+              onClick={() => fileInputRef.current?.click()}
+              className="relative w-full h-52 bg-gray-800 rounded-3xl overflow-hidden cursor-pointer border-2 border-dashed border-gray-700 hover:border-indigo-500/50 transition-all"
+            >
+              {(previewImage || producto.imagen_url) ? (
+                <>
+                  <Image
+                    src={previewImage || producto.imagen_url || "/placeholder.png"}
+                    alt={producto.nombre}
+                    fill
+                    className="object-cover transition duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/20">
+                      <Camera className="w-6 h-6 text-white" />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                  <Upload className="w-8 h-8 mb-2" />
+                  <span className="text-sm font-medium">Subir nueva imagen</span>
+                </div>
+              )}
+            </div>
+            <input 
+              ref={fileInputRef}
+              type="file" 
+              accept="image/*" 
+              className="hidden" 
+              onChange={onFileChange} 
+            />
+          </div>
 
-        <input
-          className="w-full p-2 mb-3 bg-gray-800 rounded text-white"
-          value={producto.nombre}
-          onChange={(e) => handleChange({ nombre: e.target.value })}
-          placeholder="Nombre del producto"
-        />
+          {/* Formulario */}
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Nombre</label>
+                <input
+                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-2xl text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder:text-gray-600"
+                  value={producto.nombre}
+                  onChange={(e) => handleChange({ nombre: e.target.value })}
+                  placeholder="Ej: Pizza Pepperoni"
+                />
+              </div>
 
-        <input
-          type="number"
-          className="w-full p-2 mb-3 bg-gray-800 rounded text-white"
-          value={producto.precio}
-          onChange={(e) => handleChange({ precio: Number(e.target.value) })}
-          placeholder="Precio"
-        />
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Precio</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-400 font-bold">$</span>
+                  <input
+                    type="number"
+                    className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-2xl text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                    value={producto.precio}
+                    onChange={(e) => handleChange({ precio: Number(e.target.value) })}
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+            </div>
 
-        <textarea
-          className="w-full p-2 mb-3 bg-gray-800 rounded text-white"
-          value={producto.descripcion || ""}
-          onChange={(e) => handleChange({ descripcion: e.target.value })}
-          placeholder="Descripción"
-        />
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Categoría</label>
+              <select
+                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-2xl text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all appearance-none cursor-pointer"
+                value={producto.categoria_id}
+                onChange={(e) => handleChange({ categoria_id: e.target.value })}
+              >
+                <option value="" disabled>Selecciona una categoría</option>
+                {categorias.map((cat) => (
+                  <option key={cat.id} value={cat.id} className="bg-gray-900">{cat.nombre}</option>
+                ))}
+              </select>
+            </div>
 
-        <select
-          className="w-full p-2 mb-4 bg-gray-800 rounded text-white"
-          value={producto.categoria_id}
-          onChange={(e) => handleChange({ categoria_id: e.target.value })}
-        >
-          <option value="" disabled>Selecciona una categoría</option>
-          {categorias.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.nombre}
-            </option>
-          ))}
-        </select>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Descripción</label>
+              <textarea
+                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-2xl text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all resize-none placeholder:text-gray-600"
+                rows={3}
+                value={producto.descripcion || ""}
+                onChange={(e) => handleChange({ descripcion: e.target.value })}
+                placeholder="Describe tu producto..."
+              />
+            </div>
+          </div>
+        </div>
 
-        <div className="flex justify-end gap-2">
+        {/* Footer con acciones */}
+        <div className="p-6 border-t border-gray-800 bg-gray-900/50 flex flex-col sm:flex-row gap-3">
           <button
             onClick={onCancel}
-            className="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600 transition"
+            className="flex-1 px-6 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold rounded-2xl transition-all order-2 sm:order-1"
           >
             Cancelar
           </button>
-
           <button
             onClick={onSave}
-            className="px-4 py-2 bg-orange-500 rounded hover:bg-orange-400 transition"
+            className="flex-1 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-2xl transition-all shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2 order-1 sm:order-2"
           >
-            Guardar
+            <Save className="w-5 h-5" />
+            Guardar Cambios
           </button>
         </div>
       </div>

@@ -9,6 +9,14 @@ export default function CallbackPage() {
 
   useEffect(() => {
     const handleAuth = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get("code");
+
+      // Intercambiar el código por sesión
+      if (code) {
+        await supabase.auth.exchangeCodeForSession(code);
+      }
+
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -18,23 +26,8 @@ export default function CallbackPage() {
         return;
       }
 
-      const user = session.user;
-
-      const { data: subscription } = await supabase
-        .from("subscriptions")
-        .select("*")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      const now = new Date();
-
-      const hasAccess =
-        subscription &&
-        subscription.status === "active" &&
-        subscription.current_period_end &&
-        new Date(subscription.current_period_end) > now;
-
-      router.push(hasAccess ? "/dashboard" : "/suscripcion");
+      // Por ahora mandar directo al dashboard
+      router.push("/dashboard");
     };
 
     handleAuth();
