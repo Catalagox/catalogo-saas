@@ -59,24 +59,31 @@ export default function CreateProductForm({
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const subirImagen = async (): Promise<string> => {
-    if (!imagen) throw new Error("Debes seleccionar una imagen");
-    if (!userId) throw new Error("Usuario no autenticado");
+ // Busca la función subirImagen y asegúrate de validar el userId antes del fetch
+const subirImagen = async (): Promise<string> => {
+  if (!imagen) throw new Error("Debes seleccionar una imagen");
+  
+  // Si el userId es nulo o undefined, detenemos la ejecución antes de llamar a la API
+  if (!userId) {
+    alert("Tu sesión ha expirado. Por favor, recarga la página.");
+    throw new Error("Usuario no autenticado");
+  }
 
-    const formData = new FormData();
-    formData.append("file", imagen);
-    formData.append("userId", userId);
+  const formData = new FormData();
+  formData.append("file", imagen);
+  formData.append("userId", userId);
 
-    const res = await fetch("/api/upload-product-image", {
-      method: "POST",
-      body: formData,
-    });
+  const res = await fetch("/api/upload-product-image", {
+    method: "POST",
+    body: formData,
+  });
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Error subiendo imagen");
+  // Si el servidor responde con el error de JWS, lo capturamos aquí
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Error subiendo imagen");
 
-    return data.url;
-  };
+  return data.url;
+};
 
   const crearProducto = async () => {
     if (!userId) return alert("Usuario no autenticado");

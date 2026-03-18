@@ -86,12 +86,44 @@ export default function NuevoProductoPage() {
     );
   }
 
+  // ... resto del código ...
+
   return (
+    <div className="w-full min-h-screen pb-20">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* ... Header ... */}
+        
+        <div className="relative">
+          <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-600/5 blur-[100px] pointer-events-none" />
+          
+          {/* Solo mostramos el formulario si tenemos el userId REAL */}
+          {userId ? (
+            <CreateProductForm
+              userId={userId}
+              catalogoId={catalogoId}
+              categorias={categorias}
+              onCreated={() => {
+                console.log("Producto creado");
+              }}
+            />
+          ) : (
+            <div className="bg-gray-900 border border-gray-800 p-10 rounded-2xl text-center">
+               <Loader2 className="w-8 h-8 text-indigo-500 animate-spin mx-auto mb-4" />
+               <p className="text-gray-400">Validando sesión de usuario...</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ /* return (
     // 3. Contenedor optimizado
     <div className="w-full min-h-screen pb-20">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Header Responsivo */}
+      
         <header className="py-8 md:py-12 border-b border-gray-800/50 mb-10">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
@@ -110,9 +142,9 @@ export default function NuevoProductoPage() {
           </div>
         </header>
 
-        {/* Formulario */}
+       
         <div className="relative">
-          {/* Un toque de luz de fondo sutil */}
+          
           <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-600/5 blur-[100px] pointer-events-none" />
           
           <CreateProductForm
@@ -130,3 +162,4 @@ export default function NuevoProductoPage() {
     </div>
   );
 }
+  */
