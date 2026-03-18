@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+/*import { NextResponse } from "next/server";
 import sharp from "sharp";
 import { createClient } from "@supabase/supabase-js";
 
@@ -46,5 +46,75 @@ export async function POST(req: Request) {
 
   } catch (error) {
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+  }
+}*/
+
+
+
+
+import { NextResponse } from "next/server";
+import sharp from "sharp";
+import { createClient } from "@supabase/supabase-js";
+
+// Usamos el Service Role para saltar RLS en el servidor de forma segura
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+);
+
+export async function POST(req: Request) {
+  try {
+    const formData = await req.formData();
+    const file = formData.get("file") as File;
+    const userId = formData.get("userId") as string;
+
+    // Validación extra para evitar el error de JWS/Token
+    if (!userId || userId === "null" || userId === "undefined") {
+      return NextResponse.json({ error: "ID de usuario no válido o sesión expirada" }, { status: 401 });
+    }
+
+    if (!file) {
+      return NextResponse.json({ error: "No se subió ningún archivo" }, { status: 400 });
+    }
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+
+    // Optimización con Sharp
+    const optimizedImage = await sharp(buffer)
+      .resize(800, 800, { fit: 'inside', withoutEnlargement: true }) // Mantiene proporción
+      .jpeg({ quality: 75, progressive: true })
+      .toBuffer();
+
+    const fileName = `${crypto.randomUUID()}.jpg`;
+    // Es mejor usar una estructura limpia: productos/userId/fileName
+    const filePath = `${userId}/${fileName}`;
+
+    const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
+      .from("productos")
+      .upload(filePath, optimizedImage, {
+        contentType: "image/jpeg",
+        upsert: true // Evita errores si el archivo ya existe
+      });
+
+    if (uploadError) {
+      console.error("Error de Supabase Storage:", uploadError);
+      return NextResponse.json({ error: uploadError.message }, { status: 500 });
+    }
+
+    const { data } = supabaseAdmin.storage
+      .from("productos")
+      .getPublicUrl(filePath);
+
+    return NextResponse.json({ url: data.publicUrl });
+
+  } catch (error: any) {
+    console.error("Error crítico en API:", error);
+    return NextResponse.json({ error: "Fallo en el servidor al procesar la imagen" }, { status: 500 });
   }
 }
