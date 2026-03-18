@@ -15,7 +15,6 @@ import {
   Palette,
   BarChart3,
   PlusCircle,
-  X,
 } from "lucide-react";
 
 type Props = {
@@ -60,103 +59,77 @@ export default function Sidebar({ closeMenu }: Props) {
     { name: "Ajustes", href: "/dashboard/ajustes", icon: Settings },
   ];
 
-  const avatar = `https://ui-avatars.com/api/?name=${userEmail}&background=111827&color=fff`;
+  const avatar = `https://ui-avatars.com/api/?name=${userName || userEmail}&background=111827&color=fff`;
 
   return (
-    <aside className="w-64 bg-gray-900 border-r border-gray-800 flex flex-col h-screen sticky top-0">
+    <div className="flex flex-col h-full w-full bg-gray-900 lg:bg-transparent">
 
-      {/* BOTON CERRAR MOBILE */}
-      {closeMenu && (
-        <button
-          onClick={closeMenu}
-          className="absolute top-4 right-4 lg:hidden p-2 rounded-lg hover:bg-gray-800"
-        >
-          <X size={20} />
-        </button>
-      )}
+      {/* HEADER SOLO DESKTOP */}
+<div className="hidden lg:block px-6 py-6 border-b border-gray-800">
+  <h2 className="text-xl font-bold text-white">
+    Catalago<span className="text-blue-500">X</span>
+  </h2>
 
-      {/* CONTENIDO */}
-      <div className="flex flex-col flex-1 overflow-y-auto p-6">
+  <p className="text-xs text-gray-500 mt-1">
+    Panel profesional
+  </p>
+</div>
+      
+      {/* NAV */}
+      <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+        {links.map((link) => {
+          const Icon = link.icon;
+          const active = pathname === link.href;
 
-        {/* HEADER */}
-        <div className="mb-10">
-
-          <h2 className="text-2xl font-bold text-white">
-            CatalagoX
-          </h2>
-
-          <p className="text-xs text-gray-500 mt-1">
-            Panel profesional
-          </p>
-
-        </div>
-
-        {/* NAV */}
-        <nav className="space-y-1 flex-1">
-
-          {links.map((link) => {
-            const Icon = link.icon;
-            const active = pathname === link.href;
-
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={closeMenu}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition ${
+          return (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={closeMenu}
+              className={`
+                flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition
+                ${
                   active
-                    ? "bg-white text-black font-semibold"
+                    ? "bg-blue-600 text-white font-semibold"
                     : "text-gray-400 hover:bg-gray-800 hover:text-white"
-                }`}
-              >
+                }
+              `}
+            >
+              <Icon size={20} />
+              {link.name}
+            </Link>
+          );
+        })}
+      </nav>
 
-                <Icon size={18} />
-
-                {link.name}
-
-              </Link>
-            );
-          })}
-
-        </nav>
-
-      </div>
-
-      {/* FOOTER USUARIO */}
-      <div className="border-t border-gray-800 p-4">
-
+      {/* FOOTER */}
+      <div className="p-4 border-t border-gray-800">
         <div className="flex items-center gap-3 mb-4">
-
           <img
             src={avatar}
             alt="avatar"
-            className="w-9 h-9 rounded-full"
+            className="w-10 h-10 rounded-full"
           />
 
-          <div className="flex flex-col text-sm">
-
-            <span className="text-white font-medium">
+          <div className="flex flex-col min-w-0">
+            <span className="text-sm text-white font-semibold truncate">
               {userName || "Usuario"}
             </span>
 
-            <span className="text-gray-400 text-xs truncate">
+            <span className="text-xs text-gray-500 truncate">
               {userEmail}
             </span>
-
           </div>
-
         </div>
 
         <button
           onClick={cerrarSesion}
-          className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-gray-400 hover:bg-red-500 hover:text-white transition"
+          className="flex items-center justify-center gap-2 w-full px-4 py-2 rounded-lg text-gray-400 hover:bg-red-500 hover:text-white transition"
         >
           <LogOut size={16} />
           Cerrar sesión
         </button>
-
       </div>
-
-    </aside>
+    </div>
   );
 }

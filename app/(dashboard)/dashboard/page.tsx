@@ -9,6 +9,9 @@ import {
   Package,
   Tags,
   QrCode,
+  Palette,
+  BarChart3,
+  Globe,
 } from "lucide-react";
 
 type Catalogo = {
@@ -26,9 +29,14 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
 
+  const [productosCount, setProductosCount] = useState(0);
+  const [categoriasCount, setCategoriasCount] = useState(0);
+
   useEffect(() => {
     inicializar();
   }, []);
+
+  const irA = (ruta: string) => router.push(ruta);
 
   const inicializar = async () => {
     const {
@@ -42,15 +50,32 @@ export default function DashboardPage() {
 
     setUser(session.user);
 
-    const { data } = await supabase
+    // CATÁLOGO
+    const { data: catalogoData } = await supabase
       .from("catalogos")
       .select("id, nombre, slug, created_at")
       .eq("user_id", session.user.id)
       .maybeSingle();
 
-    if (data) {
-      setCatalogo(data);
+    if (catalogoData) {
+      setCatalogo(catalogoData);
     }
+
+    // PRODUCTOS
+    const { count: productos } = await supabase
+      .from("productos")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", session.user.id);
+
+    setProductosCount(productos || 0);
+
+    // CATEGORÍAS
+    const { count: categorias } = await supabase
+      .from("categorias")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", session.user.id);
+
+    setCategoriasCount(categorias || 0);
 
     setLoading(false);
   };
@@ -85,45 +110,112 @@ export default function DashboardPage() {
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8">
-
       <div className="max-w-6xl mx-auto space-y-10">
 
-        {/* DASHBOARD STATS */}
+       <div className="bg-gray-900/50 border-b border-gray-800 sticky top-0 z-20 backdrop-blur-md px-5 py-6 md:px-10 md:py-8 mb-6 md:mb-8">
+  <div className="max-w-6xl mx-auto flex flex-col items-start text-left gap-3">
 
+    {/* Label */}
+    <div className="flex items-center gap-2 text-indigo-400 text-xs font-bold uppercase tracking-widest">
+      <MenuSquare className="w-4 h-4" />
+      <span>principal</span>
+    </div>
+
+    {/* Título */}
+    <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
+      Panel de control
+    </h1>
+
+  </div>
+</div>
+
+        {/* DASHBOARD */}
         {catalogo && (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          //<div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+            {/* MENÚ */}
+            <button
+              onClick={() => irA("/dashboard/agregar-producto")}
+              className="bg-gray-900 border border-gray-800 rounded-2xl p-6 text-left hover:bg-gray-800 transition"
+            >
               <MenuSquare className="text-orange-500 mb-3" />
               <p className="text-gray-400 text-sm">Menú</p>
               <h3 className="text-xl font-bold">
                 {catalogo.nombre}
               </h3>
-            </div>
+            </button>
 
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+            {/* PRODUCTOS */}
+            <button
+              onClick={() => irA("/dashboard/productos")}
+              className="bg-gray-900 border border-gray-800 rounded-2xl p-6 text-left hover:bg-gray-800 transition"
+            >
               <Package className="text-green-500 mb-3" />
               <p className="text-gray-400 text-sm">Productos</p>
-              <h3 className="text-xl font-bold">0</h3>
-            </div>
+              <h3 className="text-xl font-bold">
+                {productosCount}
+              </h3>
+            </button>
 
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+            {/* CATEGORÍAS */}
+            <button
+              onClick={() => irA("/dashboard/categorias")}
+              className="bg-gray-900 border border-gray-800 rounded-2xl p-6 text-left hover:bg-gray-800 transition"
+            >
               <Tags className="text-blue-500 mb-3" />
               <p className="text-gray-400 text-sm">Categorías</p>
-              <h3 className="text-xl font-bold">0</h3>
-            </div>
+              <h3 className="text-xl font-bold">
+                {categoriasCount}
+              </h3>
+            </button>
 
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+            {/* QR */}
+            <button
+              onClick={() => irA("/dashboard/qr")}
+              className="bg-gray-900 border border-gray-800 rounded-2xl p-6 text-left hover:bg-gray-800 transition"
+            >
               <QrCode className="text-purple-500 mb-3" />
-              <p className="text-gray-400 text-sm">QR activo</p>
-              <h3 className="text-xl font-bold">1</h3>
-            </div>
+              <p className="text-gray-400 text-sm">QR</p>
+              <h3 className="text-xl font-bold">Activo</h3>
+            </button>
+
+            {/* APARIENCIA */}
+            <button
+              onClick={() => irA("/dashboard/apariencia")}
+              className="bg-gray-900 border border-gray-800 rounded-2xl p-6 text-left hover:bg-gray-800 transition"
+            >
+              <Palette className="text-pink-500 mb-3" />
+              <p className="text-gray-400 text-sm">Apariencia</p>
+              <h3 className="text-xl font-bold">Personalizar</h3>
+            </button>
+
+            {/* ESTADÍSTICAS */}
+            <button
+              onClick={() => irA("/dashboard/estadisticas")}
+              className="bg-gray-900 border border-gray-800 rounded-2xl p-6 text-left hover:bg-gray-800 transition"
+            >
+              <BarChart3 className="text-yellow-500 mb-3" />
+              <p className="text-gray-400 text-sm">Estadísticas</p>
+              <h3 className="text-xl font-bold">Ver datos</h3>
+            </button>
+
+            {/* MENÚ PÚBLICO */}
+            <button
+              onClick={() => irA(`/${catalogo.slug}`)}
+              className="bg-gray-900 border border-gray-800 rounded-2xl p-6 text-left hover:bg-gray-800 transition"
+            >
+              <Globe className="text-cyan-500 mb-3" />
+              <p className="text-gray-400 text-sm">Menú público</p>
+              <h3 className="text-xl font-bold">
+                Ver online
+              </h3>
+            </button>
 
           </div>
         )}
 
-        {/* SI NO TIENE MENÚ */}
-
+        {/* SIN MENÚ */}
         {!catalogo && (
           <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 max-w-xl">
 
@@ -157,45 +249,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* ACCIONES RÁPIDAS */}
-
-        {catalogo && (
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-
-            <h2 className="text-xl font-semibold mb-6">
-              Acciones rápidas
-            </h2>
-
-            <div className="flex flex-wrap gap-4">
-
-              <button
-                onClick={() => router.push("/dashboard/agregar-producto")}
-                className="bg-white text-black px-6 py-3 rounded-lg font-medium hover:bg-gray-200"
-              >
-                Editar menú
-              </button>
-
-              <button
-                onClick={() => router.push("/dashboard/qr")}
-                className="border border-gray-700 px-6 py-3 rounded-lg hover:bg-gray-800"
-              >
-                Ver QR
-              </button>
-
-              <button
-  onClick={() => router.push(`/${catalogo.slug}`)}
-  className="border border-gray-700 px-6 py-3 rounded-lg hover:bg-gray-800"
->
-  Ver menú público
-</button>
-
-            </div>
-
-          </div>
-        )}
-
       </div>
-
     </div>
   );
 }

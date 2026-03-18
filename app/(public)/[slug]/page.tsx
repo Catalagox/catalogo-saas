@@ -3,21 +3,21 @@ import MenuHeader from "@/components/public/MenuHeader";
 import MenuFooter from "@/components/public/MenuFooter";
 import CategoriaSection from "@/components/public/CategoriaSection";
 
-// Definimos la interfaz para evitar el uso de 'any'
 interface PageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ qr?: string }>;
 }
 
-export default async function MenuPage({ params }: PageProps) {
+export default async function MenuPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
-  
-  // 1. IMPORTANTE: Verifica si tu createClient requiere await
-  const supabase = await createClient(); 
+  const { qr } = await searchParams;
 
-  // Buscar catálogo
+  const supabase = await createClient();
+
+  // 🔥 Buscar catálogo (IMPORTANTE: agregar user_id)
   const { data: catalogo, error: catalogoError } = await supabase
     .from("catalogos")
-    .select("id, nombre, logo")
+    .select("id, nombre, logo, user_id")
     .eq("slug", slug)
     .maybeSingle();
 
@@ -25,7 +25,21 @@ export default async function MenuPage({ params }: PageProps) {
     return <div className="p-10 text-center">Menú no encontrado</div>;
   }
 
-  // Buscar categorías + productos
+  // 🔥 Registrar vista del menú
+  supabase.from("estadisticas").insert({
+    user_id: catalogo.user_id,
+    tipo: "menu_view",
+  });
+
+  // 🔥 Registrar escaneo QR (si existe ?qr=1)
+  if (qr) {
+    supabase.from("estadisticas").insert({
+      user_id: catalogo.user_id,
+      tipo: "qr_scan",
+    });
+  }
+
+  // 🔥 Buscar categorías + productos
   const { data: categorias, error: categoriasError } = await supabase
     .from("categorias")
     .select(`
@@ -37,7 +51,8 @@ export default async function MenuPage({ params }: PageProps) {
         descripcion,
         precio,
         imagen_url,
-        disponible
+        disponible,
+        user_id
       )
     `)
     .eq("catalogo_id", catalogo.id)
@@ -49,10 +64,10 @@ export default async function MenuPage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      {/* Pasamos catalogo como prop */}
+      
       <MenuHeader 
-       catalogo={catalogo}
-       categorias={categorias ?? []}
+        catalogo={catalogo}
+        categorias={categorias ?? []}
       />
 
       <main className="max-w-3xl mx-auto w-full p-4 space-y-10 flex-grow">
