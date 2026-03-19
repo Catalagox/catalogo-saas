@@ -192,7 +192,7 @@ export default function DashboardPage() {
 
             {/* ESTADÍSTICAS */}
             <button
-              onClick={() => irA("/dashboard/estadisticas")}
+              onClick={() => irA("/dashboard/estadistica")}
               className="bg-gray-900 border border-gray-800 rounded-2xl p-6 text-left hover:bg-gray-800 transition"
             >
               <BarChart3 className="text-yellow-500 mb-3" />

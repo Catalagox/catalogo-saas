@@ -52,7 +52,7 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
         precio,
         imagen_url,
         disponible,
-        user_id
+        slug
       )
     `)
     .eq("catalogo_id", catalogo.id)
