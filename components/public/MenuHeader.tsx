@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 type Categoria = {
   id: string;
@@ -17,101 +17,106 @@ type Props = {
 
 export default function MenuHeader({ catalogo, categorias }: Props) {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // Un margen pequeño para activar el cambio
+      setScrolled(window.scrollY > 10);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
     <>
-     <header className="bg-zinc-900 text-white sticky top-0 z-50 shadow-md">
-
-  <div className="max-w-3xl mx-auto flex items-center justify-between p-4">
-
-    {/* IZQUIERDA */}
-    <div className="flex items-center gap-3">
-
-      {/* 🍔 SOLO MOBILE */}
-      <button
-        onClick={() => setOpen(true)}
-        className="flex flex-col gap-1 md:hidden"
+      <header 
+        className={`sticky top-0 z-50 transition-all duration-300 ${
+          scrolled 
+            ? "bg-zinc-950 shadow-xl py-3" // Fondo negro sólido al bajar para máxima visibilidad
+            : "bg-zinc-900 py-5"
+        } text-white`}
       >
-        <span className="w-6 h-[2px] bg-white"></span>
-        <span className="w-6 h-[2px] bg-white"></span>
-        <span className="w-6 h-[2px] bg-white"></span>
-      </button>
+        <div className="max-w-3xl mx-auto flex items-center justify-between px-5">
+          
+          <div className="flex items-center gap-4">
+            {/* 🍔 BOTÓN HAMBURGUESA: Reforzado */}
+            <button
+              onClick={() => setOpen(true)}
+              className="flex flex-col justify-center items-center w-8 h-8 md:hidden group"
+              aria-label="Menu"
+            >
+              <span className="block w-6 h-0.5 bg-white mb-1.5 transition-all group-hover:bg-orange-400"></span>
+              <span className="block w-6 h-0.5 bg-white mb-1.5 transition-all group-hover:bg-orange-400"></span>
+              <span className="block w-6 h-0.5 bg-white transition-all group-hover:bg-orange-400"></span>
+            </button>
 
-      {catalogo.logo && (
-        <img
-          src={catalogo.logo}
-          className="w-10 h-10 rounded-full object-cover"
-        />
-      )}
+            <div className="flex items-center gap-3">
+              {catalogo.logo && (
+                <img
+                  src={catalogo.logo}
+                  alt={catalogo.nombre}
+                  className="w-9 h-9 rounded-full object-cover border border-zinc-700"
+                />
+              )}
+              <h1 className="text-lg font-bold tracking-tight">
+                {catalogo.nombre}
+              </h1>
+            </div>
+          </div>
 
-      <h1 className="text-lg font-semibold tracking-wide">
-        {catalogo.nombre}
-      </h1>
+          {/* NAVEGACIÓN DESKTOP */}
+          <nav className="hidden md:flex items-center gap-2">
+            {categorias.slice(0, 5).map((cat) => (
+              <a
+                key={cat.id}
+                href={`#cat-${cat.id}`}
+                className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-zinc-400 hover:text-white transition-colors"
+              >
+                {cat.nombre}
+              </a>
+            ))}
+          </nav>
+        </div>
+      </header>
 
-    </div>
-
-    {/* 💻 DESKTOP MENU */}
-    <nav className="hidden md:flex items-center gap-6 text-sm">
-
-      {categorias.map((cat) => (
-        <a
-          key={cat.id}
-          href={`#cat-${cat.id}`}
-          className="text-zinc-300 hover:text-white transition"
-        >
-          {cat.nombre}
-        </a>
-      ))}
-
-    </nav>
-
-  </div>
-
-</header>
-
-      {/* 🌑 OVERLAY */}
+      {/* OVERLAY */}
       {open && (
         <div
           onClick={() => setOpen(false)}
-          className="fixed inset-0 bg-black/50 z-40"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] transition-opacity"
         />
       )}
 
-      {/* 📱 DRAWER LATERAL */}
-      <div
-        className={`fixed top-0 left-0 h-full w-64 bg-zinc-900 text-white z-50 transform transition-transform duration-300 ${
+      {/* DRAWER LATERAL */}
+      <aside
+        className={`fixed top-0 left-0 h-full w-[280px] bg-zinc-950 text-white z-[70] shadow-2xl transform transition-transform duration-300 ease-in-out ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-
-        {/* HEADER DEL MENU */}
-        <div className="p-4 border-b border-zinc-800 flex items-center justify-between">
-
-          <h2 className="font-semibold">Categorías</h2>
-
-          <button onClick={() => setOpen(false)}>
+        <div className="p-6 border-b border-zinc-900 flex items-center justify-between">
+          <h2 className="text-xl font-bold">Menú</h2>
+          <button 
+            onClick={() => setOpen(false)}
+            className="text-2xl hover:text-orange-500"
+          >
             ✕
           </button>
-
         </div>
 
-        {/* LISTA */}
-        <div className="py-2">
-
+        <nav className="py-4">
           {categorias.map((cat) => (
             <a
               key={cat.id}
               href={`#cat-${cat.id}`}
               onClick={() => setOpen(false)}
-              className="block px-4 py-3 hover:bg-zinc-800 transition"
+              className="block px-6 py-4 text-lg border-b border-zinc-900/50 hover:bg-zinc-900 hover:text-orange-400 transition-all"
             >
               {cat.nombre}
             </a>
           ))}
-
-        </div>
-
-      </div>
+        </nav>
+      </aside>
     </>
   );
 }
