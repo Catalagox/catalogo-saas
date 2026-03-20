@@ -2,17 +2,27 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import MenuStyleSwitch from "@/components/dashboard/apariencia/MenuStyleSwitch";
 
 export default function AparienciaPage() {
   const [nombre, setNombre] = useState("");
   const [colorPrimario, setColorPrimario] = useState("#f97316");
   const [colorFondo, setColorFondo] = useState("#111827");
+  const [estiloMenu, setEstiloMenu] = useState<"lista" | "galeria">("lista");
+  const [catalogoId, setCatalogoId] = useState<string | null>(null);
   const [logo, setLogo] = useState<File | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     cargarDatos();
   }, []);
+
+  // 🔥 AUTO GUARDADO DEL SWITCH
+  useEffect(() => {
+    if (!loading && catalogoId) {
+      guardarEstilo();
+    }
+  }, [estiloMenu]);
 
   const cargarDatos = async () => {
     const {
@@ -21,36 +31,62 @@ export default function AparienciaPage() {
 
     if (!user) return;
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("catalogos")
       .select("*")
       .eq("user_id", user.id)
       .single();
 
+    if (error) {
+      console.error("Error cargando datos:", error);
+      return;
+    }
+
     if (data) {
+      setCatalogoId(data.id); // 🔥 CLAVE
       setNombre(data.nombre || "");
       setColorPrimario(data.color_primario || "#f97316");
       setColorFondo(data.color_fondo || "#111827");
+      setEstiloMenu(data.estilo_menu || "lista");
     }
 
     setLoading(false);
   };
 
+  // 🔥 SOLO guarda el estilo (independiente)
+  const guardarEstilo = async () => {
+    if (!catalogoId) return;
+
+    const { error } = await supabase
+      .from("catalogos")
+      .update({
+        estilo_menu: estiloMenu,
+      })
+      .eq("id", catalogoId);
+
+    if (error) {
+      console.error("Error guardando estilo:", error);
+    }
+  };
+
+  // 🔥 guardar resto de datos
   const guardar = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    if (!catalogoId) return;
 
-    if (!user) return;
-
-    await supabase
+    const { error } = await supabase
       .from("catalogos")
       .update({
         nombre,
         color_primario: colorPrimario,
         color_fondo: colorFondo,
       })
-      .eq("user_id", user.id);
+      .eq("id", catalogoId);
+
+    if (error) {
+      console.error("Error guardando:", error);
+      alert("Error al guardar");
+      return;
+    }
 
     alert("Apariencia guardada");
   };
@@ -65,8 +101,20 @@ export default function AparienciaPage() {
 
   return (
     <div className="flex justify-center w-full">
-
       <div className="w-full max-w-2xl">
+
+        {/* 🔥 SWITCH ARRIBA DEL TODO */}
+        <div className="mb-6 flex items-center justify-between bg-gray-900 border border-gray-800 rounded-xl p-4">
+          <div>
+            <p className="text-sm text-gray-400">Estilo del menú</p>
+            <h2 className="text-lg font-bold">Visualización</h2>
+          </div>
+
+          <MenuStyleSwitch
+            value={estiloMenu}
+            onChange={setEstiloMenu}
+          />
+        </div>
 
         <h1 className="text-3xl font-bold mb-8">
           Apariencia del menú
@@ -130,7 +178,7 @@ export default function AparienciaPage() {
             />
           </div>
 
-          {/* BOTON GUARDAR */}
+          {/* BOTÓN */}
           <button
             onClick={guardar}
             className="w-full bg-orange-500 hover:bg-orange-600 py-3 rounded-lg font-semibold"
@@ -139,9 +187,7 @@ export default function AparienciaPage() {
           </button>
 
         </div>
-
       </div>
-
     </div>
   );
 }
