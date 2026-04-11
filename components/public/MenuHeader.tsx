@@ -13,15 +13,27 @@ type Props = {
     logo?: string;
   };
   categorias: Categoria[];
+
+  // 🎨 COLORES
+  colorHeader: string;
+  colorTexto: string;
+  colorHamburguesa: string;
+  colorCategoria: string;
 };
 
-export default function MenuHeader({ catalogo, categorias }: Props) {
+export default function MenuHeader({
+  catalogo,
+  categorias,
+  colorHeader,
+  colorTexto,
+  colorHamburguesa,
+  colorCategoria,
+}: Props) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      // Un margen pequeño para activar el cambio
       setScrolled(window.scrollY > 10);
     };
     window.addEventListener("scroll", handleScroll);
@@ -30,53 +42,70 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
 
   return (
     <>
-      <header 
-        className={`sticky top-0 z-50 transition-all duration-300 ${
-          scrolled 
-            ? "bg-zinc-950 shadow-xl py-3" // Fondo negro sólido al bajar para máxima visibilidad
-            : "bg-zinc-900 py-5"
-        } text-white`}
+      {/* HEADER */}
+      <header
+        className="sticky top-0 z-50 transition-all duration-300"
+        style={{
+          backgroundColor: colorHeader,
+          boxShadow: scrolled ? "0 8px 20px rgba(0,0,0,0.3)" : "none",
+        }}
       >
-        <div className="max-w-3xl mx-auto flex items-center justify-between px-5">
-          
+        <div className="max-w-3xl mx-auto flex items-center justify-between px-5 py-4">
+
+          {/* IZQUIERDA */}
           <div className="flex items-center gap-4">
-            {/* 🍔 BOTÓN HAMBURGUESA: Reforzado */}
+
+            {/* 🍔 HAMBURGUESA */}
             <button
               onClick={() => setOpen(true)}
-              className="flex flex-col justify-center items-center w-8 h-8 md:hidden group"
-              aria-label="Menu"
+              className="flex flex-col justify-center items-center w-8 h-8 md:hidden"
             >
-              <span className="block w-6 h-0.5 bg-white mb-1.5 transition-all group-hover:bg-orange-400"></span>
-              <span className="block w-6 h-0.5 bg-white mb-1.5 transition-all group-hover:bg-orange-400"></span>
-              <span className="block w-6 h-0.5 bg-white transition-all group-hover:bg-orange-400"></span>
+              <span
+                className="block w-6 h-[2px] mb-1.5"
+                style={{ backgroundColor: colorHamburguesa }}
+              />
+              <span
+                className="block w-6 h-[2px] mb-1.5"
+                style={{ backgroundColor: colorHamburguesa }}
+              />
+              <span
+                className="block w-6 h-[2px]"
+                style={{ backgroundColor: colorHamburguesa }}
+              />
             </button>
 
+            {/* LOGO + NOMBRE */}
             <div className="flex items-center gap-3">
               {catalogo.logo && (
                 <img
                   src={catalogo.logo}
                   alt={catalogo.nombre}
-                  className="w-9 h-9 rounded-full object-cover border border-zinc-700"
+                  className="w-9 h-9 rounded-full object-cover"
                 />
               )}
-              <h1 className="text-lg font-bold tracking-tight">
+              <h1
+                className="text-lg font-bold"
+                style={{ color: colorTexto }}
+              >
                 {catalogo.nombre}
               </h1>
             </div>
           </div>
 
-          {/* NAVEGACIÓN DESKTOP */}
-          <nav className="hidden md:flex items-center gap-2">
+          {/* DESKTOP NAV */}
+          <nav className="hidden md:flex items-center gap-3">
             {categorias.slice(0, 5).map((cat) => (
               <a
                 key={cat.id}
                 href={`#cat-${cat.id}`}
-                className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-zinc-400 hover:text-white transition-colors"
+                className="text-xs font-semibold uppercase tracking-wider transition"
+                style={{ color: colorCategoria }}
               >
                 {cat.nombre}
               </a>
             ))}
           </nav>
+
         </div>
       </header>
 
@@ -84,33 +113,44 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
       {open && (
         <div
           onClick={() => setOpen(false)}
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] transition-opacity"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
         />
       )}
 
-      {/* DRAWER LATERAL */}
+      {/* DRAWER */}
       <aside
-        className={`fixed top-0 left-0 h-full w-[280px] bg-zinc-950 text-white z-[70] shadow-2xl transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 h-full w-[280px] z-[70] transform transition-transform duration-300 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
+        style={{ backgroundColor: colorHeader }}
       >
-        <div className="p-6 border-b border-zinc-900 flex items-center justify-between">
-          <h2 className="text-xl font-bold">Menú</h2>
-          <button 
+        {/* HEADER DRAWER */}
+        <div className="p-6 flex items-center justify-between">
+          <h2
+            className="text-xl font-bold"
+            style={{ color: colorTexto }}
+          >
+            Menú
+          </h2>
+
+          <button
             onClick={() => setOpen(false)}
-            className="text-2xl hover:text-orange-500"
+            className="text-2xl"
+            style={{ color: colorHamburguesa }}
           >
             ✕
           </button>
         </div>
 
-        <nav className="py-4">
+        {/* LINKS */}
+        <nav>
           {categorias.map((cat) => (
             <a
               key={cat.id}
               href={`#cat-${cat.id}`}
               onClick={() => setOpen(false)}
-              className="block px-6 py-4 text-lg border-b border-zinc-900/50 hover:bg-zinc-900 hover:text-orange-400 transition-all"
+              className="block px-6 py-4 text-lg border-b border-white/10 transition"
+              style={{ color: colorCategoria }}
             >
               {cat.nombre}
             </a>

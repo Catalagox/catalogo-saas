@@ -18,45 +18,72 @@ interface Categoria {
 
 interface MenuGaleriaProps {
   categorias: Categoria[];
-  slug: string; 
+  slug: string;
+
+  // 🎨 COLORES
+  colorTexto: string;
+  colorPrecio: string;
+  colorTarjeta: string;
+  colorCategoria: string;
 }
 
-export default function MenuGaleria({ categorias, slug }: MenuGaleriaProps) {
+export default function MenuGaleria({
+  categorias,
+  slug,
+  colorTexto,
+  colorPrecio,
+  colorTarjeta,
+  colorCategoria,
+}: MenuGaleriaProps) {
 
   if (!categorias || categorias.length === 0) {
     return (
-      <div className="text-center text-gray-400 py-20 border border-dashed border-gray-200">
-        <p className="text-sm uppercase tracking-widest">Sin productos</p>
+      <div
+        className="text-center py-20 border border-dashed rounded-2xl"
+        style={{
+          borderColor: colorCategoria + "40",
+          color: colorTexto,
+        }}
+      >
+        <p className="text-sm uppercase tracking-widest opacity-70">
+          Sin productos
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-20 pb-10">
+    <div className="space-y-16 pb-10">
       {categorias.map((cat) => {
-        const productosValidos = cat.productos?.filter(p => p && p.slug && p.nombre) || [];
-        
+        const productosValidos =
+          cat.productos?.filter((p) => p && p.slug && p.nombre) || [];
+
         if (productosValidos.length === 0) return null;
 
         return (
-          <div key={cat.id} className="flex flex-col">
-            
-            {/* 🏷️ NOMBRE DE LA CATEGORÍA (Alineado a la izquierda) */}
-            <div className="mb-10">
-              <div className="flex items-end gap-4">
-                <h2 className="text-1xl font-black text-zinc-900 uppercase tracking-tighter leading-none">
+          <div key={cat.id}>
+
+            {/* 🏷️ CATEGORÍA */}
+            <div className="mb-8">
+              <div className="flex items-center gap-4">
+                <h2
+                  className="text-lg font-bold uppercase"
+                  style={{ color: colorCategoria }}
+                >
                   {cat.nombre}
                 </h2>
-                {/* Línea decorativa que llena el espacio restante */}
-                <div className="h-[2px] flex-1 bg-zinc-100 mb-1"></div>
+
+                <div
+                  className="h-[2px] flex-1"
+                  style={{
+                    background: `linear-gradient(to right, ${colorCategoria}, transparent)`,
+                  }}
+                />
               </div>
-              <p className="text-[10px] uppercase tracking-[0.3em] text-orange-500 font-bold mt-2">
-                Selección exclusiva
-              </p>
             </div>
 
-            {/* GRID DE PRODUCTOS EN CASCADA */}
-            <div className="grid grid-cols-2 gap-x-4 gap-y-12">
+            {/* GRID */}
+            <div className="grid grid-cols-2 gap-4">
               {productosValidos.map((p, i) => {
                 const href = `/${slug}/${p.slug}`;
 
@@ -64,12 +91,13 @@ export default function MenuGaleria({ categorias, slug }: MenuGaleriaProps) {
                   <Link
                     key={p.id}
                     href={href}
-                    className={`group block bg-white border border-zinc-100 shadow-sm transition-all duration-300 hover:shadow-md ${
-                      i % 2 === 0 ? "mt-0" : "mt-14" // Mantenemos el efecto cascada
+                    className={`group block rounded-2xl overflow-hidden transition ${
+                      i % 2 !== 0 ? "mt-10" : ""
                     }`}
+                    style={{ backgroundColor: colorTarjeta }}
                   >
-                    {/* Imagen Cuadrada 100% */}
-                    <div className="relative aspect-square overflow-hidden bg-zinc-50 border-b border-zinc-50">
+                    {/* IMAGEN */}
+                    <div className="relative aspect-square overflow-hidden">
                       {p.imagen_url ? (
                         <img
                           src={p.imagen_url}
@@ -77,24 +105,32 @@ export default function MenuGaleria({ categorias, slug }: MenuGaleriaProps) {
                           alt={p.nombre}
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-zinc-100 text-[9px] text-zinc-400 uppercase">
-                          No Image
+                        <div
+                          className="w-full h-full flex items-center justify-center text-xs"
+                          style={{ color: colorTexto }}
+                        >
+                          Sin imagen
                         </div>
                       )}
                     </div>
 
-                    {/* Texto con jerarquía clara */}
-                    <div className="p-4 flex flex-col justify-between min-h-[110px]">
-                      <h3 className="text-[12px] font-extrabold text-zinc-900 uppercase tracking-tight leading-tight line-clamp-2">
+                    {/* INFO */}
+                    <div className="p-3 flex flex-col gap-1">
+
+                      <h3
+                        className="text-sm font-semibold line-clamp-2"
+                        style={{ color: colorTexto }}
+                      >
                         {p.nombre}
                       </h3>
 
-                      <div className="mt-auto pt-3 border-t border-zinc-50">
-                        <span className="text-[10px] text-zinc-400 uppercase font-bold block mb-1">Precio</span>
-                        <p className="text-sm font-black text-orange-600">
-                          ${Number(p.precio || 0).toLocaleString("es-AR")}
-                        </p>
-                      </div>
+                      <span
+                        className="text-xs font-bold"
+                        style={{ color: colorPrecio }}
+                      >
+                        ${Number(p.precio || 0).toLocaleString()}
+                      </span>
+
                     </div>
                   </Link>
                 );

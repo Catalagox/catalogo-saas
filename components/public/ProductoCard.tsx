@@ -3,7 +3,21 @@
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 
-export default function ProductoCard({ producto }: any) {
+interface Props {
+  producto: any;
+
+  // 🎨 COLORES
+  colorTexto: string;
+  colorPrecio: string;
+  colorTarjeta: string;
+}
+
+export default function ProductoCard({
+  producto,
+  colorTexto,
+  colorPrecio,
+  colorTarjeta,
+}: Props) {
   const router = useRouter();
   const params = useParams();
   const slug = params.slug as string;
@@ -18,52 +32,73 @@ export default function ProductoCard({ producto }: any) {
   return (
     <div
       onClick={handleClick}
-      className="group bg-white border border-zinc-100 rounded-2xl p-3 flex items-center gap-4 
-                 cursor-pointer hover:border-orange-200 hover:shadow-lg hover:shadow-orange-100/50 
-                 active:scale-[0.98] transition-all duration-300"
+      className="group rounded-2xl p-3 flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-all duration-300"
+      style={{
+        backgroundColor: colorTarjeta,
+        border: "1px solid rgba(255,255,255,0.08)",
+      }}
     >
-      {/* 1. Imagen a la Izquierda con Aspecto Pulido */}
+      {/* 🖼️ IMAGEN */}
       {producto.imagen_url ? (
-        <div className="relative w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0 overflow-hidden rounded-xl bg-zinc-50">
+        <div className="relative w-24 h-24 flex-shrink-0 overflow-hidden rounded-xl">
           <Image
             src={producto.imagen_url}
             alt={producto.nombre}
             fill
-            sizes="(max-width: 768px) 100px, 120px"
             className="object-cover transition-transform duration-500 group-hover:scale-110"
           />
         </div>
       ) : (
-        // Placeholder elegante si no hay imagen
-        <div className="w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0 bg-zinc-50 rounded-xl flex items-center justify-center border border-dashed border-zinc-200">
-          <span className="text-zinc-300 text-xs">Sin foto</span>
+        <div
+          className="w-24 h-24 flex items-center justify-center rounded-xl text-xs"
+          style={{ backgroundColor: "#ffffff10", color: colorTexto }}
+        >
+          Sin foto
         </div>
       )}
 
-      {/* 2. Información del Producto */}
-      <div className="flex-1 flex flex-col min-w-0 py-1">
-        <div className="flex justify-between items-start gap-2">
-          <h3 className="font-bold text-zinc-800 text-base sm:text-lg leading-tight truncate group-hover:text-orange-600 transition-colors">
-            {producto.nombre}
-          </h3>
-        </div>
+      {/* 📦 INFO */}
+      <div className="flex-1 flex flex-col min-w-0">
 
+        {/* NOMBRE */}
+        <h3
+          className="font-semibold text-base leading-tight truncate"
+          style={{ color: colorTexto }}
+        >
+          {producto.nombre}
+        </h3>
+
+        {/* DESCRIPCIÓN */}
         {producto.descripcion && (
-          <p className="text-sm text-zinc-500 line-clamp-2 mt-1 leading-relaxed">
+          <p
+            className="text-sm mt-1 line-clamp-2 opacity-70"
+            style={{ color: colorTexto }}
+          >
             {producto.descripcion}
           </p>
         )}
 
-        <div className="mt-auto pt-2 flex items-center justify-between">
-          <span className="text-lg font-extrabold text-zinc-900">
-            ${Number(producto.precio).toLocaleString('es-CL')} 
+        {/* PRECIO */}
+        <div className="mt-2 flex items-center justify-between">
+          <span
+            className="text-sm font-bold"
+            style={{ color: colorPrecio }}
+          >
+            ${Number(producto.precio).toLocaleString()}
           </span>
-          
-          {/* Badge de "Ver más" sutil para mejorar el UX en móvil */}
-          <span className="text-[10px] font-bold uppercase tracking-wider text-orange-500 bg-orange-50 px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block">
-            Detalles
+
+          {/* BADGE */}
+          <span
+            className="text-[10px] px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition"
+            style={{
+              backgroundColor: colorPrecio + "20",
+              color: colorPrecio,
+            }}
+          >
+            Ver
           </span>
         </div>
+
       </div>
     </div>
   );

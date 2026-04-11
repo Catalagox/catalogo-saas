@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import MenuStyleSwitch from "@/components/dashboard/apariencia/MenuStyleSwitch";
+import AparienciaForm from "@/components/dashboard/apariencia/AparienciaForm";
+import PhonePreview from "@/components/dashboard/apariencia/PhonePreview";
 
 export default function AparienciaPage() {
   const [nombre, setNombre] = useState("");
@@ -10,66 +11,96 @@ export default function AparienciaPage() {
   const [colorFondo, setColorFondo] = useState("#111827");
   const [estiloMenu, setEstiloMenu] = useState<"lista" | "galeria">("lista");
   const [catalogoId, setCatalogoId] = useState<string | null>(null);
-  const [logo, setLogo] = useState<File | null>(null);
+  const [logo, setLogo] = useState<string | null>(null);
+  const [categorias, setCategorias] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // 🎨 COLORES
+  const [colorHeader, setColorHeader] = useState("#f97316");
+  const [colorFooter, setColorFooter] = useState("#111827");
+  const [colorTexto, setColorTexto] = useState("#ffffff");
+  const [colorPrecio, setColorPrecio] = useState("#22c55e");
+
+  const [colorHamburguesa, setColorHamburguesa] = useState("#ffffff");
+  const [colorTarjeta, setColorTarjeta] = useState("#ffffff10");
+  const [colorCategoria, setColorCategoria] = useState("#ffffff");
 
   useEffect(() => {
     cargarDatos();
   }, []);
 
-  // 🔥 AUTO GUARDADO DEL SWITCH
-  useEffect(() => {
-    if (!loading && catalogoId) {
-      guardarEstilo();
-    }
-  }, [estiloMenu]);
-
   const cargarDatos = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-    if (!user) return;
+      const { data, error } = await supabase
+        .from("catalogos")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
 
-    const { data, error } = await supabase
-      .from("catalogos")
-      .select("*")
-      .eq("user_id", user.id)
-      .single();
+      if (error) {
+        console.error("Error cargando catálogo:", error);
+        return;
+      }
 
-    if (error) {
-      console.error("Error cargando datos:", error);
-      return;
-    }
+      if (data) {
+        setCatalogoId(data.id);
+        setNombre(data.nombre || "");
+        setEstiloMenu(data.estilo_menu || "lista");
+        setLogo(data.logo || null);
 
-    if (data) {
-      setCatalogoId(data.id); // 🔥 CLAVE
-      setNombre(data.nombre || "");
-      setColorPrimario(data.color_primario || "#f97316");
-      setColorFondo(data.color_fondo || "#111827");
-      setEstiloMenu(data.estilo_menu || "lista");
-    }
+        // 🔥 COLORES DESDE BD (cuando los agregues)
+        setColorPrimario(data.color_primario || "#f97316");
+        setColorFondo(data.color_fondo || "#111827");
+        setColorHeader(data.color_header || "#f97316");
+        setColorFooter(data.color_footer || "#111827");
+        setColorTexto(data.color_texto || "#ffffff");
+        setColorPrecio(data.color_precio || "#22c55e");
+        setColorHamburguesa(data.color_hamburguesa || "#ffffff");
+        setColorTarjeta(data.color_tarjeta || "#ffffff10");
+        setColorCategoria(data.color_categoria || "#ffffff");
 
-    setLoading(false);
-  };
-
-  // 🔥 SOLO guarda el estilo (independiente)
-  const guardarEstilo = async () => {
-    if (!catalogoId) return;
-
-    const { error } = await supabase
-      .from("catalogos")
-      .update({
-        estilo_menu: estiloMenu,
-      })
-      .eq("id", catalogoId);
-
-    if (error) {
-      console.error("Error guardando estilo:", error);
+        await cargarMenu(data.id);
+      }
+    } catch (err) {
+      console.error("Error general:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // 🔥 guardar resto de datos
+  const cargarMenu = async (catalogoId: string) => {
+    try {
+      const { data: categoriasData } = await supabase
+        .from("categorias")
+        .select("*")
+        .eq("catalogo_id", catalogoId);
+
+      const { data: productosData } = await supabase
+        .from("productos")
+        .select("*")
+        .eq("catalogo_id", catalogoId)
+        .eq("disponible", true);
+
+      const categoriasSafe = categoriasData || [];
+      const productosSafe = productosData || [];
+
+      const resultado = categoriasSafe.map((cat: any) => ({
+        ...cat,
+        productos: productosSafe.filter(
+          (p: any) => p.categoria_id === cat.id
+        ),
+      }));
+
+      setCategorias(resultado);
+    } catch (err) {
+      console.error(err);
+      setCategorias([]);
+    }
+  };
+
   const guardar = async () => {
     if (!catalogoId) return;
 
@@ -77,116 +108,88 @@ export default function AparienciaPage() {
       .from("catalogos")
       .update({
         nombre,
+        estilo_menu: estiloMenu,
         color_primario: colorPrimario,
         color_fondo: colorFondo,
+        color_header: colorHeader,
+        color_footer: colorFooter,
+        color_texto: colorTexto,
+        color_precio: colorPrecio,
+        color_hamburguesa: colorHamburguesa,
+        color_tarjeta: colorTarjeta,
+        color_categoria: colorCategoria,
       })
       .eq("id", catalogoId);
 
     if (error) {
-      console.error("Error guardando:", error);
+      console.error(error);
       alert("Error al guardar");
       return;
     }
 
-    alert("Apariencia guardada");
+    alert("Guardado 🔥");
   };
 
   if (loading) {
-    return (
-      <div className="text-center py-20">
-        Cargando apariencia...
-      </div>
-    );
+    return <div className="text-center py-20">Cargando...</div>;
   }
 
   return (
-    <div className="flex justify-center w-full">
-      <div className="w-full max-w-2xl">
+    <div className="w-full max-w-7xl mx-auto px-4 py-6">
 
-        {/* 🔥 SWITCH ARRIBA DEL TODO */}
-        <div className="mb-6 flex items-center justify-between bg-gray-900 border border-gray-800 rounded-xl p-4">
-          <div>
-            <p className="text-sm text-gray-400">Estilo del menú</p>
-            <h2 className="text-lg font-bold">Visualización</h2>
-          </div>
+      {/* 🔥 RESPONSIVE GRID */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-          <MenuStyleSwitch
-            value={estiloMenu}
-            onChange={setEstiloMenu}
+        {/* FORM */}
+        <div>
+          <AparienciaForm
+            nombre={nombre}
+            setNombre={setNombre}
+            colorPrimario={colorPrimario}
+            setColorPrimario={setColorPrimario}
+            colorFondo={colorFondo}
+            setColorFondo={setColorFondo}
+            estiloMenu={estiloMenu}
+            setEstiloMenu={setEstiloMenu}
+
+            colorHeader={colorHeader}
+            setColorHeader={setColorHeader}
+            colorFooter={colorFooter}
+            setColorFooter={setColorFooter}
+            colorTexto={colorTexto}
+            setColorTexto={setColorTexto}
+            colorPrecio={colorPrecio}
+            setColorPrecio={setColorPrecio}
+
+            colorHamburguesa={colorHamburguesa}
+            setColorHamburguesa={setColorHamburguesa}
+            colorTarjeta={colorTarjeta}
+            setColorTarjeta={setColorTarjeta}
+            colorCategoria={colorCategoria}
+            setColorCategoria={setColorCategoria}
+
+            guardar={guardar}
           />
         </div>
 
-        <h1 className="text-3xl font-bold mb-8">
-          Apariencia del menú
-        </h1>
-
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 space-y-6">
-
-          {/* NOMBRE */}
-          <div>
-            <label className="block text-sm text-gray-400 mb-2">
-              Nombre del menú
-            </label>
-
-            <input
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2"
-            />
-          </div>
-
-          {/* LOGO */}
-          <div>
-            <label className="block text-sm text-gray-400 mb-2">
-              Logo del restaurante
-            </label>
-
-            <input
-              type="file"
-              onChange={(e) =>
-                setLogo(e.target.files ? e.target.files[0] : null)
-              }
-              className="w-full text-sm"
-            />
-          </div>
-
-          {/* COLOR PRINCIPAL */}
-          <div>
-            <label className="block text-sm text-gray-400 mb-2">
-              Color principal
-            </label>
-
-            <input
-              type="color"
-              value={colorPrimario}
-              onChange={(e) => setColorPrimario(e.target.value)}
-              className="w-20 h-10 border-none"
-            />
-          </div>
-
-          {/* COLOR FONDO */}
-          <div>
-            <label className="block text-sm text-gray-400 mb-2">
-              Color de fondo
-            </label>
-
-            <input
-              type="color"
-              value={colorFondo}
-              onChange={(e) => setColorFondo(e.target.value)}
-              className="w-20 h-10 border-none"
-            />
-          </div>
-
-          {/* BOTÓN */}
-          <button
-            onClick={guardar}
-            className="w-full bg-orange-500 hover:bg-orange-600 py-3 rounded-lg font-semibold"
-          >
-            Guardar cambios
-          </button>
-
+        {/* PREVIEW */}
+        <div className="flex justify-center lg:justify-end">
+          <PhonePreview
+            nombre={nombre}
+            colorFondo={colorFondo}
+            estiloMenu={estiloMenu}
+            logo={logo}
+            categorias={categorias}
+            colorHeader={colorHeader}
+            colorFooter={colorFooter}
+            colorTexto={colorTexto}
+            colorPrecio={colorPrecio}
+            colorHamburguesa={colorHamburguesa}
+            colorTarjeta={colorTarjeta}
+            colorCategoria={colorCategoria}
+          />
         </div>
+
       </div>
     </div>
   );

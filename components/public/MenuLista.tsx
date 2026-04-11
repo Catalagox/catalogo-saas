@@ -2,7 +2,7 @@
 
 import CategoriaSection from "@/components/public/CategoriaSection";
 
-// 🛡️ Interfaces para TypeScript (para que VS Code esté feliz)
+// Tipos
 interface Producto {
   id: string;
   nombre: string;
@@ -21,15 +21,32 @@ interface Categoria {
 
 interface MenuListaProps {
   categorias: Categoria[];
+
+  // 🎨 COLORES
+  colorTexto: string;
+  colorPrecio: string;
+  colorTarjeta: string;
+  colorCategoria: string;
 }
 
-export default function MenuLista({ categorias }: MenuListaProps) {
-  
-  // 🛡️ Si no hay categorías, mostramos un estado vacío elegante
+export default function MenuLista({
+  categorias,
+  colorTexto,
+  colorPrecio,
+  colorTarjeta,
+  colorCategoria,
+}: MenuListaProps) {
+
   if (!categorias || categorias.length === 0) {
     return (
-      <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
-        <p className="text-gray-400 italic text-sm">
+      <div
+        className="text-center py-20 rounded-3xl border border-dashed"
+        style={{
+          borderColor: colorCategoria + "40",
+          color: colorTexto,
+        }}
+      >
+        <p className="italic text-sm opacity-70">
           No hay categorías configuradas aún.
         </p>
       </div>
@@ -37,13 +54,18 @@ export default function MenuLista({ categorias }: MenuListaProps) {
   }
 
   return (
-    <div className="space-y-12 pb-10">
+    <div className="space-y-10 pb-10">
       {categorias.map((categoria) => (
-        <div 
-          key={categoria.id} 
-          className="animate-in fade-in slide-in-from-bottom-4 duration-700"
-        >
-          <CategoriaSection categoria={categoria} />
+        <div key={categoria.id}>
+          <CategoriaSection
+            categoria={categoria}
+
+            // 🎨 PASAMOS TODO
+            colorTexto={colorTexto}
+            colorPrecio={colorPrecio}
+            colorTarjeta={colorTarjeta}
+            colorCategoria={colorCategoria}
+          />
         </div>
       ))}
     </div>
