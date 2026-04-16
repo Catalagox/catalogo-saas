@@ -5,14 +5,47 @@
 
 /* Variables de tema */
 :root {
+  /* 🌿 PRIMARY */
+  --color-primary: #16A34A;
+  --color-primary-hover: #15803D;
+  --color-primary-light: #DCFCE7;
+  --color-primary-dark: #052E16;
+
+  /* ⚫ BASE */
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #111827;
+
+  /* 🧾 TEXTOS */
+  --color-text: #111827;
+  --color-text-light: #6B7280;
+  --color-text-inverse: #ffffff;
+
+  /* 🟢 ACCENTOS */
+  --color-accent: #22C55E;
+
+  /* 🔴 ESTADOS */
+  --color-danger: #EF4444;
+  --color-warning: #F59E0B;
+  --color-success: #16A34A;
+
+  /* 🧊 BORDES */
+  --color-border: #E5E7EB;
 }
 
+/* 🌙 DARK MODE */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0F172A;
+    --foreground: #F9FAFB;
+
+    --color-text: #13291e;
+    --color-text-light: #9CA3AF;
+
+    --color-border: #1F2933;
+
+    /* opcional: ajustar verde en dark */
+    --color-primary: #22C55E;
+    --color-primary-hover: #16A34A;
   }
 }
 
