@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import MenuHeader from "@/components/public/MenuHeader";
 import MenuFooter from "@/components/public/MenuFooter";
 import MenuLista from "@/components/public/MenuLista";
@@ -50,7 +49,6 @@ interface MenuClientProps {
 
 export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
 
-  // 🛡️ seguridad
   if (!catalogo) {
     return (
       <div className="flex items-center justify-center min-h-screen text-gray-400">
@@ -61,59 +59,54 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
 
   const safeCategorias = categorias ?? [];
 
-  const [viewMode, setViewMode] = useState<"lista" | "galeria">("lista");
+  // 🔥 FIX: usar directamente el valor de la BD
+  const viewMode = catalogo.estilo_menu ?? "lista";
 
-  useEffect(() => {
-    if (catalogo.estilo_menu) {
-      setViewMode(catalogo.estilo_menu);
-    }
-  }, [catalogo.estilo_menu]);
-
-  // 🎨 COLORES (con fallback seguro)
+  // 🎨 VARIABLES BASE
   const colorFondo = catalogo.color_fondo ?? "#111827";
-  const colorHeader = catalogo.color_header ?? "#f97316";
+  const colorHeader = catalogo.color_header ?? "#1680f9";
   const colorFooter = catalogo.color_footer ?? "#111827";
   const colorTexto = catalogo.color_texto ?? "#ffffff";
   const colorPrecio = catalogo.color_precio ?? "#22c55e";
   const colorHamburguesa = catalogo.color_hamburguesa ?? "#ffffff";
   const colorTarjeta = catalogo.color_tarjeta ?? "#ffffff10";
   const colorCategoria = catalogo.color_categoria ?? "#ffffff";
+  const colorPrimario = catalogo.color_primario ?? "#f97316";
+
+  // 🎨 CSS VARIABLES GLOBAL
+  const theme = {
+    "--color-bg": colorFondo,
+    "--color-header": colorHeader,
+    "--color-footer": colorFooter,
+    "--color-text": colorTexto,
+    "--color-price": colorPrecio,
+    "--color-hamburguesa": colorHamburguesa,
+    "--color-card": colorTarjeta,
+    "--color-categoria": colorCategoria,
+    "--color-primary": colorPrimario,
+  } as React.CSSProperties;
 
   return (
     <div
-      className="min-h-screen flex flex-col"
-      style={{ backgroundColor: colorFondo }}
+      className="min-h-screen flex flex-col bg-[var(--color-bg)]"
+      style={theme}
     >
 
       {/* HEADER */}
       <MenuHeader
         catalogo={catalogo}
         categorias={safeCategorias}
-        colorHeader={colorHeader}
-        colorTexto={colorTexto}
-        colorHamburguesa={colorHamburguesa}
-        colorCategoria={colorCategoria} // 🔥 FIX CLAVE
       />
 
       {/* MAIN */}
       <main className="max-w-3xl mx-auto w-full p-4 flex-grow">
 
         {viewMode === "lista" ? (
-          <MenuLista
-            categorias={safeCategorias}
-            colorTexto={colorTexto}
-            colorPrecio={colorPrecio}
-            colorTarjeta={colorTarjeta}
-            colorCategoria={colorCategoria}
-          />
+          <MenuLista categorias={safeCategorias} />
         ) : catalogo.slug ? (
           <MenuGaleria
             categorias={safeCategorias}
             slug={catalogo.slug}
-            colorTexto={colorTexto}
-            colorPrecio={colorPrecio}
-            colorTarjeta={colorTarjeta}
-            colorCategoria={colorCategoria}
           />
         ) : (
           <div className="text-center text-red-400 py-10">
@@ -124,10 +117,7 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
       </main>
 
       {/* FOOTER */}
-      <MenuFooter
-        colorFooter={colorFooter}
-        colorTexto={colorTexto}
-      />
+      <MenuFooter />
 
     </div>
   );

@@ -1,29 +1,30 @@
+"use client";
+
 import ProductoCard from "@/components/public/ProductoCard";
 
-type Categoria = {
+// 🔥 Tipado real (NO any)
+interface Producto {
   id: string;
   nombre: string;
-  productos: any[];
-};
+  descripcion?: string;
+  precio: number;
+  imagen_url?: string;
+  slug: string;
+}
+
+interface Categoria {
+  id: string;
+  nombre: string;
+  productos: Producto[];
+}
 
 interface Props {
   categoria: Categoria;
-
-  // 🎨 NUEVOS
-  colorCategoria: string;
-  colorTexto: string;
-  colorTarjeta: string;
-  colorPrecio: string;
 }
 
-export default function CategoriaSection({
-  categoria,
-  colorCategoria,
-  colorTexto,
-  colorTarjeta,
-  colorPrecio,
-}: Props) {
+export default function CategoriaSection({ categoria }: Props) {
 
+  // 🛡️ Seguridad
   const productosValidos =
     (categoria.productos ?? []).filter(
       (p) => p && p.id && p.nombre
@@ -40,37 +41,24 @@ export default function CategoriaSection({
       {/* 🏷️ HEADER CATEGORÍA */}
       <div className="flex items-center gap-4 mb-6">
 
-        <div
-          className="flex items-center gap-3 px-4 py-2 rounded-full"
-          style={{ backgroundColor: colorTarjeta }}
-        >
+        <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-[var(--color-card)]">
+
           {/* 🔥 PUNTO */}
-          <span
-            className="w-2 h-2 rounded-full"
-            style={{ backgroundColor: colorCategoria }}
-          />
+          <span className="w-2 h-2 rounded-full bg-[var(--color-categoria)]" />
 
           {/* NOMBRE */}
-          <h2
-            className="text-lg font-bold uppercase"
-            style={{ color: colorCategoria }}
-          >
+          <h2 className="text-lg font-bold uppercase text-[var(--color-categoria)]">
             {categoria.nombre}
           </h2>
 
           {/* CANTIDAD */}
-          <span
-            className="text-xs px-2 py-1 rounded-full"
-            style={{
-              backgroundColor: colorCategoria + "20",
-              color: colorCategoria,
-            }}
-          >
+          <span className="text-xs px-2 py-1 rounded-full bg-[var(--color-categoria)]/20 text-[var(--color-categoria)]">
             {productosValidos.length}
           </span>
         </div>
 
-        <div className="flex-1 h-[1px]" style={{ backgroundColor: colorCategoria + "30" }} />
+        {/* LINEA */}
+        <div className="flex-1 h-[1px] bg-[var(--color-categoria)]/30" />
 
       </div>
 
@@ -80,14 +68,10 @@ export default function CategoriaSection({
           <ProductoCard
             key={producto.id}
             producto={producto}
-
-            // 🎨 PASAMOS COLORES
-            colorTexto={colorTexto}
-            colorPrecio={colorPrecio}
-            colorTarjeta={colorTarjeta}
           />
         ))}
       </div>
+
     </section>
   );
 }

@@ -12,7 +12,12 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
 
   const supabase = await createClient();
 
-  // 🔥 CATÁLOGO CON COLORES
+  // 🔥 VALIDACIÓN BÁSICA
+  if (!slug) {
+    return <div className="p-10 text-center">Slug inválido</div>;
+  }
+
+  // 🔥 CATÁLOGO
   const { data: catalogoDB, error: catalogoError } = await supabase
     .from("catalogos")
     .select(`
@@ -35,38 +40,46 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
     .eq("slug", slug)
     .maybeSingle();
 
-  if (catalogoError || !catalogoDB) {
+  if (catalogoError) {
+    console.error("Error catálogo:", catalogoError);
+    return <div className="p-10 text-center">Error cargando menú</div>;
+  }
+
+  if (!catalogoDB) {
     return <div className="p-10 text-center">Menú no encontrado</div>;
   }
 
-  // 🔥 NORMALIZAMOS (con defaults)
+  // 🔥 NORMALIZACIÓN (CLAVE para CSS variables)
   const catalogo = {
     ...catalogoDB,
-    slug,
 
-    color_primario: catalogoDB.color_primario || "#f97316",
-    color_fondo: catalogoDB.color_fondo || "#111827",
-    color_header: catalogoDB.color_header || "#f97316",
-    color_footer: catalogoDB.color_footer || "#111827",
-    color_texto: catalogoDB.color_texto || "#ffffff",
-    color_precio: catalogoDB.color_precio || "#22c55e",
-    color_hamburguesa: catalogoDB.color_hamburguesa || "#ffffff",
-    color_tarjeta: catalogoDB.color_tarjeta || "#ffffff10",
-    color_categoria: catalogoDB.color_categoria || "#ffffff",
+    color_primario: catalogoDB.color_primario ?? "#f97316",
+    color_fondo: catalogoDB.color_fondo ?? "#111827",
+    color_header: catalogoDB.color_header ?? "#f97316",
+    color_footer: catalogoDB.color_footer ?? "#111827",
+    color_texto: catalogoDB.color_texto ?? "#ffffff",
+    color_precio: catalogoDB.color_precio ?? "#22c55e",
+    color_hamburguesa: catalogoDB.color_hamburguesa ?? "#ffffff",
+    color_tarjeta: catalogoDB.color_tarjeta ?? "#ffffff10",
+    color_categoria: catalogoDB.color_categoria ?? "#ffffff",
   };
 
-  // 🔥 TRACKING VIEW
-  await supabase.from("estadisticas").insert({
-    user_id: catalogo.user_id,
-    tipo: "menu_view",
-  });
-
-  // 🔥 TRACKING QR
-  if (qr) {
-    await supabase.from("estadisticas").insert({
-      user_id: catalogo.user_id,
-      tipo: "qr_scan",
-    });
+  // 🔥 TRACKING (NO bloquear render)
+  try {
+    await Promise.all([
+      supabase.from("estadisticas").insert({
+        user_id: catalogo.user_id,
+        tipo: "menu_view",
+      }),
+      qr
+        ? supabase.from("estadisticas").insert({
+            user_id: catalogo.user_id,
+            tipo: "qr_scan",
+          })
+        : null,
+    ]);
+  } catch (err) {
+    console.warn("Tracking error:", err);
   }
 
   // 🔥 CATEGORÍAS + PRODUCTOS
@@ -89,6 +102,7 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
     .order("created_at");
 
   if (categoriasError) {
+    console.error("Error categorías:", categoriasError);
     return <div className="p-10 text-center">Error al cargar categorías</div>;
   }
 

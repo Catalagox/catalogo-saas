@@ -9,10 +9,14 @@ interface PageProps {
 
 export default async function ProductoPage({ params }: PageProps) {
   const { slug, producto: productoSlug } = await params;
+
   const supabase = await createClient();
 
-  // 🔥 TRAEMOS COLORES TAMBIÉN
-  const { data: catalogo } = await supabase
+  // 🔥 VALIDACIÓN
+  if (!slug || !productoSlug) return notFound();
+
+  // 🔥 CATÁLOGO (COLORES)
+  const { data: catalogo, error: catalogoError } = await supabase
     .from("catalogos")
     .select(`
       id,
@@ -25,28 +29,37 @@ export default async function ProductoPage({ params }: PageProps) {
     .eq("slug", slug)
     .single();
 
-  if (!catalogo) return notFound();
+  if (catalogoError || !catalogo) {
+    console.error("Error catálogo:", catalogoError);
+    return notFound();
+  }
 
-  const { data } = await supabase
+  // 🔥 PRODUCTO
+  const { data, error: productoError } = await supabase
     .from("productos")
     .select("*")
     .eq("catalogo_id", catalogo.id)
     .eq("slug", productoSlug)
     .single();
 
-  if (!data) return notFound();
+  if (productoError || !data) {
+    console.error("Error producto:", productoError);
+    return notFound();
+  }
 
-  // 🎨 DEFAULTS
-  const colorFondo = catalogo.color_fondo || "#111827";
-  const colorHeader = catalogo.color_header || "#f97316";
-  const colorTexto = catalogo.color_texto || "#ffffff";
-  const colorPrecio = catalogo.color_precio || "#22c55e";
-  const colorPrimario = catalogo.color_primario || "#f97316";
+  // 🎨 CSS VARIABLES (CLAVE)
+  const theme = {
+    "--color-bg": catalogo.color_fondo ?? "#111827",
+    "--color-header": catalogo.color_header ?? "#f97316",
+    "--color-text": catalogo.color_texto ?? "#ffffff",
+    "--color-price": catalogo.color_precio ?? "#22c55e",
+    "--color-primary": catalogo.color_primario ?? "#f97316",
+  } as React.CSSProperties;
 
   return (
     <div
-      className="min-h-screen pb-32"
-      style={{ backgroundColor: colorFondo }}
+      className="min-h-screen pb-32 bg-[var(--color-bg)]"
+      style={theme}
     >
       {/* HERO */}
       <div className="relative w-full h-[45vh] md:h-[55vh] overflow-hidden">
@@ -64,7 +77,7 @@ export default async function ProductoPage({ params }: PageProps) {
             className="object-cover opacity-90"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-sm">
+          <div className="w-full h-full flex items-center justify-center text-sm text-[var(--color-text)]">
             Sin foto
           </div>
         )}
@@ -72,17 +85,11 @@ export default async function ProductoPage({ params }: PageProps) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
 
         <div className="absolute bottom-10 left-0 w-full px-6">
-          <span
-            className="text-[10px] font-black uppercase px-2 py-1 rounded-md mb-3 inline-block"
-            style={{ backgroundColor: colorPrimario, color: "#fff" }}
-          >
+          <span className="text-[10px] font-black uppercase px-2 py-1 rounded-md mb-3 inline-block bg-[var(--color-primary)] text-white">
             Detalles
           </span>
 
-          <h1
-            className="text-3xl md:text-5xl font-black"
-            style={{ color: "#fff" }}
-          >
+          <h1 className="text-3xl md:text-5xl font-black text-white">
             {data.nombre}
           </h1>
         </div>
@@ -90,25 +97,17 @@ export default async function ProductoPage({ params }: PageProps) {
 
       {/* BODY */}
       <main className="-mt-10">
-        <div
-          className="max-w-2xl mx-auto rounded-t-[40px] shadow-2xl p-6 space-y-6"
-          style={{ backgroundColor: "#ffffff" }}
-        >
+        <div className="max-w-2xl mx-auto rounded-t-[40px] shadow-2xl p-6 space-y-6 bg-white">
+
           {/* PRECIO */}
           <div className="flex justify-between items-center">
             <div>
-              <span
-                className="text-xs font-bold uppercase"
-                style={{ color: colorPrimario }}
-              >
+              <span className="text-xs font-bold uppercase text-[var(--color-primary)]">
                 Precio
               </span>
 
-              <p
-                className="text-3xl font-black"
-                style={{ color: colorPrecio }}
-              >
-                ${Number(data.precio).toLocaleString()}
+              <p className="text-3xl font-black text-[var(--color-price)]">
+                ${Number(data.precio || 0).toLocaleString()}
               </p>
             </div>
 
@@ -124,36 +123,30 @@ export default async function ProductoPage({ params }: PageProps) {
           </div>
 
           {/* DESCRIPCIÓN */}
-          <div
-            className="p-5 rounded-2xl"
-            style={{ backgroundColor: "#f9fafb" }}
-          >
-            <h3
-              className="text-xs font-bold uppercase mb-2"
-              style={{ color: colorPrimario }}
-            >
+          <div className="p-5 rounded-2xl bg-gray-50">
+            <h3 className="text-xs font-bold uppercase mb-2 text-[var(--color-primary)]">
               Descripción
             </h3>
 
-            <p style={{ color: "#555" }}>
+            <p className="text-gray-600">
               {data.descripcion ||
                 "Este producto es una recomendación especial."}
             </p>
           </div>
+
         </div>
       </main>
 
       {/* BOTÓN */}
-      <div
-        className="fixed bottom-0 left-0 w-full p-5"
-        style={{ backgroundColor: "#ffffffee", backdropFilter: "blur(10px)" }}
-      >
+      <div className="fixed bottom-0 left-0 w-full p-5 bg-white/90 backdrop-blur-md">
         <div className="max-w-2xl mx-auto">
           <button
             disabled={!data.disponible}
             className="w-full h-14 rounded-xl font-bold transition"
             style={{
-              backgroundColor: data.disponible ? colorPrimario : "#ccc",
+              backgroundColor: data.disponible
+                ? "var(--color-primary)"
+                : "#ccc",
               color: "#fff",
             }}
           >

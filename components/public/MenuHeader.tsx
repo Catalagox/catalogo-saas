@@ -13,21 +13,11 @@ type Props = {
     logo?: string;
   };
   categorias: Categoria[];
-
-  // 🎨 COLORES
-  colorHeader: string;
-  colorTexto: string;
-  colorHamburguesa: string;
-  colorCategoria: string;
 };
 
 export default function MenuHeader({
   catalogo,
   categorias,
-  colorHeader,
-  colorTexto,
-  colorHamburguesa,
-  colorCategoria,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -44,9 +34,8 @@ export default function MenuHeader({
     <>
       {/* HEADER */}
       <header
-        className="sticky top-0 z-50 transition-all duration-300"
+        className="sticky top-0 z-50 transition-all duration-300 bg-[var(--color-header)]"
         style={{
-          backgroundColor: colorHeader,
           boxShadow: scrolled ? "0 8px 20px rgba(0,0,0,0.3)" : "none",
         }}
       >
@@ -60,18 +49,9 @@ export default function MenuHeader({
               onClick={() => setOpen(true)}
               className="flex flex-col justify-center items-center w-8 h-8 md:hidden"
             >
-              <span
-                className="block w-6 h-[2px] mb-1.5"
-                style={{ backgroundColor: colorHamburguesa }}
-              />
-              <span
-                className="block w-6 h-[2px] mb-1.5"
-                style={{ backgroundColor: colorHamburguesa }}
-              />
-              <span
-                className="block w-6 h-[2px]"
-                style={{ backgroundColor: colorHamburguesa }}
-              />
+              <span className="block w-6 h-[2px] mb-1.5 bg-[var(--color-hamburguesa)]" />
+              <span className="block w-6 h-[2px] mb-1.5 bg-[var(--color-hamburguesa)]" />
+              <span className="block w-6 h-[2px] bg-[var(--color-hamburguesa)]" />
             </button>
 
             {/* LOGO + NOMBRE */}
@@ -83,10 +63,7 @@ export default function MenuHeader({
                   className="w-9 h-9 rounded-full object-cover"
                 />
               )}
-              <h1
-                className="text-lg font-bold"
-                style={{ color: colorTexto }}
-              >
+              <h1 className="text-lg font-bold text-[var(--color-text)]">
                 {catalogo.nombre}
               </h1>
             </div>
@@ -98,8 +75,7 @@ export default function MenuHeader({
               <a
                 key={cat.id}
                 href={`#cat-${cat.id}`}
-                className="text-xs font-semibold uppercase tracking-wider transition"
-                style={{ color: colorCategoria }}
+                className="text-xs font-semibold uppercase tracking-wider transition text-[var(--color-categoria)]"
               >
                 {cat.nombre}
               </a>
@@ -121,22 +97,17 @@ export default function MenuHeader({
       <aside
         className={`fixed top-0 left-0 h-full w-[280px] z-[70] transform transition-transform duration-300 ${
           open ? "translate-x-0" : "-translate-x-full"
-        }`}
-        style={{ backgroundColor: colorHeader }}
+        } bg-[var(--color-header)]`}
       >
         {/* HEADER DRAWER */}
         <div className="p-6 flex items-center justify-between">
-          <h2
-            className="text-xl font-bold"
-            style={{ color: colorTexto }}
-          >
+          <h2 className="text-xl font-bold text-[var(--color-text)]">
             Menú
           </h2>
 
           <button
             onClick={() => setOpen(false)}
-            className="text-2xl"
-            style={{ color: colorHamburguesa }}
+            className="text-2xl text-[var(--color-hamburguesa)]"
           >
             ✕
           </button>
@@ -149,8 +120,7 @@ export default function MenuHeader({
               key={cat.id}
               href={`#cat-${cat.id}`}
               onClick={() => setOpen(false)}
-              className="block px-6 py-4 text-lg border-b border-white/10 transition"
-              style={{ color: colorCategoria }}
+              className="block px-6 py-4 text-lg border-b border-white/10 transition text-[var(--color-categoria)]"
             >
               {cat.nombre}
             </a>

@@ -21,31 +21,16 @@ interface Categoria {
 
 interface MenuListaProps {
   categorias: Categoria[];
-
-  // 🎨 COLORES
-  colorTexto: string;
-  colorPrecio: string;
-  colorTarjeta: string;
-  colorCategoria: string;
 }
 
-export default function MenuLista({
-  categorias,
-  colorTexto,
-  colorPrecio,
-  colorTarjeta,
-  colorCategoria,
-}: MenuListaProps) {
+export default function MenuLista({ categorias }: MenuListaProps) {
 
-  if (!categorias || categorias.length === 0) {
+  // 🛡️ Seguridad extra
+  const safeCategorias = categorias ?? [];
+
+  if (safeCategorias.length === 0) {
     return (
-      <div
-        className="text-center py-20 rounded-3xl border border-dashed"
-        style={{
-          borderColor: colorCategoria + "40",
-          color: colorTexto,
-        }}
-      >
+      <div className="text-center py-20 rounded-3xl border border-dashed border-[var(--color-categoria)] text-[var(--color-text)]">
         <p className="italic text-sm opacity-70">
           No hay categorías configuradas aún.
         </p>
@@ -55,18 +40,11 @@ export default function MenuLista({
 
   return (
     <div className="space-y-10 pb-10">
-      {categorias.map((categoria) => (
-        <div key={categoria.id}>
-          <CategoriaSection
-            categoria={categoria}
-
-            // 🎨 PASAMOS TODO
-            colorTexto={colorTexto}
-            colorPrecio={colorPrecio}
-            colorTarjeta={colorTarjeta}
-            colorCategoria={colorCategoria}
-          />
-        </div>
+      {safeCategorias.map((categoria) => (
+        <CategoriaSection
+          key={categoria.id}
+          categoria={categoria}
+        />
       ))}
     </div>
   );
