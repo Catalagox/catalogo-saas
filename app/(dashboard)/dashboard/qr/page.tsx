@@ -36,13 +36,12 @@ export default function QRPage() {
 
   if (!slug) {
     return (
-      <div className="flex justify-center py-20">
+      <div className="flex justify-center py-20 text-[var(--text-secondary)]">
         Cargando QR...
       </div>
     );
   }
 
-  // 🔑 URL correcta del menú
   const urlMenu = `https://catalagox.com//${slug}`;
 
   const copiarLink = async () => {
@@ -63,13 +62,11 @@ export default function QRPage() {
 
   return (
     <div className="max-w-2xl mx-auto">
-
-      <h1 className="text-3xl font-bold mb-8">
+      <h1 className="text-3xl font-bold mb-8 text-[var(--text-primary)]">
         QR de tu menú
       </h1>
 
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 text-center">
-
+      <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-8 text-center">
         {/* QR */}
         <div className="bg-white p-5 rounded-xl w-fit mx-auto mb-6">
           <div ref={qrRef}>
@@ -78,27 +75,26 @@ export default function QRPage() {
         </div>
 
         {/* LINK */}
-        <p className="text-sm text-gray-400 mb-2">
+        <p className="text-sm text-[var(--text-secondary)] mb-2">
           Link de tu menú
         </p>
 
-        <p className="text-xs break-all bg-gray-800 p-3 rounded-lg mb-6">
+        <p className="text-xs break-all bg-[var(--bg-tertiary)] border border-[var(--border-card)] text-[var(--text-secondary)] p-3 rounded-lg mb-6">
           {urlMenu}
         </p>
 
         {/* BOTONES */}
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-
           <button
             onClick={copiarLink}
-            className="bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded-lg font-semibold"
+            className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-text-inverse)] px-4 py-2 rounded-lg font-semibold transition"
           >
             Copiar link
           </button>
 
           <button
             onClick={descargarQR}
-            className="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-lg"
+            className="bg-[var(--bg-tertiary)] hover:bg-[var(--bg-card-hover)] text-[var(--text-primary)] px-4 py-2 rounded-lg transition"
           >
             Descargar QR
           </button>
@@ -106,15 +102,12 @@ export default function QRPage() {
           <a
             href={urlMenu}
             target="_blank"
-            className="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-lg"
+            className="bg-[var(--bg-tertiary)] hover:bg-[var(--bg-card-hover)] text-[var(--text-primary)] px-4 py-2 rounded-lg transition"
           >
             Ver menú
           </a>
-
         </div>
-
       </div>
-
     </div>
   );
 }

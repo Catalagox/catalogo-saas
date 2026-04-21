@@ -31,7 +31,9 @@ export default function AparienciaPage() {
 
   const cargarDatos = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data, error } = await supabase
@@ -51,7 +53,6 @@ export default function AparienciaPage() {
         setEstiloMenu(data.estilo_menu || "lista");
         setLogo(data.logo || null);
 
-        // 🔥 COLORES DESDE BD (cuando los agregues)
         setColorPrimario(data.color_primario || "#f97316");
         setColorFondo(data.color_fondo || "#111827");
         setColorHeader(data.color_header || "#f97316");
@@ -89,9 +90,7 @@ export default function AparienciaPage() {
 
       const resultado = categoriasSafe.map((cat: any) => ({
         ...cat,
-        productos: productosSafe.filter(
-          (p: any) => p.categoria_id === cat.id
-        ),
+        productos: productosSafe.filter((p: any) => p.categoria_id === cat.id),
       }));
 
       setCategorias(resultado);
@@ -131,17 +130,18 @@ export default function AparienciaPage() {
   };
 
   if (loading) {
-    return <div className="text-center py-20">Cargando...</div>;
+    return (
+      <div className="flex justify-center py-20 text-[var(--text-secondary)]">
+        Cargando...
+      </div>
+    );
   }
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 py-6">
-
-      {/* 🔥 RESPONSIVE GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
         {/* FORM */}
-        <div>
+        <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6">
           <AparienciaForm
             nombre={nombre}
             setNombre={setNombre}
@@ -151,7 +151,6 @@ export default function AparienciaPage() {
             setColorFondo={setColorFondo}
             estiloMenu={estiloMenu}
             setEstiloMenu={setEstiloMenu}
-
             colorHeader={colorHeader}
             setColorHeader={setColorHeader}
             colorFooter={colorFooter}
@@ -160,14 +159,12 @@ export default function AparienciaPage() {
             setColorTexto={setColorTexto}
             colorPrecio={colorPrecio}
             setColorPrecio={setColorPrecio}
-
             colorHamburguesa={colorHamburguesa}
             setColorHamburguesa={setColorHamburguesa}
             colorTarjeta={colorTarjeta}
             setColorTarjeta={setColorTarjeta}
             colorCategoria={colorCategoria}
             setColorCategoria={setColorCategoria}
-
             guardar={guardar}
           />
         </div>
@@ -189,7 +186,6 @@ export default function AparienciaPage() {
             colorCategoria={colorCategoria}
           />
         </div>
-
       </div>
     </div>
   );

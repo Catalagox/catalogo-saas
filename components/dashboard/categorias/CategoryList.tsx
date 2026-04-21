@@ -26,18 +26,14 @@ export default function CategoryList({
   cancelarEdicion,
   eliminarCategoria,
 }: Props) {
-
   if (categorias.length === 0) {
     return (
-      <p className="text-gray-400">
-        Aún no tienes categorías.
-      </p>
+      <p className="text-[var(--text-secondary)]">Aún no tienes categorías.</p>
     );
   }
 
   return (
     <div className="space-y-3">
-
       {categorias.map((cat) => (
         <CategoryItem
           key={cat.id}
@@ -51,7 +47,6 @@ export default function CategoryList({
           eliminarCategoria={eliminarCategoria}
         />
       ))}
-
     </div>
   );
 }

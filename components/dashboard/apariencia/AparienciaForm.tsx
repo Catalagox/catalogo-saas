@@ -16,7 +16,6 @@ interface Props {
   estiloMenu: "lista" | "galeria";
   setEstiloMenu: (v: "lista" | "galeria") => void;
 
-  // 🎨 COLORES
   colorHeader: string;
   setColorHeader: (v: string) => void;
 
@@ -51,7 +50,6 @@ export default function AparienciaForm({
   estiloMenu,
   setEstiloMenu,
 
-  // 🎨 COLORES
   colorHeader,
   setColorHeader,
   colorFooter,
@@ -71,29 +69,31 @@ export default function AparienciaForm({
 }: Props) {
   return (
     <div className="space-y-6">
-
       {/* SWITCH */}
-      <div className="flex items-center justify-between bg-gray-900 border border-gray-800 rounded-xl p-4">
+      <div className="flex items-center justify-between bg-[var(--bg-card)] border border-[var(--border-card)] rounded-xl p-4">
         <div>
-          <p className="text-sm text-gray-400">Estilo del menú</p>
-          <h2 className="text-lg font-bold">Visualización</h2>
+          <p className="text-sm text-[var(--text-secondary)]">
+            Estilo del menú
+          </p>
+          <h2 className="text-lg font-bold text-[var(--text-primary)]">
+            Visualización
+          </h2>
         </div>
 
         <MenuStyleSwitch value={estiloMenu} onChange={setEstiloMenu} />
       </div>
 
       {/* FORM */}
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-6">
-
+      <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 space-y-6">
         {/* NOMBRE */}
         <input
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
           placeholder="Nombre del menú"
-          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2"
+          className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-card)] text-[var(--text-primary)] rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-[var(--color-primary)] placeholder:text-[var(--text-secondary)]"
         />
 
-        {/* 🎨 COLORES PRINCIPALES */}
+        {/* 🎨 COLORES */}
         <ColorPicker
           label="Color principal"
           value={colorPrimario}
@@ -106,7 +106,6 @@ export default function AparienciaForm({
           onChange={setColorFondo}
         />
 
-        {/* 🎨 HEADER */}
         <ColorPicker
           label="Color header"
           value={colorHeader}
@@ -119,7 +118,6 @@ export default function AparienciaForm({
           onChange={setColorHamburguesa}
         />
 
-        {/* 🎨 CONTENIDO */}
         <ColorPicker
           label="Color tarjetas"
           value={colorTarjeta}
@@ -144,7 +142,6 @@ export default function AparienciaForm({
           onChange={setColorPrecio}
         />
 
-        {/* 🎨 FOOTER */}
         <ColorPicker
           label="Color footer"
           value={colorFooter}
@@ -154,11 +151,10 @@ export default function AparienciaForm({
         {/* BOTÓN */}
         <button
           onClick={guardar}
-          className="w-full bg-orange-500 py-3 rounded-lg font-semibold"
+          className="w-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-text-inverse)] py-3 rounded-lg font-semibold transition"
         >
           Guardar
         </button>
-
       </div>
     </div>
   );

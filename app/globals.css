@@ -28,8 +28,21 @@
   --color-warning: #F59E0B;
   --color-success: #16A34A;
 
-  /* 🧊 BORDES */
   --color-border: #E5E7EB;
+  
+  /* DASHBOARD */
+  --bg-main: #050807; 
+  --bg-secondary: #0b1210; 
+
+  --bg-tertiary: #101915;
+  --bg-overlay: rgba(0,0,0,0.7);
+
+  --bg-card: #0e1412;        /* fondo de tarjetas */
+  --bg-card-hover: #101915;  /* hover */
+  --border-card: #1e261b;    /* borde */
+
+  --text-primary: #ffffff;   /* texto grande */
+  --text-secondary: #c4c7c4; /* texto pequeño */
 }
 
 /* 🌙 DARK MODE */

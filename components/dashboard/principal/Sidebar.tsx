@@ -50,7 +50,11 @@ export default function Sidebar({ closeMenu }: Props) {
 
   const links = [
     { name: "Principal", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Agregar producto", href: "/dashboard/agregar-producto", icon: PlusCircle },
+    {
+      name: "Agregar producto",
+      href: "/dashboard/agregar-producto",
+      icon: PlusCircle,
+    },
     { name: "Productos", href: "/dashboard/productos", icon: Package },
     { name: "Categorías", href: "/dashboard/categorias", icon: Tags },
     { name: "QR del menú", href: "/dashboard/qr", icon: QrCode },
@@ -62,19 +66,18 @@ export default function Sidebar({ closeMenu }: Props) {
   const avatar = `https://ui-avatars.com/api/?name=${userName || userEmail}&background=111827&color=fff`;
 
   return (
-    <div className="flex flex-col h-full w-full bg-gray-900 lg:bg-transparent">
-
+    <div className="flex flex-col h-full w-full bg-[var(--bg-secondary)] border-r border-[var(--border-card)] lg:bg-transparent">
       {/* HEADER SOLO DESKTOP */}
-<div className="hidden lg:block px-6 py-6 border-b border-gray-800">
-  <h2 className="text-xl font-bold text-white">
-    Catalago<span className="text-blue-500">X</span>
-  </h2>
+      <div className="hidden lg:block px-6 py-6 border-b border-[var(--border-card)]">
+        <h2 className="text-xl font-bold text-[var(--text-primary)]">
+          Catalago<span className="text-[var(--color-primary)]">X</span>
+        </h2>
 
-  <p className="text-xs text-gray-500 mt-1">
-    Panel profesional
-  </p>
-</div>
-      
+        <p className="text-xs text-[var(--text-secondary)] mt-1">
+          Panel profesional
+        </p>
+      </div>
+
       {/* NAV */}
       <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
         {links.map((link) => {
@@ -90,8 +93,8 @@ export default function Sidebar({ closeMenu }: Props) {
                 flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition
                 ${
                   active
-                    ? "bg-blue-600 text-white font-semibold"
-                    : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                    ? "bg-[var(--color-primary)] text-[var(--text-primary)] font-semibold"
+                    : "text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)] hover:text-[var(--text-primary)]"
                 }
               `}
             >
@@ -103,20 +106,16 @@ export default function Sidebar({ closeMenu }: Props) {
       </nav>
 
       {/* FOOTER */}
-      <div className="p-4 border-t border-gray-800">
+      <div className="p-4 border-t border-[var(--border-card)]">
         <div className="flex items-center gap-3 mb-4">
-          <img
-            src={avatar}
-            alt="avatar"
-            className="w-10 h-10 rounded-full"
-          />
+          <img src={avatar} alt="avatar" className="w-10 h-10 rounded-full" />
 
           <div className="flex flex-col min-w-0">
-            <span className="text-sm text-white font-semibold truncate">
+            <span className="text-sm text-[var(--text-primary)] font-semibold truncate">
               {userName || "Usuario"}
             </span>
 
-            <span className="text-xs text-gray-500 truncate">
+            <span className="text-xs text-[var(--text-secondary)] truncate">
               {userEmail}
             </span>
           </div>
@@ -124,7 +123,7 @@ export default function Sidebar({ closeMenu }: Props) {
 
         <button
           onClick={cerrarSesion}
-          className="flex items-center justify-center gap-2 w-full px-4 py-2 rounded-lg text-gray-400 hover:bg-red-500 hover:text-white transition"
+          className="flex items-center justify-center gap-2 w-full px-4 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--color-danger)] hover:text-white transition"
         >
           <LogOut size={16} />
           Cerrar sesión

@@ -2,11 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { useRouter } from "next/navigation";
 
 export default function AjustesPage() {
-  const router = useRouter();
-
   const [email, setEmail] = useState("");
   const [nombreMenu, setNombreMenu] = useState("");
   const [password, setPassword] = useState("");
@@ -68,73 +65,59 @@ export default function AjustesPage() {
     }
   };
 
-  const cerrarSesion = async () => {
-    await supabase.auth.signOut();
-    router.push("/login");
-  };
-
   if (loading) {
     return (
-      <div className="text-center py-20">
+      <div className="text-center py-20 text-[var(--text-secondary)]">
         Cargando ajustes...
       </div>
     );
   }
 
   return (
-    <div className="flex justify-center w-full">
-
+    <div className="flex justify-center w-full px-4">
       <div className="w-full max-w-2xl space-y-8">
-
-        <h1 className="text-3xl font-bold">
+        <h1 className="text-3xl font-bold text-[var(--text-primary)]">
           Ajustes
         </h1>
 
-        {/* INFORMACIÓN DE CUENTA */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4">
-
-          <h2 className="text-xl font-semibold">
+        {/* CUENTA */}
+        <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 space-y-4">
+          <h2 className="text-xl font-semibold text-[var(--text-primary)]">
             Cuenta
           </h2>
 
           <div>
-            <p className="text-sm text-gray-400">
-              Email
-            </p>
+            <p className="text-sm text-[var(--text-secondary)]">Email</p>
 
-            <div className="bg-gray-800 rounded-lg p-3 text-sm">
+            <div className="bg-[var(--bg-tertiary)] border border-[var(--border-card)] rounded-lg p-3 text-sm text-[var(--text-primary)]">
               {email}
             </div>
           </div>
-
         </div>
 
-        {/* NOMBRE DEL MENU */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4">
-
-          <h2 className="text-xl font-semibold">
+        {/* NOMBRE DEL MENÚ */}
+        <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 space-y-4">
+          <h2 className="text-xl font-semibold text-[var(--text-primary)]">
             Nombre del menú
           </h2>
 
           <input
             value={nombreMenu}
             onChange={(e) => setNombreMenu(e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2"
+            className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-card)] text-[var(--text-primary)] rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
           />
 
           <button
             onClick={guardarNombreMenu}
-            className="bg-orange-500 hover:bg-orange-600 px-5 py-2 rounded-lg font-semibold"
+            className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-text-inverse)] px-5 py-2 rounded-lg font-semibold transition"
           >
             Guardar
           </button>
-
         </div>
 
-        {/* CAMBIAR PASSWORD */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4">
-
-          <h2 className="text-xl font-semibold">
+        {/* PASSWORD */}
+        <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 space-y-4">
+          <h2 className="text-xl font-semibold text-[var(--text-primary)]">
             Cambiar contraseña
           </h2>
 
@@ -143,32 +126,17 @@ export default function AjustesPage() {
             placeholder="Nueva contraseña"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2"
+            className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-card)] text-[var(--text-primary)] rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-[var(--color-primary)] placeholder:text-[var(--text-secondary)]"
           />
 
           <button
             onClick={cambiarPassword}
-            className="bg-orange-500 hover:bg-orange-600 px-5 py-2 rounded-lg font-semibold"
+            className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-text-inverse)] px-5 py-2 rounded-lg font-semibold transition"
           >
             Actualizar contraseña
           </button>
-
         </div>
-
-        {/* CERRAR SESIÓN */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-
-          <button
-            onClick={cerrarSesion}
-            className="w-full bg-red-500 hover:bg-red-600 py-3 rounded-lg font-semibold"
-          >
-            Cerrar sesión
-          </button>
-
-        </div>
-
       </div>
-
     </div>
   );
 }

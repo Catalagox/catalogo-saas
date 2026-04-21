@@ -56,8 +56,8 @@ export default function CreateCategoryForm({
   };
 
   return (
-    <div className="bg-gray-900 p-6 rounded-xl mb-10">
-      <h2 className="text-xl mb-4 font-semibold">
+    <div className="bg-[var(--bg-card)] border border-[var(--border-card)] p-6 rounded-xl mb-10">
+      <h2 className="text-xl mb-4 font-semibold text-[var(--text-primary)]">
         Nueva Categoría
       </h2>
 
@@ -67,13 +67,10 @@ export default function CreateCategoryForm({
           placeholder="Ej: Bebidas, Hamburguesas, Postres"
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
-          className="flex-1 px-4 py-2 rounded bg-gray-800 border border-gray-700 outline-none focus:border-white"
+          className="flex-1 px-4 py-2 rounded bg-[var(--bg-tertiary)] border border-[var(--border-card)] text-[var(--text-primary)] outline-none focus:ring-2 focus:ring-[var(--color-primary)] placeholder:text-[var(--text-secondary)]"
         />
 
-        <ButtonPrimary
-          onClick={crearCategoria}
-          disabled={loading}
-        >
+        <ButtonPrimary onClick={crearCategoria} disabled={loading}>
           {loading ? "Creando..." : "Crear Categoría"}
         </ButtonPrimary>
       </div>

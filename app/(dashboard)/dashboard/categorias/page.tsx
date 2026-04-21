@@ -87,7 +87,7 @@ export default function CategoriasPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-20">
+      <div className="flex justify-center py-20 text-[var(--text-secondary)]">
         Cargando categorías...
       </div>
     );
@@ -95,12 +95,11 @@ export default function CategoriasPage() {
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8">
-
       <div className="max-w-3xl mx-auto space-y-10">
-
         <CategoryHeader />
 
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 sm:p-8">
+        {/* Crear categoría */}
+        <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 sm:p-8">
           <CreateCategoryForm
             userId={userId}
             catalogoId={catalogoId}
@@ -108,9 +107,9 @@ export default function CategoriasPage() {
           />
         </div>
 
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-
-          <h2 className="text-xl font-semibold mb-6">
+        {/* Lista de categorías */}
+        <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6">
+          <h2 className="text-xl font-semibold mb-6 text-[var(--text-primary)]">
             Tus categorías
           </h2>
 
@@ -124,11 +123,8 @@ export default function CategoriasPage() {
             cancelarEdicion={() => setEditingId(null)}
             eliminarCategoria={eliminarCategoria}
           />
-
         </div>
-
       </div>
-
     </div>
   );
 }

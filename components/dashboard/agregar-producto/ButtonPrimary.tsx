@@ -23,14 +23,14 @@ export default function ButtonPrimary({
       onClick={onClick}
       disabled={disabled}
       className={`
-        bg-white
-        text-black
+        bg-[var(--color-primary)]
+        text-[var(--text-primary)]
         font-semibold
         px-6
         py-2
         rounded-lg
         transition
-        hover:bg-gray-200
+        hover:bg-[var(--color-primary-hover)]
         disabled:opacity-50
         disabled:cursor-not-allowed
         ${className}

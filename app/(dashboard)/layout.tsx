@@ -39,8 +39,7 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-950 text-white">
-
+    <div className="flex min-h-screen bg-[var(--bg-main)] text-white">
       {/* SIDEBAR DESKTOP */}
       <aside className="hidden lg:flex w-64 border-r border-gray-800 h-screen sticky top-0 flex-col shrink-0">
         <Sidebar />
@@ -76,9 +75,7 @@ export default function DashboardLayout({
               <h2 className="text-xl font-bold text-white">
                 Catalago<span className="text-blue-500">X</span>
               </h2>
-              <p className="text-xs text-gray-500">
-                Panel profesional
-              </p>
+              <p className="text-xs text-gray-500">Panel profesional</p>
             </div>
 
             <button
@@ -98,7 +95,6 @@ export default function DashboardLayout({
 
       {/* CONTENIDO */}
       <div className="flex-1 flex flex-col min-w-0">
-
         {/* HEADER MOBILE */}
         <header className="sticky top-0 z-40 lg:hidden bg-gray-950/90 backdrop-blur-md border-b border-gray-800 px-6 py-4 flex items-center justify-between">
           <h1 className="text-lg font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
@@ -117,7 +113,6 @@ export default function DashboardLayout({
         <main className="flex-1 p-4 md:p-6 lg:p-10 max-w-[1600px] mx-auto w-full">
           {children}
         </main>
-
       </div>
     </div>
   );
