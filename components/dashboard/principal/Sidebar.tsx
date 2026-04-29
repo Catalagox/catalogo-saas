@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import Logo from "@/components/marketing/ui/Logo";
 
 import {
   LayoutDashboard,
@@ -69,13 +70,7 @@ export default function Sidebar({ closeMenu }: Props) {
     <div className="flex flex-col h-full w-full bg-[var(--bg-secondary)] border-r border-[var(--border-card)] lg:bg-transparent">
       {/* HEADER SOLO DESKTOP */}
       <div className="hidden lg:block px-6 py-6 border-b border-[var(--border-card)]">
-        <h2 className="text-xl font-bold text-[var(--text-primary)]">
-          Catalago<span className="text-[var(--color-primary)]">X</span>
-        </h2>
-
-        <p className="text-xs text-[var(--text-secondary)] mt-1">
-          Panel profesional
-        </p>
+        <Logo size="md" />
       </div>
 
       {/* NAV */}

@@ -20,7 +20,8 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
   // 🔥 CATÁLOGO
   const { data: catalogoDB, error: catalogoError } = await supabase
     .from("catalogos")
-    .select(`
+    .select(
+      `
       id,
       nombre,
       logo,
@@ -36,7 +37,8 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
       color_hamburguesa,
       color_tarjeta,
       color_categoria
-    `)
+    `,
+    )
     .eq("slug", slug)
     .maybeSingle();
 
@@ -85,7 +87,8 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
   // 🔥 CATEGORÍAS + PRODUCTOS
   const { data: categorias, error: categoriasError } = await supabase
     .from("categorias")
-    .select(`
+    .select(
+      `
       id,
       nombre,
       productos (
@@ -97,7 +100,8 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
         disponible,
         slug
       )
-    `)
+    `,
+    )
     .eq("catalogo_id", catalogo.id)
     .order("created_at");
 
@@ -106,10 +110,5 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
     return <div className="p-10 text-center">Error al cargar categorías</div>;
   }
 
-  return (
-    <MenuClient
-      catalogo={catalogo}
-      categorias={categorias ?? []}
-    />
-  );
+  return <MenuClient catalogo={catalogo} categorias={categorias ?? []} />;
 }

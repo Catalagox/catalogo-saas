@@ -9,148 +9,150 @@ interface PageProps {
 
 export default async function ProductoPage({ params }: PageProps) {
   const { slug, producto: productoSlug } = await params;
-
   const supabase = await createClient();
 
-  // 🔥 VALIDACIÓN
   if (!slug || !productoSlug) return notFound();
 
-  // 🔥 CATÁLOGO (COLORES)
   const { data: catalogo, error: catalogoError } = await supabase
     .from("catalogos")
-    .select(`
-      id,
-      color_fondo,
-      color_header,
-      color_texto,
-      color_precio,
-      color_primario
-    `)
+    .select(
+      `
+      id, 
+      color_fondo, 
+      color_header, 
+      color_texto, 
+      color_precio, 
+      color_primario,
+      color_tarjeta
+    `,
+    )
     .eq("slug", slug)
     .single();
 
-  if (catalogoError || !catalogo) {
-    console.error("Error catálogo:", catalogoError);
-    return notFound();
-  }
+  if (catalogoError || !catalogo) return notFound();
 
-  // 🔥 PRODUCTO
-  const { data, error: productoError } = await supabase
+  const { data: producto, error: productoError } = await supabase
     .from("productos")
     .select("*")
     .eq("catalogo_id", catalogo.id)
     .eq("slug", productoSlug)
     .single();
 
-  if (productoError || !data) {
-    console.error("Error producto:", productoError);
-    return notFound();
-  }
+  if (productoError || !producto) return notFound();
 
-  // 🎨 CSS VARIABLES (CLAVE)
   const theme = {
     "--color-bg": catalogo.color_fondo ?? "#111827",
-    "--color-header": catalogo.color_header ?? "#f97316",
     "--color-text": catalogo.color_texto ?? "#ffffff",
     "--color-price": catalogo.color_precio ?? "#22c55e",
     "--color-primary": catalogo.color_primario ?? "#f97316",
+    "--color-card": catalogo.color_tarjeta ?? "rgba(255,255,255,0.05)",
   } as React.CSSProperties;
 
   return (
-    <div
-      className="min-h-screen pb-32 bg-[var(--color-bg)]"
-      style={theme}
-    >
-      {/* HERO */}
-      <div className="relative w-full h-[45vh] md:h-[55vh] overflow-hidden">
-        
-        <div className="absolute top-0 left-0 w-full z-50">
+    <div className="relative min-h-screen bg-black" style={theme}>
+      {/* --- HERO IMAGE --- */}
+      <div className="fixed top-0 left-0 w-full h-[60vh] z-0">
+        <div className="absolute top-6 left-6 z-50">
           <BackButton />
         </div>
 
-        {data.imagen_url ? (
+        {producto.imagen_url ? (
           <Image
-            src={data.imagen_url}
-            alt={data.nombre}
+            src={producto.imagen_url}
+            alt={producto.nombre}
             fill
             priority
             className="object-cover opacity-90"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-sm text-[var(--color-text)]">
-            Sin foto
+          <div className="w-full h-full flex items-center justify-center bg-gray-900 text-gray-500">
+            Sin imagen disponible
           </div>
         )}
 
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-
-        <div className="absolute bottom-10 left-0 w-full px-6">
-          <span className="text-[10px] font-black uppercase px-2 py-1 rounded-md mb-3 inline-block bg-[var(--color-primary)] text-white">
-            Detalles
-          </span>
-
-          <h1 className="text-3xl md:text-5xl font-black text-white">
-            {data.nombre}
-          </h1>
-        </div>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-transparent" />
       </div>
 
-      {/* BODY */}
-      <main className="-mt-10">
-        <div className="max-w-2xl mx-auto rounded-t-[40px] shadow-2xl p-6 space-y-6 bg-white">
+      {/* --- HOJA DESLIZABLE (SHEET) --- */}
+      <main className="relative z-10 mt-[50vh] min-h-[50vh] bg-[var(--color-bg)] rounded-t-[45px] shadow-[0_-15px_50px_rgba(0,0,0,0.5)] pb-32">
+        {/* Handle bar */}
+        <div className="flex justify-center pt-5">
+          <div className="w-16 h-1.5 rounded-full bg-[var(--color-primary)] opacity-70" />
+        </div>
 
-          {/* PRECIO */}
-          <div className="flex justify-between items-center">
-            <div>
-              <span className="text-xs font-bold uppercase text-[var(--color-primary)]">
-                Precio
+        <div className="max-w-2xl mx-auto px-8 py-10 space-y-10">
+          {/* TÍTULO Y BADGE */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full animate-pulse bg-[var(--color-primary)]" />
+              <span className="text-[11px] font-black uppercase tracking-[0.2em] text-[var(--color-primary)]">
+                Producto
               </span>
+            </div>
 
-              <p className="text-3xl font-black text-[var(--color-price)]">
-                ${Number(data.precio || 0).toLocaleString()}
+            <h1 className="text-4xl font-extrabold text-[var(--color-text)] leading-tight">
+              {producto.nombre}
+            </h1>
+          </div>
+
+          {/* PRECIO E "INVERSIÓN" */}
+          <div className="flex justify-between items-center p-6 rounded-[2rem] bg-[var(--color-card)] border border-white/5">
+            <div>
+              <p className="text-[10px] font-black uppercase mb-1 tracking-widest text-[var(--color-primary)]">
+                Inversión
+              </p>
+              <p className="text-4xl font-black text-[var(--color-price)]">
+                ${Number(producto.precio || 0).toLocaleString()}
               </p>
             </div>
 
             <div
-              className={`px-4 py-2 rounded-xl text-xs font-bold ${
-                data.disponible
-                  ? "bg-green-100 text-green-600"
-                  : "bg-red-100 text-red-600"
+              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest ${
+                producto.disponible
+                  ? "bg-green-500/10 text-green-400 border border-green-500/20"
+                  : "bg-red-500/10 text-red-400 border border-red-500/20"
               }`}
             >
-              {data.disponible ? "Disponible" : "Agotado"}
+              {producto.disponible ? "Disponible" : "Agotado"}
             </div>
           </div>
 
           {/* DESCRIPCIÓN */}
-          <div className="p-5 rounded-2xl bg-gray-50">
-            <h3 className="text-xs font-bold uppercase mb-2 text-[var(--color-primary)]">
+          <div className="space-y-4">
+            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-[var(--color-primary)]">
               Descripción
             </h3>
 
-            <p className="text-gray-600">
-              {data.descripcion ||
-                "Este producto es una recomendación especial."}
-            </p>
+            <div className="text-lg leading-relaxed whitespace-pre-line font-light text-[var(--color-text)]">
+              {producto.descripcion
+                ? producto.descripcion
+                : "No hay detalles adicionales para este producto."}
+            </div>
           </div>
 
+          {/* REFERENCIA */}
+          <div className="pt-6 border-t border-white/10">
+            <p className="text-[10px] uppercase tracking-widest text-[var(--color-text)] font-medium">
+              Referencia: {producto.slug}
+            </p>
+          </div>
         </div>
       </main>
 
-      {/* BOTÓN */}
-      <div className="fixed bottom-0 left-0 w-full p-5 bg-white/90 backdrop-blur-md">
+      {/* --- BOTÓN FIJO --- */}
+      <div className="fixed bottom-0 left-0 w-full p-6 z-50 bg-gradient-to-t from-[var(--color-bg)] via-[var(--color-bg)] to-transparent">
         <div className="max-w-2xl mx-auto">
           <button
-            disabled={!data.disponible}
-            className="w-full h-14 rounded-xl font-bold transition"
+            disabled={!producto.disponible}
+            className="w-full h-16 rounded-2xl font-black text-sm tracking-widest uppercase transition-all hover:brightness-110 active:scale-[0.98] shadow-2xl disabled:opacity-50 disabled:grayscale"
             style={{
-              backgroundColor: data.disponible
+              backgroundColor: producto.disponible
                 ? "var(--color-primary)"
-                : "#ccc",
+                : "#222",
               color: "#fff",
             }}
           >
-            {data.disponible ? "Ordenar ahora" : "No disponible"}
+            {producto.disponible ? "Añadir a mi pedido" : "No disponible"}
           </button>
         </div>
       </div>

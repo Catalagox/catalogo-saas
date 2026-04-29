@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import Image from "next/image";
+import Logo from "@/components/marketing/ui/Logo";
 import { FaBars, FaTimes, FaSignInAlt, FaUserPlus } from "react-icons/fa";
 
 export default function Header() {
@@ -31,19 +31,7 @@ export default function Header() {
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between px-6">
         {/* LOGO */}
-        <Link
-          href="/"
-          className="flex items-center gap-3 group transition-transform hover:scale-105"
-        >
-          <div className="relative w-10 h-10 overflow-hidden rounded-xl shadow-lg border border-white/20">
-            <Image src="/c.png" alt="CatalogX" fill className="object-cover" />
-          </div>
-          <span
-            className={`font-black text-2xl tracking-tighter transition-colors ${textColor}`}
-          >
-            Catalogo<span className="text-[var(--color-primary)]">X</span>
-          </span>
-        </Link>
+        <Logo scrolled={scrolled} size="lg" />
 
         {/* NAV DESKTOP */}
         <nav
