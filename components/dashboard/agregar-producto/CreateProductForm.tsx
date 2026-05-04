@@ -35,11 +35,18 @@ export default function CreateProductForm({
     categoria_id: "",
   });
 
-  const handleChange = (e: any) => {
-    setProducto({ ...producto, [e.target.name]: e.target.value });
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
+    setProducto((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
   };
 
-  const handleImagenChange = (e: any) => {
+  const handleImagenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -47,11 +54,30 @@ export default function CreateProductForm({
     setPreview(URL.createObjectURL(file));
   };
 
-  const eliminarImagen = (e: any) => {
+  const eliminarImagen = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     setImagen(null);
     setPreview(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const resetForm = () => {
+    setProducto({
+      nombre: "",
+      descripcion: "",
+      precio: "",
+      categoria_id: "",
+    });
+
+    setImagen(null);
+    setPreview(null);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const subirImagen = async (): Promise<string> => {
@@ -68,27 +94,35 @@ export default function CreateProductForm({
     });
 
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error);
+
+    if (!res.ok) {
+      throw new Error(data?.error || "No se pudo subir la imagen");
+    }
+
+    if (!data?.url) {
+      throw new Error("No se recibió la URL de la imagen");
+    }
 
     return data.url;
   };
 
   const crearProducto = async () => {
     if (!userId) return alert("Usuario no autenticado");
-    if (!producto.nombre || !producto.precio)
+    if (!producto.nombre.trim() || !producto.precio)
       return alert("Nombre y precio son obligatorios");
     if (!imagen) return alert("Debes subir una imagen");
 
     try {
       setLoading(true);
+
       const imagen_url = await subirImagen();
 
-      await supabase.from("productos").insert([
+      const { error } = await supabase.from("productos").insert([
         {
           user_id: userId,
           catalogo_id: catalogoId,
-          nombre: producto.nombre,
-          descripcion: producto.descripcion,
+          nombre: producto.nombre.trim(),
+          descripcion: producto.descripcion.trim(),
           precio: Number(producto.precio),
           categoria_id: producto.categoria_id || null,
           imagen_url,
@@ -96,18 +130,13 @@ export default function CreateProductForm({
         },
       ]);
 
-      setProducto({
-        nombre: "",
-        descripcion: "",
-        precio: "",
-        categoria_id: "",
-      });
-      setImagen(null);
-      setPreview(null);
+      if (error) throw error;
+
+      resetForm();
       onCreated();
       alert("Producto creado correctamente");
     } catch (err: any) {
-      alert(err.message);
+      alert(err?.message || "Ocurrió un error al crear el producto");
     } finally {
       setLoading(false);
     }
@@ -135,18 +164,22 @@ export default function CreateProductForm({
 
           <div
             onClick={() => fileInputRef.current?.click()}
-            className={`relative group aspect-square flex flex-col items-center justify-center border-2 border-dashed rounded-2xl cursor-pointer transition
-              ${
-                preview
-                  ? "border-transparent bg-[var(--bg-tertiary)]"
-                  : "border-[var(--border-card)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)]/5"
-              }`}
+            className={`relative group aspect-square flex flex-col items-center justify-center border-2 border-dashed rounded-2xl cursor-pointer transition ${
+              preview
+                ? "border-transparent bg-[var(--bg-tertiary)]"
+                : "border-[var(--border-card)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)]/5"
+            }`}
           >
             {preview ? (
               <>
-                <img src={preview} className="w-full h-full object-cover" />
+                <img
+                  src={preview}
+                  alt="Vista previa del producto"
+                  className="w-full h-full object-cover rounded-2xl"
+                />
 
                 <button
+                  type="button"
                   onClick={eliminarImagen}
                   className="absolute top-3 right-3 p-1.5 bg-[var(--color-danger)] text-white rounded-full"
                 >
@@ -173,6 +206,7 @@ export default function CreateProductForm({
           <input
             ref={fileInputRef}
             type="file"
+            accept="image/png,image/jpeg,image/webp"
             className="hidden"
             onChange={handleImagenChange}
           />
