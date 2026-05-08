@@ -64,7 +64,7 @@ export default function Hero() {
           "
               >
                 <span className="text-center leading-tight">
-                  ¡Empezar mi transformación!
+                  ¡Empezar ahora!
                 </span>
                 <FaRocket className="animate-bounce flex-shrink-0 text-xl" />
               </Link>
@@ -141,9 +141,12 @@ export default function Hero() {
 
             {/* BOTÓN DE ACCIÓN (OPCIONAL) */}
             <div className="flex justify-center md:justify-start">
-              <button className="px-8 py-4 bg-[var(--color-primary)] text-black font-bold rounded-xl hover:shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.4)] hover:-translate-y-1 transition-all duration-300">
+              <Link
+                href="contacto"
+                className="px-8 py-4 bg-[var(--color-primary)] text-black font-bold rounded-xl hover:shadow-[0_0_20px_rgba(var(--color-primary-rgb),0.4)] hover:-translate-y-1 transition-all duration-300"
+              >
                 Empezar ahora
-              </button>
+              </Link>
             </div>
           </div>
 
@@ -225,9 +228,12 @@ export default function Hero() {
                 ))}
               </ul>
 
-              <button className="mt-auto w-fit px-6 py-3 bg-slate-900 text-white rounded-xl font-bold group-hover:bg-[var(--color-primary)] group-hover:text-black transition-colors duration-300">
+              <Link
+                href="contacto"
+                className="mt-auto w-fit px-6 py-3 bg-slate-900 text-white rounded-xl font-bold group-hover:bg-[var(--color-primary)] group-hover:text-black transition-colors duration-300"
+              >
                 Saber más
-              </button>
+              </Link>
             </div>
           </div>
 
@@ -269,9 +275,12 @@ export default function Hero() {
                 ))}
               </ul>
 
-              <button className="mt-auto w-fit px-6 py-3 bg-[var(--color-primary)] text-black rounded-xl font-bold hover:scale-105 transition-transform duration-300">
+              <Link
+                href="contacto"
+                className="mt-auto w-fit px-6 py-3 bg-[var(--color-primary)] text-black rounded-xl font-bold hover:scale-105 transition-transform duration-300"
+              >
                 Probar Demo
-              </button>
+              </Link>
             </div>
           </div>
         </div>

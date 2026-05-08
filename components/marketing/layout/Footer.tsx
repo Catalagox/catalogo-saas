@@ -8,8 +8,8 @@ export default function Footer() {
         {/* CONTENIDO PRINCIPAL */}
         <div className="py-20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           {/* REDES - Con el toque verde que pediste */}
-          <div className="space-y-8 flex flex-col items-center lg:items-start">
-            <h2 className="text-2xl font-black tracking-tighter">SÍGUEME</h2>
+          <div className="space-y-2 flex flex-col items-center lg:items-start">
+            <h2 className="font-bold mb-6 text-lg text-white">Sigueme</h2>
 
             <div className="flex gap-4">
               {[
@@ -123,7 +123,7 @@ export default function Footer() {
           <p className="text-gray-500 text-xs tracking-widest uppercase font-bold">
             © {new Date().getFullYear()}{" "}
             <span className="text-white">
-              Catalog<span className="text-[var(--color-primary)]">X</span>
+              Catalogo<span className="text-[var(--color-primary)]">X</span>
             </span>
             . Todos los derechos reservados.
           </p>

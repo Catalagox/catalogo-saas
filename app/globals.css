@@ -11,6 +11,11 @@
   --color-primary-light: #DCFCE7;
   --color-primary-dark: #052E16;
 
+  
+--color-subscription-text: #555a56;
+--color-subscription-title: #111827;
+--color-subscription-muted: #5f6560;
+
   /* ⚫ BASE */
   --background: #ffffff;
   --foreground: #111827;

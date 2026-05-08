@@ -80,30 +80,34 @@ export default function CreateProductForm({
     }
   };
 
+  // ✅ NUEVA VERSIÓN: Subida directa sin API externa
   const subirImagen = async (): Promise<string> => {
     if (!imagen) throw new Error("Debes seleccionar una imagen");
     if (!userId) throw new Error("Usuario no autenticado");
 
-    const formData = new FormData();
-    formData.append("file", imagen);
-    formData.append("userId", userId);
+    // Crear un nombre único para evitar conflictos de caché
+    const fileExt = imagen.name.split(".").pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+    const filePath = `${userId}/${fileName}`;
 
-    const res = await fetch("/api/upload-product-image", {
-      method: "POST",
-      body: formData,
-    });
+    // Subida directa al bucket "productos"
+    const { data, error: uploadError } = await supabase.storage
+      .from("productos")
+      .upload(filePath, imagen, {
+        cacheControl: "3600",
+        upsert: false,
+      });
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data?.error || "No se pudo subir la imagen");
+    if (uploadError) {
+      throw new Error("Error al subir al storage: " + uploadError.message);
     }
 
-    if (!data?.url) {
-      throw new Error("No se recibió la URL de la imagen");
-    }
+    // Obtener la URL pública de la imagen subida
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("productos").getPublicUrl(filePath);
 
-    return data.url;
+    return publicUrl;
   };
 
   const crearProducto = async () => {
@@ -136,6 +140,7 @@ export default function CreateProductForm({
       onCreated();
       alert("Producto creado correctamente");
     } catch (err: any) {
+      console.error("Error al crear producto:", err);
       alert(err?.message || "Ocurrió un error al crear el producto");
     } finally {
       setLoading(false);
