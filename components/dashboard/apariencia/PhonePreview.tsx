@@ -1,5 +1,7 @@
 "use client";
 
+import { Search } from "lucide-react";
+
 interface Producto {
   id: string;
   nombre: string;
@@ -29,6 +31,9 @@ interface Props {
   colorHamburguesa: string;
   colorTarjeta: string;
   colorCategoria: string;
+
+  // 🔥 NUEVO
+  colorLupa: string;
 }
 
 export default function PhonePreview({
@@ -44,31 +49,76 @@ export default function PhonePreview({
   colorHamburguesa,
   colorTarjeta,
   colorCategoria,
+
+  // 🔥 NUEVO
+  colorLupa,
 }: Props) {
   return (
     <div className="w-[300px] h-[600px] rounded-[40px] border-8 border-gray-800 shadow-2xl overflow-hidden flex flex-col">
-
       {/* 🔥 HEADER */}
-      <div
-        style={{ backgroundColor: colorHeader }}
-        className="p-3 flex items-center justify-between"
-      >
-        {/* ☰ MENU */}
-        <div style={{ color: colorHamburguesa }} className="text-xl">
-          ☰
+      <div style={{ backgroundColor: colorHeader }} className="p-3">
+        <div className="flex items-center justify-between">
+          {/* IZQUIERDA */}
+          <div className="flex items-center gap-3">
+            {/* ☰ MENU */}
+            <div style={{ color: colorHamburguesa }} className="text-xl">
+              ☰
+            </div>
+
+            {/* LOGO + NOMBRE */}
+            <div className="flex items-center gap-2">
+              {logo && (
+                <img src={logo} className="w-7 h-7 rounded-full object-cover" />
+              )}
+
+              <p style={{ color: colorTexto }} className="text-sm font-bold">
+                {nombre}
+              </p>
+            </div>
+          </div>
+
+          {/* 🔍 LUPA */}
+          <button
+            className="
+              w-8
+              h-8
+              rounded-full
+              flex
+              items-center
+              justify-center
+            "
+          >
+            <Search
+              size={18}
+              style={{
+                color: colorLupa,
+              }}
+            />
+          </button>
         </div>
 
-        {/* LOGO + NOMBRE */}
-        <div className="text-center flex-1">
-          {logo && (
-            <img src={logo} className="h-6 mx-auto mb-1" />
-          )}
-          <p style={{ color: colorTexto }} className="text-sm font-bold">
-            {nombre}
-          </p>
+        {/* 🔥 SEARCH PREVIEW */}
+        <div className="mt-3">
+          <div
+            className="
+              h-9
+              rounded-xl
+              border
+              flex
+              items-center
+              px-3
+              text-xs
+              opacity-80
+            "
+            style={{
+              borderColor: `${colorLupa}30`,
+              color: colorTexto,
+              backgroundColor: "rgba(255,255,255,0.05)",
+            }}
+          >
+            Buscar productos...
+          </div>
         </div>
-
-        <div className="w-5" />
       </div>
 
       {/* BODY */}
@@ -169,9 +219,7 @@ export default function PhonePreview({
         style={{ backgroundColor: colorFooter }}
         className="p-2 text-center text-xs"
       >
-        <p style={{ color: colorTexto }}>
-          © {nombre || "Mi Restaurante"}
-        </p>
+        <p style={{ color: colorTexto }}>© {nombre || "Mi Restaurante"}</p>
       </div>
     </div>
   );

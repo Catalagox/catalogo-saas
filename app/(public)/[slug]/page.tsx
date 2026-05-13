@@ -8,16 +8,15 @@ interface PageProps {
 
 export default async function MenuPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
+
   const { qr } = await searchParams;
 
   const supabase = await createClient();
 
-  // 🔥 VALIDACIÓN BÁSICA
   if (!slug) {
     return <div className="p-10 text-center">Slug inválido</div>;
   }
 
-  // 🔥 CATÁLOGO
   const { data: catalogoDB, error: catalogoError } = await supabase
     .from("catalogos")
     .select(
@@ -36,7 +35,8 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
       color_precio,
       color_hamburguesa,
       color_tarjeta,
-      color_categoria
+      color_categoria,
+      color_lupa
     `,
     )
     .eq("slug", slug)
@@ -44,6 +44,7 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
 
   if (catalogoError) {
     console.error("Error catálogo:", catalogoError);
+
     return <div className="p-10 text-center">Error cargando menú</div>;
   }
 
@@ -51,28 +52,44 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
     return <div className="p-10 text-center">Menú no encontrado</div>;
   }
 
-  // 🔥 NORMALIZACIÓN (CLAVE para CSS variables)
-  const catalogo = {
-    ...catalogoDB,
+  const data = catalogoDB;
 
-    color_primario: catalogoDB.color_primario ?? "#f97316",
-    color_fondo: catalogoDB.color_fondo ?? "#111827",
-    color_header: catalogoDB.color_header ?? "#f97316",
-    color_footer: catalogoDB.color_footer ?? "#111827",
-    color_texto: catalogoDB.color_texto ?? "#ffffff",
-    color_precio: catalogoDB.color_precio ?? "#22c55e",
-    color_hamburguesa: catalogoDB.color_hamburguesa ?? "#ffffff",
-    color_tarjeta: catalogoDB.color_tarjeta ?? "#ffffff10",
-    color_categoria: catalogoDB.color_categoria ?? "#ffffff",
+  if (!data) {
+    return <div className="p-10 text-center">Menú no encontrado</div>;
+  }
+
+  const catalogo = {
+    ...data,
+
+    color_primario: data.color_primario ?? "#f97316",
+
+    color_fondo: data.color_fondo ?? "#111827",
+
+    color_header: data.color_header ?? "#f97316",
+
+    color_footer: data.color_footer ?? "#111827",
+
+    color_texto: data.color_texto ?? "#ffffff",
+
+    color_precio: data.color_precio ?? "#22c55e",
+
+    color_hamburguesa: data.color_hamburguesa ?? "#ffffff",
+
+    color_tarjeta: data.color_tarjeta ?? "#ffffff10",
+
+    color_categoria: data.color_categoria ?? "#ffffff",
+
+    // 🔥 NUEVO
+    color_lupa: data.color_lupa ?? "#ffffff",
   };
 
-  // 🔥 TRACKING (NO bloquear render)
   try {
     await Promise.all([
       supabase.from("estadisticas").insert({
         user_id: catalogo.user_id,
         tipo: "menu_view",
       }),
+
       qr
         ? supabase.from("estadisticas").insert({
             user_id: catalogo.user_id,
@@ -84,7 +101,6 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
     console.warn("Tracking error:", err);
   }
 
-  // 🔥 CATEGORÍAS + PRODUCTOS
   const { data: categorias, error: categoriasError } = await supabase
     .from("categorias")
     .select(
@@ -107,6 +123,7 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
 
   if (categoriasError) {
     console.error("Error categorías:", categoriasError);
+
     return <div className="p-10 text-center">Error al cargar categorías</div>;
   }
 

@@ -37,6 +37,10 @@ interface Props {
   colorCategoria: string;
   setColorCategoria: (v: string) => void;
 
+  // 🔥 NUEVO
+  colorLupa: string;
+  setColorLupa: (v: string) => void;
+
   guardar: () => void;
 }
 
@@ -65,6 +69,10 @@ export default function AparienciaForm({
   colorCategoria,
   setColorCategoria,
 
+  // 🔥 NUEVO
+  colorLupa,
+  setColorLupa,
+
   guardar,
 }: Props) {
   return (
@@ -75,22 +83,40 @@ export default function AparienciaForm({
           <p className="text-sm text-[var(--text-secondary)]">
             Estilo del menú
           </p>
+
           <h2 className="text-lg font-bold text-[var(--text-primary)]">
             Visualización
           </h2>
         </div>
 
-        <MenuStyleSwitch value={estiloMenu} onChange={setEstiloMenu} />
+        <MenuStyleSwitch
+          value={estiloMenu}
+          onChange={setEstiloMenu}
+        />
       </div>
 
       {/* FORM */}
       <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 space-y-6">
+        
         {/* NOMBRE */}
         <input
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
           placeholder="Nombre del menú"
-          className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-card)] text-[var(--text-primary)] rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-[var(--color-primary)] placeholder:text-[var(--text-secondary)]"
+          className="
+            w-full
+            bg-[var(--bg-tertiary)]
+            border
+            border-[var(--border-card)]
+            text-[var(--text-primary)]
+            rounded-lg
+            px-4
+            py-2
+            outline-none
+            focus:ring-2
+            focus:ring-[var(--color-primary)]
+            placeholder:text-[var(--text-secondary)]
+          "
         />
 
         {/* 🎨 COLORES */}
@@ -116,6 +142,13 @@ export default function AparienciaForm({
           label="Color icono hamburguesa"
           value={colorHamburguesa}
           onChange={setColorHamburguesa}
+        />
+
+        {/* 🔥 NUEVO */}
+        <ColorPicker
+          label="Color lupa búsqueda"
+          value={colorLupa}
+          onChange={setColorLupa}
         />
 
         <ColorPicker
@@ -151,7 +184,16 @@ export default function AparienciaForm({
         {/* BOTÓN */}
         <button
           onClick={guardar}
-          className="w-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-text-inverse)] py-3 rounded-lg font-semibold transition"
+          className="
+            w-full
+            bg-[var(--color-primary)]
+            hover:bg-[var(--color-primary-hover)]
+            text-[var(--color-text-inverse)]
+            py-3
+            rounded-lg
+            font-semibold
+            transition
+          "
         >
           Guardar
         </button>

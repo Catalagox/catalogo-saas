@@ -9,21 +9,40 @@ export default function AparienciaPage() {
   const [nombre, setNombre] = useState("");
   const [colorPrimario, setColorPrimario] = useState("#f97316");
   const [colorFondo, setColorFondo] = useState("#111827");
-  const [estiloMenu, setEstiloMenu] = useState<"lista" | "galeria">("lista");
+
+  const [estiloMenu, setEstiloMenu] = useState<
+    "lista" | "galeria"
+  >("lista");
+
   const [catalogoId, setCatalogoId] = useState<string | null>(null);
+
   const [logo, setLogo] = useState<string | null>(null);
+
   const [categorias, setCategorias] = useState<any[]>([]);
+
   const [loading, setLoading] = useState(true);
 
   // 🎨 COLORES
   const [colorHeader, setColorHeader] = useState("#f97316");
+
   const [colorFooter, setColorFooter] = useState("#111827");
+
   const [colorTexto, setColorTexto] = useState("#ffffff");
+
   const [colorPrecio, setColorPrecio] = useState("#22c55e");
 
-  const [colorHamburguesa, setColorHamburguesa] = useState("#ffffff");
-  const [colorTarjeta, setColorTarjeta] = useState("#ffffff10");
-  const [colorCategoria, setColorCategoria] = useState("#ffffff");
+  const [colorHamburguesa, setColorHamburguesa] =
+    useState("#ffffff");
+
+  const [colorTarjeta, setColorTarjeta] =
+    useState("#ffffff10");
+
+  const [colorCategoria, setColorCategoria] =
+    useState("#ffffff");
+
+  // 🔥 NUEVO
+  const [colorLupa, setColorLupa] =
+    useState("#ffffff");
 
   useEffect(() => {
     cargarDatos();
@@ -34,6 +53,7 @@ export default function AparienciaPage() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
+
       if (!user) return;
 
       const { data, error } = await supabase
@@ -43,25 +63,64 @@ export default function AparienciaPage() {
         .single();
 
       if (error) {
-        console.error("Error cargando catálogo:", error);
+        console.error(
+          "Error cargando catálogo:",
+          error,
+        );
         return;
       }
 
       if (data) {
         setCatalogoId(data.id);
+
         setNombre(data.nombre || "");
-        setEstiloMenu(data.estilo_menu || "lista");
+
+        setEstiloMenu(
+          data.estilo_menu || "lista",
+        );
+
         setLogo(data.logo || null);
 
-        setColorPrimario(data.color_primario || "#f97316");
-        setColorFondo(data.color_fondo || "#111827");
-        setColorHeader(data.color_header || "#f97316");
-        setColorFooter(data.color_footer || "#111827");
-        setColorTexto(data.color_texto || "#ffffff");
-        setColorPrecio(data.color_precio || "#22c55e");
-        setColorHamburguesa(data.color_hamburguesa || "#ffffff");
-        setColorTarjeta(data.color_tarjeta || "#ffffff10");
-        setColorCategoria(data.color_categoria || "#ffffff");
+        setColorPrimario(
+          data.color_primario || "#f97316",
+        );
+
+        setColorFondo(
+          data.color_fondo || "#111827",
+        );
+
+        setColorHeader(
+          data.color_header || "#f97316",
+        );
+
+        setColorFooter(
+          data.color_footer || "#111827",
+        );
+
+        setColorTexto(
+          data.color_texto || "#ffffff",
+        );
+
+        setColorPrecio(
+          data.color_precio || "#22c55e",
+        );
+
+        setColorHamburguesa(
+          data.color_hamburguesa || "#ffffff",
+        );
+
+        setColorTarjeta(
+          data.color_tarjeta || "#ffffff10",
+        );
+
+        setColorCategoria(
+          data.color_categoria || "#ffffff",
+        );
+
+        // 🔥 NUEVO
+        setColorLupa(
+          data.color_lupa || "#ffffff",
+        );
 
         await cargarMenu(data.id);
       }
@@ -72,26 +131,38 @@ export default function AparienciaPage() {
     }
   };
 
-  const cargarMenu = async (catalogoId: string) => {
+  const cargarMenu = async (
+    catalogoId: string,
+  ) => {
     try {
-      const { data: categoriasData } = await supabase
-        .from("categorias")
-        .select("*")
-        .eq("catalogo_id", catalogoId);
+      const { data: categoriasData } =
+        await supabase
+          .from("categorias")
+          .select("*")
+          .eq("catalogo_id", catalogoId);
 
-      const { data: productosData } = await supabase
-        .from("productos")
-        .select("*")
-        .eq("catalogo_id", catalogoId)
-        .eq("disponible", true);
+      const { data: productosData } =
+        await supabase
+          .from("productos")
+          .select("*")
+          .eq("catalogo_id", catalogoId)
+          .eq("disponible", true);
 
-      const categoriasSafe = categoriasData || [];
-      const productosSafe = productosData || [];
+      const categoriasSafe =
+        categoriasData || [];
 
-      const resultado = categoriasSafe.map((cat: any) => ({
-        ...cat,
-        productos: productosSafe.filter((p: any) => p.categoria_id === cat.id),
-      }));
+      const productosSafe =
+        productosData || [];
+
+      const resultado = categoriasSafe.map(
+        (cat: any) => ({
+          ...cat,
+          productos: productosSafe.filter(
+            (p: any) =>
+              p.categoria_id === cat.id,
+          ),
+        }),
+      );
 
       setCategorias(resultado);
     } catch (err) {
@@ -107,22 +178,38 @@ export default function AparienciaPage() {
       .from("catalogos")
       .update({
         nombre,
+
         estilo_menu: estiloMenu,
+
         color_primario: colorPrimario,
+
         color_fondo: colorFondo,
+
         color_header: colorHeader,
+
         color_footer: colorFooter,
+
         color_texto: colorTexto,
+
         color_precio: colorPrecio,
-        color_hamburguesa: colorHamburguesa,
+
+        color_hamburguesa:
+          colorHamburguesa,
+
         color_tarjeta: colorTarjeta,
+
         color_categoria: colorCategoria,
+
+        // 🔥 NUEVO
+        color_lupa: colorLupa,
       })
       .eq("id", catalogoId);
 
     if (error) {
       console.error(error);
+
       alert("Error al guardar");
+
       return;
     }
 
@@ -140,13 +227,16 @@ export default function AparienciaPage() {
   return (
     <div className="w-full max-w-7xl mx-auto px-4 py-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
         {/* FORM */}
         <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6">
           <AparienciaForm
             nombre={nombre}
             setNombre={setNombre}
             colorPrimario={colorPrimario}
-            setColorPrimario={setColorPrimario}
+            setColorPrimario={
+              setColorPrimario
+            }
             colorFondo={colorFondo}
             setColorFondo={setColorFondo}
             estiloMenu={estiloMenu}
@@ -159,12 +249,27 @@ export default function AparienciaPage() {
             setColorTexto={setColorTexto}
             colorPrecio={colorPrecio}
             setColorPrecio={setColorPrecio}
-            colorHamburguesa={colorHamburguesa}
-            setColorHamburguesa={setColorHamburguesa}
+            colorHamburguesa={
+              colorHamburguesa
+            }
+            setColorHamburguesa={
+              setColorHamburguesa
+            }
             colorTarjeta={colorTarjeta}
-            setColorTarjeta={setColorTarjeta}
-            colorCategoria={colorCategoria}
-            setColorCategoria={setColorCategoria}
+            setColorTarjeta={
+              setColorTarjeta
+            }
+            colorCategoria={
+              colorCategoria
+            }
+            setColorCategoria={
+              setColorCategoria
+            }
+
+            // 🔥 NUEVO
+            colorLupa={colorLupa}
+            setColorLupa={setColorLupa}
+
             guardar={guardar}
           />
         </div>
@@ -181,9 +286,16 @@ export default function AparienciaPage() {
             colorFooter={colorFooter}
             colorTexto={colorTexto}
             colorPrecio={colorPrecio}
-            colorHamburguesa={colorHamburguesa}
+            colorHamburguesa={
+              colorHamburguesa
+            }
             colorTarjeta={colorTarjeta}
-            colorCategoria={colorCategoria}
+            colorCategoria={
+              colorCategoria
+            }
+
+            // 🔥 NUEVO
+            colorLupa={colorLupa}
           />
         </div>
       </div>
