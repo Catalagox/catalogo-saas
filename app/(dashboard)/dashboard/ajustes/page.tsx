@@ -7,6 +7,14 @@ export default function AjustesPage() {
   const [email, setEmail] = useState("");
   const [nombreMenu, setNombreMenu] = useState("");
   const [password, setPassword] = useState("");
+
+  // CONTACTO Y REDES
+  const [whatsapp, setWhatsapp] = useState("");
+  const [instagram, setInstagram] = useState("");
+  const [facebook, setFacebook] = useState("");
+  const [tiktok, setTiktok] = useState("");
+  const [youtube, setYoutube] = useState("");
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,17 +32,32 @@ export default function AjustesPage() {
 
     const { data } = await supabase
       .from("catalogos")
-      .select("nombre")
+      .select(
+        `
+        nombre,
+        whatsapp,
+        instagram,
+        facebook,
+        tiktok,
+        youtube
+      `,
+      )
       .eq("user_id", user.id)
       .single();
 
     if (data) {
-      setNombreMenu(data.nombre);
+      setNombreMenu(data.nombre || "");
+      setWhatsapp(data.whatsapp || "");
+      setInstagram(data.instagram || "");
+      setFacebook(data.facebook || "");
+      setTiktok(data.tiktok || "");
+      setYoutube(data.youtube || "");
     }
 
     setLoading(false);
   };
 
+  // GUARDAR NOMBRE
   const guardarNombreMenu = async () => {
     const {
       data: { user },
@@ -50,6 +73,33 @@ export default function AjustesPage() {
     alert("Nombre del menú actualizado");
   };
 
+  // GUARDAR CONTACTO
+  const guardarContacto = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+    const { error } = await supabase
+      .from("catalogos")
+      .update({
+        whatsapp,
+        instagram,
+        facebook,
+        tiktok,
+        youtube,
+      })
+      .eq("user_id", user.id);
+
+    if (error) {
+      alert("Error al guardar contacto");
+    } else {
+      alert("Contacto actualizado");
+    }
+  };
+
+  // CAMBIAR PASSWORD
   const cambiarPassword = async () => {
     if (!password) return;
 
@@ -112,6 +162,85 @@ export default function AjustesPage() {
             className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-text-inverse)] px-5 py-2 rounded-lg font-semibold transition"
           >
             Guardar
+          </button>
+        </div>
+
+        {/* CONTACTO Y REDES */}
+        <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 space-y-5">
+          <h2 className="text-xl font-semibold text-[var(--text-primary)]">
+            Contacto y redes
+          </h2>
+
+          {/* WHATSAPP */}
+          <div className="space-y-2">
+            <p className="text-sm text-[var(--text-secondary)]">WhatsApp</p>
+
+            <input
+              type="text"
+              placeholder="5491122334455"
+              value={whatsapp}
+              onChange={(e) => setWhatsapp(e.target.value)}
+              className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-card)] text-[var(--text-primary)] rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-[var(--color-primary)] placeholder:text-[var(--text-secondary)]"
+            />
+          </div>
+
+          {/* INSTAGRAM */}
+          <div className="space-y-2">
+            <p className="text-sm text-[var(--text-secondary)]">Instagram</p>
+
+            <input
+              type="text"
+              placeholder="https://instagram.com/tu-negocio"
+              value={instagram}
+              onChange={(e) => setInstagram(e.target.value)}
+              className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-card)] text-[var(--text-primary)] rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-[var(--color-primary)] placeholder:text-[var(--text-secondary)]"
+            />
+          </div>
+
+          {/* FACEBOOK */}
+          <div className="space-y-2">
+            <p className="text-sm text-[var(--text-secondary)]">Facebook</p>
+
+            <input
+              type="text"
+              placeholder="https://facebook.com/tu-negocio"
+              value={facebook}
+              onChange={(e) => setFacebook(e.target.value)}
+              className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-card)] text-[var(--text-primary)] rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-[var(--color-primary)] placeholder:text-[var(--text-secondary)]"
+            />
+          </div>
+
+          {/* TIKTOK */}
+          <div className="space-y-2">
+            <p className="text-sm text-[var(--text-secondary)]">TikTok</p>
+
+            <input
+              type="text"
+              placeholder="https://tiktok.com/@tu-negocio"
+              value={tiktok}
+              onChange={(e) => setTiktok(e.target.value)}
+              className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-card)] text-[var(--text-primary)] rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-[var(--color-primary)] placeholder:text-[var(--text-secondary)]"
+            />
+          </div>
+
+          {/* YOUTUBE */}
+          <div className="space-y-2">
+            <p className="text-sm text-[var(--text-secondary)]">YouTube</p>
+
+            <input
+              type="text"
+              placeholder="https://youtube.com/@tu-negocio"
+              value={youtube}
+              onChange={(e) => setYoutube(e.target.value)}
+              className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-card)] text-[var(--text-primary)] rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-[var(--color-primary)] placeholder:text-[var(--text-secondary)]"
+            />
+          </div>
+
+          <button
+            onClick={guardarContacto}
+            className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-text-inverse)] px-5 py-2 rounded-lg font-semibold transition"
+          >
+            Guardar contacto
           </button>
         </div>
 

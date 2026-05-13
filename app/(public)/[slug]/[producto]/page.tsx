@@ -23,7 +23,8 @@ export default async function ProductoPage({ params }: PageProps) {
       color_texto, 
       color_precio, 
       color_primario,
-      color_tarjeta
+      color_tarjeta,
+      whatsapp
     `,
     )
     .eq("slug", slug)
@@ -47,6 +48,13 @@ export default async function ProductoPage({ params }: PageProps) {
     "--color-primary": catalogo.color_primario ?? "#f97316",
     "--color-card": catalogo.color_tarjeta ?? "rgba(255,255,255,0.05)",
   } as React.CSSProperties;
+
+  // MENSAJE WHATSAPP
+  const mensaje = `Hola, quiero pedir: ${producto.nombre}`;
+
+  const whatsappUrl = catalogo.whatsapp
+    ? `https://wa.me/${catalogo.whatsapp}?text=${encodeURIComponent(mensaje)}`
+    : "#";
 
   return (
     <div className="relative min-h-screen bg-black" style={theme}>
@@ -85,6 +93,7 @@ export default async function ProductoPage({ params }: PageProps) {
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full animate-pulse bg-[var(--color-primary)]" />
+
               <span className="text-[11px] font-black uppercase tracking-[0.2em] text-[var(--color-primary)]">
                 Producto
               </span>
@@ -95,12 +104,13 @@ export default async function ProductoPage({ params }: PageProps) {
             </h1>
           </div>
 
-          {/* PRECIO E "INVERSIÓN" */}
+          {/* PRECIO */}
           <div className="flex justify-between items-center p-6 rounded-[2rem] bg-[var(--color-card)] border border-white/5">
             <div>
               <p className="text-[10px] font-black uppercase mb-1 tracking-widest text-[var(--color-primary)]">
                 Inversión
               </p>
+
               <p className="text-4xl font-black text-[var(--color-price)]">
                 ${Number(producto.precio || 0).toLocaleString()}
               </p>
@@ -142,9 +152,15 @@ export default async function ProductoPage({ params }: PageProps) {
       {/* --- BOTÓN FIJO --- */}
       <div className="fixed bottom-0 left-0 w-full p-6 z-50 bg-gradient-to-t from-[var(--color-bg)] via-[var(--color-bg)] to-transparent">
         <div className="max-w-2xl mx-auto">
-          <button
-            disabled={!producto.disponible}
-            className="w-full h-16 rounded-2xl font-black text-sm tracking-widest uppercase transition-all hover:brightness-110 active:scale-[0.98] shadow-2xl disabled:opacity-50 disabled:grayscale"
+          <a
+            href={producto.disponible ? whatsappUrl : "#"}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`w-full h-16 rounded-2xl font-black text-sm tracking-widest uppercase transition-all shadow-2xl flex items-center justify-center ${
+              producto.disponible
+                ? "hover:brightness-110 active:scale-[0.98]"
+                : "opacity-50 grayscale pointer-events-none"
+            }`}
             style={{
               backgroundColor: producto.disponible
                 ? "var(--color-primary)"
@@ -152,8 +168,8 @@ export default async function ProductoPage({ params }: PageProps) {
               color: "#fff",
             }}
           >
-            {producto.disponible ? "Añadir a mi pedido" : "No disponible"}
-          </button>
+            {producto.disponible ? "Pedir por WhatsApp" : "No disponible"}
+          </a>
         </div>
       </div>
     </div>
