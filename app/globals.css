@@ -11,10 +11,9 @@
   --color-primary-light: #DCFCE7;
   --color-primary-dark: #052E16;
 
-  
---color-subscription-text: #555a56;
---color-subscription-title: #111827;
---color-subscription-muted: #5f6560;
+  --color-subscription-text: #555a56;
+  --color-subscription-title: #111827;
+  --color-subscription-muted: #5f6560;
 
   /* ⚫ BASE */
   --background: #ffffff;
@@ -34,20 +33,20 @@
   --color-success: #16A34A;
 
   --color-border: #E5E7EB;
-  
+
   /* DASHBOARD */
-  --bg-main: #050807; 
-  --bg-secondary: #0b1210; 
+  --bg-main: #050807;
+  --bg-secondary: #0b1210;
 
   --bg-tertiary: #101915;
   --bg-overlay: rgba(0,0,0,0.7);
 
-  --bg-card: #0e1412;        /* fondo de tarjetas */
-  --bg-card-hover: #101915;  /* hover */
-  --border-card: #1e261b;    /* borde */
+  --bg-card: #0e1412;
+  --bg-card-hover: #101915;
+  --border-card: #1e261b;
 
-  --text-primary: #ffffff;   /* texto grande */
-  --text-secondary: #c4c7c4; /* texto pequeño */
+  --text-primary: #ffffff;
+  --text-secondary: #c4c7c4;
 }
 
 /* 🌙 DARK MODE */
@@ -76,10 +75,83 @@
   }
 }
 
-@keyframes bounce-slow {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+/* PHONE INPUT */
+
+.react-tel-input .form-control {
+  width: 100% !important;
+  height: 44px !important;
+  background: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-card) !important;
+  border-radius: 10px !important;
+  font-size: 14px !important;
+  box-shadow: none !important;
 }
+
+.react-tel-input .form-control:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.15) !important;
+}
+
+.react-tel-input .flag-dropdown {
+  background: var(--bg-tertiary) !important;
+  border: 1px solid var(--border-card) !important;
+  border-radius: 10px 0 0 10px !important;
+}
+
+.react-tel-input .selected-flag {
+  background: transparent !important;
+}
+
+.react-tel-input .selected-flag:hover {
+  background: transparent !important;
+}
+
+.react-tel-input .selected-flag:focus {
+  background: transparent !important;
+}
+
+.react-tel-input .country-list {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-card) !important;
+}
+
+.react-tel-input .country-list .country {
+  color: var(--text-primary) !important;
+  background: transparent !important;
+}
+
+.react-tel-input .country-list .country:hover {
+  background: var(--bg-tertiary) !important;
+}
+
+.react-tel-input .country-list .country.highlight {
+  background: var(--color-primary) !important;
+  color: white !important;
+}
+
+.react-tel-input .search {
+  background: var(--bg-card) !important;
+}
+
+.react-tel-input .search-box {
+  background: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-card) !important;
+}
+
+/* Animaciones */
+
+@keyframes bounce-slow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
 .animate-bounce-slow {
   animation: bounce-slow 4s ease-in-out infinite;
 }
