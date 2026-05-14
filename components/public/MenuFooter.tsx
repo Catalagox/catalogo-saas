@@ -1,42 +1,99 @@
-export default function MenuFooter() {
+import { FaInstagram, FaFacebookF, FaTiktok, FaYoutube } from "react-icons/fa";
+
+interface MenuFooterProps {
+  instagram?: string | null;
+  facebook?: string | null;
+  tiktok?: string | null;
+  youtube?: string | null;
+}
+
+export default function MenuFooter({
+  instagram,
+  facebook,
+  tiktok,
+  youtube,
+}: MenuFooterProps) {
   const currentYear = new Date().getFullYear();
 
+  // 🔥 VALIDAR LINKS
+  const isValidUrl = (url?: string | null) => {
+    if (!url) return false;
+
+    return url.startsWith("http://") || url.startsWith("https://");
+  };
+
+  const redes = [
+    {
+      href: instagram,
+      icon: <FaInstagram size={18} />,
+    },
+
+    {
+      href: facebook,
+      icon: <FaFacebookF size={16} />,
+    },
+
+    {
+      href: tiktok,
+      icon: <FaTiktok size={16} />,
+    },
+
+    {
+      href: youtube,
+      icon: <FaYoutube size={18} />,
+    },
+  ].filter((red) => isValidUrl(red.href));
+
   return (
-    <footer className="mt-16 pt-10 pb-12 bg-[var(--color-footer)]">
+    <footer
+      className="mt-16 pt-10 pb-12"
+      style={{
+        backgroundColor: "#000000",
+      }}
+    >
       <div className="max-w-3xl mx-auto px-6 flex flex-col items-center">
+        {/* TÍTULO */}
+        {redes.length > 0 && (
+          <>
+            <p className="text-sm font-semibold tracking-wide text-white mb-5">
+              Sígueme
+            </p>
 
-        {/* LOGO */}
-        <div className="mb-4 flex items-center gap-2 opacity-80">
-          <div className="w-6 h-6 rounded-md flex items-center justify-center bg-[var(--color-text)]">
-            <span className="text-[10px] font-bold text-[var(--color-footer)]">
-              X
-            </span>
-          </div>
-
-          <span className="font-bold tracking-tight text-sm text-[var(--color-text)]">
-            CatalogoX
-          </span>
-        </div>
-
-        {/* TEXTO */}
-        <p className="text-sm text-center opacity-80 text-[var(--color-text)]">
-          Menú digital generado con tecnología QR
-        </p>
-
-        {/* FEATURES */}
-        <div className="mt-6 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-widest opacity-60 text-[var(--color-text)]">
-          <span>Seguro</span>
-          <span className="w-1 h-1 rounded-full bg-white/40"></span>
-          <span>Rápido</span>
-          <span className="w-1 h-1 rounded-full bg-white/40"></span>
-          <span>Sin contacto</span>
-        </div>
+            {/* REDES */}
+            <div className="flex items-center gap-4">
+              {redes.map((red, index) => (
+                <a
+                  key={index}
+                  href={red.href || "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="
+                    w-11
+                    h-11
+                    rounded-full
+                    border
+                    border-white/10
+                    flex
+                    items-center
+                    justify-center
+                    text-white
+                    bg-white/5
+                    hover:bg-white/10
+                    hover:scale-110
+                    transition-all
+                  "
+                >
+                  {red.icon}
+                </a>
+              ))}
+            </div>
+          </>
+        )}
 
         {/* COPYRIGHT */}
-        <p className="text-[10px] mt-4 opacity-50 text-[var(--color-text)]">
+        <p className="text-[11px] mt-8 text-white/50 text-center">
           © {currentYear} Todos los derechos reservados.
         </p>
-
       </div>
     </footer>
   );

@@ -49,9 +49,27 @@ export default async function ProductoPage({ params }: PageProps) {
     "--color-card": catalogo.color_tarjeta ?? "rgba(255,255,255,0.05)",
   } as React.CSSProperties;
 
-  // MENSAJE WHATSAPP
-  const mensaje = `Hola, quiero pedir: ${producto.nombre}`;
+  // URL DEL PRODUCTO
+  const productoUrl = `https://${process.env.NEXT_PUBLIC_SITE_URL}/${slug}/${producto.slug}`;
 
+  // MENSAJE PREMIUM WHATSAPP
+  const mensaje = `
+🛒 *Nuevo pedido*
+
+📦 *Producto:*
+${producto.nombre}
+
+💰 *Precio:*
+$${Number(producto.precio || 0).toLocaleString()}
+
+📝 *Descripción:*
+${producto.descripcion || "Sin descripción"}
+
+🔗 *Ver producto:*
+${productoUrl}
+`;
+
+  // LINK WHATSAPP
   const whatsappUrl = catalogo.whatsapp
     ? `https://wa.me/${catalogo.whatsapp}?text=${encodeURIComponent(mensaje)}`
     : "#";

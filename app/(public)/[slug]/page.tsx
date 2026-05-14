@@ -21,23 +21,31 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
     .from("catalogos")
     .select(
       `
-      id,
-      nombre,
-      logo,
-      user_id,
-      estilo_menu,
-      slug,
-      color_primario,
-      color_fondo,
-      color_header,
-      color_footer,
-      color_texto,
-      color_precio,
-      color_hamburguesa,
-      color_tarjeta,
-      color_categoria,
-      color_lupa
-    `,
+  id,
+  nombre,
+  logo,
+  user_id,
+  estilo_menu,
+  slug,
+
+  color_primario,
+  color_fondo,
+  color_header,
+  color_footer,
+  color_texto,
+  color_precio,
+  color_hamburguesa,
+  color_tarjeta,
+  color_categoria,
+  color_lupa,
+
+  whatsapp,
+
+  instagram,
+  facebook,
+  tiktok,
+  youtube
+`,
     )
     .eq("slug", slug)
     .maybeSingle();

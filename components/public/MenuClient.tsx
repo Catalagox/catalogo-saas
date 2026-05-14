@@ -5,7 +5,7 @@ import MenuFooter from "@/components/public/MenuFooter";
 import MenuLista from "@/components/public/MenuLista";
 import MenuGaleria from "@/components/public/MenuGaleria";
 
-// Tipos
+// TIPOS
 interface Producto {
   id: string;
   nombre: string;
@@ -27,7 +27,9 @@ interface Catalogo {
   nombre: string;
   logo?: string;
   user_id: string;
+
   estilo_menu?: "lista" | "galeria";
+
   slug?: string;
 
   // 🎨 COLORES
@@ -40,9 +42,16 @@ interface Catalogo {
   color_hamburguesa?: string;
   color_tarjeta?: string;
   color_categoria?: string;
-
-  // 🔥 NUEVO
   color_lupa?: string;
+
+  // 📱 CONTACTO
+  whatsapp?: string;
+
+  // 🌎 REDES
+  instagram?: string;
+  facebook?: string;
+  tiktok?: string;
+  youtube?: string;
 }
 
 interface MenuClientProps {
@@ -83,7 +92,6 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
 
   const colorPrimario = catalogo.color_primario ?? "#f97316";
 
-  // 🔥 NUEVO
   const colorLupa = catalogo.color_lupa ?? "#ffffff";
 
   // 🎨 CSS VARIABLES GLOBAL
@@ -97,8 +105,6 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
     "--color-card": colorTarjeta,
     "--color-categoria": colorCategoria,
     "--color-primary": colorPrimario,
-
-    // 🔥 NUEVO
     "--color-lupa": colorLupa,
   } as React.CSSProperties;
 
@@ -129,7 +135,12 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
       </main>
 
       {/* FOOTER */}
-      <MenuFooter />
+      <MenuFooter
+        instagram={catalogo.instagram}
+        facebook={catalogo.facebook}
+        tiktok={catalogo.tiktok}
+        youtube={catalogo.youtube}
+      />
     </div>
   );
 }
