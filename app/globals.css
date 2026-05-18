@@ -3,100 +3,203 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Variables de tema */
+/* 🌿 VARIABLES GLOBALES */
 :root {
+  /* =======================================================
+     🎨 BRAND COLORS
+  ======================================================= */
+
   /* 🌿 PRIMARY */
-  --color-primary: #16A34A;
-  --color-primary-hover: #15803D;
-  --color-primary-light: #DCFCE7;
-  --color-primary-dark: #052E16;
+  --color-primary: #22c55e;
+  --color-primary-hover: #16a34a;
+  --color-primary-light: #dcfce7;
+  --color-primary-dark: #052e16;
 
-  --color-subscription-text: #555a56;
-  --color-subscription-title: #111827;
-  --color-subscription-muted: #5f6560;
+  /* ✨ NUEVOS TONOS PREMIUM */
+  --color-primary-soft: #4ade80;
+  --color-primary-glow: rgba(34, 197, 94, 0.25);
 
-  /* ⚫ BASE */
-  --background: #ffffff;
-  --foreground: #111827;
+  /* =======================================================
+     ⚫ BASE
+  ======================================================= */
 
-  /* 🧾 TEXTOS */
-  --color-text: #111827;
-  --color-text-light: #6B7280;
-  --color-text-inverse: #ffffff;
+  --background: #050807;
+  --foreground: #ffffff;
 
-  /* 🟢 ACCENTOS */
-  --color-accent: #22C55E;
+  /* =======================================================
+     🧾 TEXTOS
+  ======================================================= */
 
-  /* 🔴 ESTADOS */
-  --color-danger: #EF4444;
-  --color-warning: #F59E0B;
-  --color-success: #16A34A;
-
-  --color-border: #E5E7EB;
-
-  /* DASHBOARD */
-  --bg-main: #050807;
-  --bg-secondary: #0b1210;
-
-  --bg-tertiary: #101915;
-  --bg-overlay: rgba(0,0,0,0.7);
-
-  --bg-card: #0e1412;
-  --bg-card-hover: #101915;
-  --border-card: #1e261b;
+  --color-text: #ffffff;
+  --color-text-light: #9ca3af;
+  --color-text-muted: #6b7280;
+  --color-text-inverse: #111827;
 
   --text-primary: #ffffff;
   --text-secondary: #c4c7c4;
+  --text-muted: #7b8a81;
+
+  /* =======================================================
+     🟢 ACCENTS
+  ======================================================= */
+
+  --color-accent: #22c55e;
+
+  /* =======================================================
+     🔴 ESTADOS
+  ======================================================= */
+
+  --color-danger: #ef4444;
+  --color-warning: #f59e0b;
+  --color-success: #22c55e;
+
+  /* =======================================================
+     📦 BORDES
+  ======================================================= */
+
+  --color-border: #1e261b;
+  --border-card: #1e261b;
+  --border-soft: rgba(255, 255, 255, 0.06);
+
+  /* =======================================================
+     🌑 DASHBOARD / APP
+  ======================================================= */
+
+  --bg-main: #050807;
+  --bg-secondary: #0b1210;
+  --bg-tertiary: #101915;
+
+  --bg-card: #0e1412;
+  --bg-card-hover: #131d19;
+
+  --bg-overlay: rgba(0, 0, 0, 0.7);
+
+  /* =======================================================
+     🍔 MENÚ / CATALOGO
+  ======================================================= */
+
+  --menu-header: #0b1210;
+  --menu-footer: #050807;
+  --menu-card: rgba(255, 255, 255, 0.04);
+
+  --menu-category: #ffffff;
+  --menu-category-active: #22c55e;
+
+  /* =======================================================
+     💳 SUSCRIPCIÓN
+  ======================================================= */
+
+  --color-subscription-text: #b4b9b5;
+  --color-subscription-title: #ffffff;
+  --color-subscription-muted: #7f8781;
+
+  /* =======================================================
+     🌫️ EFECTOS
+  ======================================================= */
+
+  --shadow-primary:
+    0 10px 30px rgba(34, 197, 94, 0.15);
+
+  --shadow-card:
+    0 4px 20px rgba(0, 0, 0, 0.25);
+
+  --blur-glass: blur(16px);
 }
 
-/* 🌙 DARK MODE */
+/* =======================================================
+   🌙 DARK MODE
+======================================================= */
+
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0F172A;
-    --foreground: #F9FAFB;
+    --background: #050807;
+    --foreground: #ffffff;
 
-    --color-text: #13291e;
-    --color-text-light: #9CA3AF;
+    --color-text: #ffffff;
+    --color-text-light: #9ca3af;
 
-    --color-border: #1F2933;
-
-    /* opcional: ajustar verde en dark */
-    --color-primary: #22C55E;
-    --color-primary-hover: #16A34A;
+    --color-primary: #22c55e;
+    --color-primary-hover: #16a34a;
   }
 }
 
-/* Estilos base */
+/* =======================================================
+   🧱 BASE
+======================================================= */
+
 @layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     background: var(--background);
     color: var(--foreground);
-    font-family: Arial, Helvetica, sans-serif;
+    font-family:
+      Arial,
+      Helvetica,
+      sans-serif;
+
+    overflow-x: hidden;
+
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
-/* PHONE INPUT */
+/* =======================================================
+   🔥 SCROLLBAR HIDE
+======================================================= */
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* =======================================================
+   📱 PHONE INPUT
+======================================================= */
 
 .react-tel-input .form-control {
   width: 100% !important;
-  height: 44px !important;
+  height: 48px !important;
+
   background: var(--bg-tertiary) !important;
   color: var(--text-primary) !important;
+
   border: 1px solid var(--border-card) !important;
-  border-radius: 10px !important;
+  border-radius: 14px !important;
+
   font-size: 14px !important;
+
   box-shadow: none !important;
+
+  transition: all 0.25s ease !important;
 }
 
 .react-tel-input .form-control:focus {
   border-color: var(--color-primary) !important;
-  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.15) !important;
+
+  box-shadow:
+    0 0 0 3px rgba(34, 197, 94, 0.15),
+    0 0 20px rgba(34, 197, 94, 0.1) !important;
 }
 
 .react-tel-input .flag-dropdown {
   background: var(--bg-tertiary) !important;
+
   border: 1px solid var(--border-card) !important;
-  border-radius: 10px 0 0 10px !important;
+
+  border-radius: 14px 0 0 14px !important;
 }
 
 .react-tel-input .selected-flag {
@@ -104,21 +207,31 @@
 }
 
 .react-tel-input .selected-flag:hover {
-  background: transparent !important;
+  background: rgba(255, 255, 255, 0.03) !important;
 }
 
 .react-tel-input .selected-flag:focus {
-  background: transparent !important;
+  background: rgba(255, 255, 255, 0.03) !important;
 }
 
 .react-tel-input .country-list {
   background: var(--bg-card) !important;
+
   border: 1px solid var(--border-card) !important;
+
+  border-radius: 14px !important;
+
+  overflow: hidden !important;
+
+  box-shadow: var(--shadow-card) !important;
 }
 
 .react-tel-input .country-list .country {
   color: var(--text-primary) !important;
+
   background: transparent !important;
+
+  transition: background 0.2s ease !important;
 }
 
 .react-tel-input .country-list .country:hover {
@@ -127,6 +240,7 @@
 
 .react-tel-input .country-list .country.highlight {
   background: var(--color-primary) !important;
+
   color: white !important;
 }
 
@@ -136,14 +250,35 @@
 
 .react-tel-input .search-box {
   background: var(--bg-tertiary) !important;
+
   color: var(--text-primary) !important;
+
   border: 1px solid var(--border-card) !important;
+
+  border-radius: 10px !important;
 }
 
-/* Animaciones */
+/* =======================================================
+   ✨ GLASS EFFECT
+======================================================= */
+
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+
+  backdrop-filter: blur(16px);
+
+  -webkit-backdrop-filter: blur(16px);
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* =======================================================
+   ✨ ANIMACIONES
+======================================================= */
 
 @keyframes bounce-slow {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
 
@@ -154,4 +289,48 @@
 
 .animate-bounce-slow {
   animation: bounce-slow 4s ease-in-out infinite;
+}
+
+/* =======================================================
+   ✨ FADE IN
+======================================================= */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease forwards;
+}
+
+/* =======================================================
+   ✨ SCALE
+======================================================= */
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.25s ease forwards;
 }

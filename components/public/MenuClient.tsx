@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import MenuHeader from "@/components/public/MenuHeader";
 import MenuFooter from "@/components/public/MenuFooter";
 import MenuLista from "@/components/public/MenuLista";
@@ -60,9 +62,20 @@ interface MenuClientProps {
 }
 
 export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
+  // 🔥 NO ACTIVAR NADA AL INICIO
+  const [categoriaActiva, setCategoriaActiva] = useState<string | null>(null);
+
   if (!catalogo) {
     return (
-      <div className="flex items-center justify-center min-h-screen text-gray-400">
+      <div
+        className="
+          flex
+          items-center
+          justify-center
+          min-h-screen
+          text-gray-400
+        "
+      >
         Cargando menú...
       </div>
     );
@@ -70,10 +83,10 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
 
   const safeCategorias = categorias ?? [];
 
-  // 🔥 FIX
+  // 🔥 VIEW MODE
   const viewMode = catalogo.estilo_menu ?? "lista";
 
-  // 🎨 VARIABLES BASE
+  // 🎨 VARIABLES
   const colorFondo = catalogo.color_fondo ?? "#111827";
 
   const colorHeader = catalogo.color_header ?? "#1680f9";
@@ -94,7 +107,7 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
 
   const colorLupa = catalogo.color_lupa ?? "#ffffff";
 
-  // 🎨 CSS VARIABLES GLOBAL
+  // 🎨 CSS VARIABLES
   const theme = {
     "--color-bg": colorFondo,
     "--color-header": colorHeader,
@@ -107,6 +120,36 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
     "--color-primary": colorPrimario,
     "--color-lupa": colorLupa,
   } as React.CSSProperties;
+
+  // 🔥 DETECTAR CATEGORÍA ACTIVA REAL
+  useEffect(() => {
+    const handleScroll = () => {
+      let current: string | null = null;
+
+      safeCategorias.forEach((categoria) => {
+        const element = document.getElementById(`categoria-${categoria.id}`);
+
+        if (element) {
+          const rect = element.getBoundingClientRect();
+
+          // 🔥 SOLO SI ESTÁ REALMENTE VISIBLE
+          if (rect.top <= 140 && rect.bottom >= 140) {
+            current = categoria.id;
+          }
+        }
+      });
+
+      setCategoriaActiva(current);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+
+    handleScroll();
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [safeCategorias]);
 
   return (
     <div
@@ -121,14 +164,116 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
       {/* HEADER */}
       <MenuHeader catalogo={catalogo} categorias={safeCategorias} />
 
+      {/* 🔥 CATEGORÍAS */}
+      {safeCategorias.length > 0 && (
+        <div
+          className="
+            sticky
+            top-0
+            z-40
+            border-b
+            border-white/10
+            backdrop-blur-xl
+            bg-[var(--color-bg)]/90
+          "
+        >
+          <div
+            className="
+              overflow-x-auto
+              whitespace-nowrap
+              scrollbar-hide
+            "
+          >
+            <div
+              className="
+                flex
+                gap-3
+                px-4
+                py-3
+                min-w-max
+              "
+            >
+              {safeCategorias.map((categoria) => {
+                const isActive = categoriaActiva === categoria.id;
+
+                return (
+                  <button
+                    key={categoria.id}
+                    onClick={() => {
+                      setCategoriaActiva(categoria.id);
+
+                      const element = document.getElementById(
+                        `categoria-${categoria.id}`,
+                      );
+
+                      element?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                      });
+                    }}
+                    className={`
+                        px-5
+                        py-2.5
+                        rounded-2xl
+                        text-sm
+                        font-bold
+                        tracking-wide
+                        transition-all
+                        duration-300
+                        border
+                        flex-shrink-0
+                        shadow-sm
+                        backdrop-blur-md
+
+                        ${
+                          isActive
+                            ? `
+                              bg-[var(--color-primary)]
+                              text-white
+                              border-[var(--color-primary)]
+                              scale-105
+                              shadow-lg
+                            `
+                            : `
+                              bg-[var(--color-card)]
+                              hover:bg-white/10
+                              text-[var(--color-categoria)]
+                              border-[var(--color-categoria)]/20
+                            `
+                        }
+                      `}
+                  >
+                    {categoria.nombre}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* MAIN */}
-      <main className="max-w-3xl mx-auto w-full p-4 flex-grow">
+      <main
+        className="
+          max-w-3xl
+          mx-auto
+          w-full
+          p-4
+          flex-grow
+        "
+      >
         {viewMode === "lista" ? (
           <MenuLista categorias={safeCategorias} />
         ) : catalogo.slug ? (
           <MenuGaleria categorias={safeCategorias} slug={catalogo.slug} />
         ) : (
-          <div className="text-center text-red-400 py-10">
+          <div
+            className="
+              text-center
+              text-red-400
+              py-10
+            "
+          >
             Error: slug no disponible
           </div>
         )}
