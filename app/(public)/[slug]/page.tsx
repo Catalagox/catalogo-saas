@@ -21,31 +21,31 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
     .from("catalogos")
     .select(
       `
-  id,
-  nombre,
-  logo,
-  user_id,
-  estilo_menu,
-  slug,
+      id,
+      nombre,
+      logo,
+      user_id,
+      estilo_menu,
+      slug,
 
-  color_primario,
-  color_fondo,
-  color_header,
-  color_footer,
-  color_texto,
-  color_precio,
-  color_hamburguesa,
-  color_tarjeta,
-  color_categoria,
-  color_lupa,
+      color_primario,
+      color_fondo,
+      color_header,
+      color_footer,
+      color_texto,
+      color_precio,
+      color_hamburguesa,
+      color_tarjeta,
+      color_categoria,
+      color_lupa,
 
-  whatsapp,
+      whatsapp,
 
-  instagram,
-  facebook,
-  tiktok,
-  youtube
-`,
+      instagram,
+      facebook,
+      tiktok,
+      youtube
+      `,
     )
     .eq("slug", slug)
     .maybeSingle();
@@ -61,10 +61,6 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
   }
 
   const data = catalogoDB;
-
-  if (!data) {
-    return <div className="p-10 text-center">Menú no encontrado</div>;
-  }
 
   const catalogo = {
     ...data,
@@ -87,26 +83,34 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
 
     color_categoria: data.color_categoria ?? "#ffffff",
 
-    // 🔥 NUEVO
     color_lupa: data.color_lupa ?? "#ffffff",
   };
 
+  // 🔥 TRACKING ESTADÍSTICAS
   try {
-    await Promise.all([
-      supabase.from("estadisticas").insert({
-        user_id: catalogo.user_id,
-        tipo: "menu_view",
-      }),
+    // 🔥 VISTA DEL MENÚ
+    const { error: menuError } = await supabase.from("estadisticas").insert({
+      user_id: catalogo.user_id,
+      tipo: "menu_view",
+    });
 
-      qr
-        ? supabase.from("estadisticas").insert({
-            user_id: catalogo.user_id,
-            tipo: "qr_scan",
-          })
-        : null,
-    ]);
+    if (menuError) {
+      console.error("ERROR MENU VIEW:", menuError);
+    }
+
+    // 🔥 ESCANEO QR
+    if (qr) {
+      const { error: qrError } = await supabase.from("estadisticas").insert({
+        user_id: catalogo.user_id,
+        tipo: "qr_scan",
+      });
+
+      if (qrError) {
+        console.error("ERROR QR:", qrError);
+      }
+    }
   } catch (err) {
-    console.warn("Tracking error:", err);
+    console.error("TRACKING ERROR:", err);
   }
 
   const { data: categorias, error: categoriasError } = await supabase
@@ -124,7 +128,7 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
         disponible,
         slug
       )
-    `,
+      `,
     )
     .eq("catalogo_id", catalogo.id)
     .order("created_at");

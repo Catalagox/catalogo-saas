@@ -11,6 +11,10 @@ export default function AjustesPage() {
   const [nombreMenu, setNombreMenu] = useState("");
   const [password, setPassword] = useState("");
 
+  // 🔥 LOGO
+  const [logo, setLogo] = useState("");
+  const [subiendoLogo, setSubiendoLogo] = useState(false);
+
   // CONTACTO Y REDES
   const [whatsapp, setWhatsapp] = useState("");
   const [instagram, setInstagram] = useState("");
@@ -39,6 +43,7 @@ export default function AjustesPage() {
         `
         nombre,
         slug,
+        logo,
         whatsapp,
         instagram,
         facebook,
@@ -51,6 +56,7 @@ export default function AjustesPage() {
 
     if (data) {
       setNombreMenu(data.nombre || "");
+      setLogo(data.logo || "");
       setWhatsapp(data.whatsapp || "");
       setInstagram(data.instagram || "");
       setFacebook(data.facebook || "");
@@ -102,6 +108,75 @@ export default function AjustesPage() {
     }
 
     alert("Nombre y URL actualizados");
+  };
+
+  // 🔥 SUBIR LOGO
+  const subirLogo = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setSubiendoLogo(true);
+
+      const file = e.target.files?.[0];
+
+      if (!file) return;
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) return;
+
+      const fileExt = file.name.split(".").pop();
+
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+
+      const filePath = `logos/${fileName}`;
+
+      // 🔥 SUBIR STORAGE
+      const { error: uploadError } = await supabase.storage
+        .from("logos")
+        .upload(filePath, file, {
+          upsert: true,
+        });
+
+      if (uploadError) {
+        console.error(uploadError);
+
+        alert("Error subiendo logo");
+
+        return;
+      }
+
+      // 🔥 URL PÚBLICA
+      const { data } = supabase.storage.from("logos").getPublicUrl(filePath);
+
+      const publicUrl = data.publicUrl;
+
+      // 🔥 GUARDAR EN DB
+      const { error } = await supabase
+        .from("catalogos")
+        .update({
+          logo: publicUrl,
+        })
+        .eq("user_id", user.id);
+
+      if (error) {
+        console.error(error);
+
+        alert("Error guardando logo");
+
+        return;
+      }
+
+      setLogo(publicUrl);
+
+      alert("Logo actualizado");
+    } catch (err) {
+      console.error(err);
+
+      alert("Ocurrió un error");
+    } finally {
+      setSubiendoLogo(false);
+    }
   };
 
   // GUARDAR CONTACTO
@@ -194,6 +269,75 @@ export default function AjustesPage() {
           >
             Guardar cambios
           </button>
+        </div>
+
+        {/* 🔥 LOGO */}
+        <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 space-y-5">
+          <h2 className="text-xl font-semibold text-[var(--text-primary)]">
+            Logo del restaurante
+          </h2>
+
+          {logo ? (
+            <div className="flex justify-center">
+              <img
+                src={logo}
+                alt="Logo"
+                className="
+                  w-28
+                  h-28
+                  rounded-full
+                  object-cover
+                  border
+                  border-white/10
+                "
+              />
+            </div>
+          ) : (
+            <div
+              className="
+                w-28
+                h-28
+                mx-auto
+                rounded-full
+                border
+                border-dashed
+                border-[var(--border-card)]
+                flex
+                items-center
+                justify-center
+                text-sm
+                text-[var(--text-secondary)]
+              "
+            >
+              Sin logo
+            </div>
+          )}
+
+          <label
+            className="
+              flex
+              items-center
+              justify-center
+              w-full
+              h-12
+              rounded-xl
+              cursor-pointer
+              font-semibold
+              transition
+              bg-[var(--color-primary)]
+              hover:bg-[var(--color-primary-hover)]
+              text-white
+            "
+          >
+            {subiendoLogo ? "Subiendo..." : "Subir logo"}
+
+            <input
+              type="file"
+              accept="image/*"
+              onChange={subirLogo}
+              className="hidden"
+            />
+          </label>
         </div>
 
         {/* CONTACTO Y REDES */}
@@ -339,3 +483,4 @@ export default function AjustesPage() {
     </div>
   );
 }
+

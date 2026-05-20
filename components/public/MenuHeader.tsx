@@ -12,7 +12,6 @@ type Categoria = {
   id: string;
   nombre: string;
 
-  // 🔥 IMPORTANTE
   productos?: Producto[];
 };
 
@@ -21,7 +20,6 @@ type Props = {
     nombre: string;
     logo?: string;
 
-    // 🔥 COLOR LUPA
     color_lupa?: string;
   };
 
@@ -118,7 +116,7 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
       >
         <div className="max-w-3xl mx-auto px-5 py-4">
           {/* TOP */}
-          <div className="flex items-center justify-between">
+          <div className="relative flex items-center justify-between">
             {/* IZQUIERDA */}
             <div className="flex items-center gap-4">
               {/* 🍔 HAMBURGUESA */}
@@ -140,30 +138,38 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
 
                 <span className="block w-6 h-[2px] bg-[var(--color-hamburguesa)]" />
               </button>
+            </div>
 
-              {/* LOGO + NOMBRE */}
-              <div className="flex items-center gap-3">
-                {catalogo.logo && (
-                  <img
-                    src={catalogo.logo}
-                    alt={catalogo.nombre}
-                    className="
-                      w-9
-                      h-9
-                      rounded-full
-                      object-cover
-                    "
-                  />
-                )}
-
+            {/* 🔥 LOGO CENTRADO */}
+            <div
+              className="
+                absolute
+                left-1/2
+                -translate-x-1/2
+                flex
+                items-center
+                justify-center
+              "
+            >
+              {catalogo.logo ? (
+                <img
+                  src={catalogo.logo}
+                  alt={catalogo.nombre}
+                  className="
+                    h-12
+                    w-auto
+                    object-contain
+                  "
+                />
+              ) : (
                 <h1 className="text-lg font-bold text-[var(--color-text)]">
                   {catalogo.nombre}
                 </h1>
-              </div>
+              )}
             </div>
 
             {/* DERECHA */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 ml-auto">
               {/* DESKTOP NAV */}
               <nav className="hidden md:flex items-center gap-3">
                 {categorias.slice(0, 5).map((cat) => (
@@ -171,13 +177,13 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
                     key={cat.id}
                     href={`#cat-${cat.id}`}
                     className="
-                        text-xs
-                        font-semibold
-                        uppercase
-                        tracking-wider
-                        transition
-                        text-[var(--color-categoria)]
-                      "
+                      text-xs
+                      font-semibold
+                      uppercase
+                      tracking-wider
+                      transition
+                      text-[var(--color-categoria)]
+                    "
                   >
                     {cat.nombre}
                   </a>
@@ -285,15 +291,15 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
                         key={index}
                         onClick={() => irAResultado(item.categoriaId)}
                         className="
-                            w-full
-                            text-left
-                            px-4
-                            py-3
-                            border-b
-                            border-white/10
-                            hover:bg-white/10
-                            transition
-                          "
+                          w-full
+                          text-left
+                          px-4
+                          py-3
+                          border-b
+                          border-white/10
+                          hover:bg-white/10
+                          transition
+                        "
                       >
                         <div className="flex items-center justify-between">
                           <span className="text-[var(--color-text)] text-sm">
@@ -302,10 +308,10 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
 
                           <span
                             className="
-                                text-[10px]
-                                uppercase
-                                opacity-60
-                              "
+                              text-[10px]
+                              uppercase
+                              opacity-60
+                            "
                             style={{
                               color: catalogo.color_lupa || "#ffffff",
                             }}
