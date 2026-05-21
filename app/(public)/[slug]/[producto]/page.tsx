@@ -9,29 +9,37 @@ interface PageProps {
 
 export default async function ProductoPage({ params }: PageProps) {
   const { slug, producto: productoSlug } = await params;
+
   const supabase = await createClient();
 
   if (!slug || !productoSlug) return notFound();
 
+  // 🔥 CARGAR CATÁLOGO
   const { data: catalogo, error: catalogoError } = await supabase
     .from("catalogos")
     .select(
       `
-      id, 
-      color_fondo, 
-      color_header, 
-      color_texto, 
-      color_precio, 
+      id,
+      user_id,
+
+      color_fondo,
+      color_header,
+      color_texto,
+      color_precio,
       color_primario,
       color_tarjeta,
+
       whatsapp
     `,
     )
     .eq("slug", slug)
     .single();
 
-  if (catalogoError || !catalogo) return notFound();
+  if (catalogoError || !catalogo) {
+    return notFound();
+  }
 
+  // 🔥 CARGAR PRODUCTO
   const { data: producto, error: productoError } = await supabase
     .from("productos")
     .select("*")
@@ -39,8 +47,25 @@ export default async function ProductoPage({ params }: PageProps) {
     .eq("slug", productoSlug)
     .single();
 
-  if (productoError || !producto) return notFound();
+  if (productoError || !producto) {
+    return notFound();
+  }
 
+  // 🔥 TRACKING PRODUCTO
+  try {
+    const { error } = await supabase.from("estadisticas").insert({
+      user_id: catalogo.user_id,
+      tipo: "producto_view",
+    });
+
+    if (error) {
+      console.error("ERROR PRODUCT VIEW:", error);
+    }
+  } catch (err) {
+    console.error("TRACKING PRODUCT ERROR:", err);
+  }
+
+  // 🔥 THEME
   const theme = {
     "--color-bg": catalogo.color_fondo ?? "#111827",
     "--color-text": catalogo.color_texto ?? "#ffffff",
@@ -49,10 +74,10 @@ export default async function ProductoPage({ params }: PageProps) {
     "--color-card": catalogo.color_tarjeta ?? "rgba(255,255,255,0.05)",
   } as React.CSSProperties;
 
-  // URL DEL PRODUCTO
+  // 🔥 URL PRODUCTO
   const productoUrl = `https://${process.env.NEXT_PUBLIC_SITE_URL}/${slug}/${producto.slug}`;
 
-  // MENSAJE PREMIUM WHATSAPP
+  // 🔥 MENSAJE WHATSAPP
   const mensaje = `
 🛒 *Nuevo pedido*
 
@@ -69,7 +94,7 @@ ${producto.descripcion || "Sin descripción"}
 ${productoUrl}
 `;
 
-  // LINK WHATSAPP
+  // 🔥 LINK WHATSAPP
   const whatsappUrl = catalogo.whatsapp
     ? `https://wa.me/${catalogo.whatsapp}?text=${encodeURIComponent(mensaje)}`
     : "#";
@@ -99,15 +124,15 @@ ${productoUrl}
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-transparent" />
       </div>
 
-      {/* --- HOJA DESLIZABLE (SHEET) --- */}
+      {/* --- HOJA --- */}
       <main className="relative z-10 mt-[50vh] min-h-[50vh] bg-[var(--color-bg)] rounded-t-[45px] shadow-[0_-15px_50px_rgba(0,0,0,0.5)] pb-32">
-        {/* Handle bar */}
+        {/* HANDLE */}
         <div className="flex justify-center pt-5">
           <div className="w-16 h-1.5 rounded-full bg-[var(--color-primary)] opacity-70" />
         </div>
 
         <div className="max-w-2xl mx-auto px-8 py-10 space-y-10">
-          {/* TÍTULO Y BADGE */}
+          {/* TÍTULO */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full animate-pulse bg-[var(--color-primary)]" />

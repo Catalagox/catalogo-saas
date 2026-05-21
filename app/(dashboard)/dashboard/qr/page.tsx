@@ -7,6 +7,7 @@ import { toPng } from "html-to-image";
 
 export default function QRPage() {
   const [slug, setSlug] = useState<string | null>(null);
+
   const qrRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -27,7 +28,7 @@ export default function QRPage() {
       .single();
 
     if (error) {
-      console.error(error);
+      console.error("ERROR CARGANDO QR:", error);
       return;
     }
 
@@ -42,35 +43,62 @@ export default function QRPage() {
     );
   }
 
-  const urlMenu = `https://catalagox.com//${slug}`;
+  // 🔥 URL CON TRACKING QR
+  const urlMenu = `https://catalagox.com/${slug}?qr=1`;
 
+  // COPIAR LINK
   const copiarLink = async () => {
-    await navigator.clipboard.writeText(urlMenu);
-    alert("Link copiado");
+    try {
+      await navigator.clipboard.writeText(urlMenu);
+
+      alert("Link copiado");
+    } catch (error) {
+      console.error(error);
+
+      alert("No se pudo copiar el link");
+    }
   };
 
+  // DESCARGAR QR
   const descargarQR = async () => {
     if (!qrRef.current) return;
 
-    const dataUrl = await toPng(qrRef.current);
+    try {
+      const dataUrl = await toPng(qrRef.current, {
+        cacheBust: true,
+        pixelRatio: 3,
+      });
 
-    const link = document.createElement("a");
-    link.download = "qr-menu.png";
-    link.href = dataUrl;
-    link.click();
+      const link = document.createElement("a");
+
+      link.download = `qr-${slug}.png`;
+
+      link.href = dataUrl;
+
+      link.click();
+    } catch (error) {
+      console.error("ERROR DESCARGANDO QR:", error);
+
+      alert("Error al descargar QR");
+    }
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto px-4">
       <h1 className="text-3xl font-bold mb-8 text-[var(--text-primary)]">
         QR de tu menú
       </h1>
 
       <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-8 text-center">
         {/* QR */}
-        <div className="bg-white p-5 rounded-xl w-fit mx-auto mb-6">
+        <div className="bg-white p-5 rounded-2xl w-fit mx-auto mb-6 shadow-lg">
           <div ref={qrRef}>
-            <QRCode value={urlMenu} size={220} />
+            <QRCode
+              value={urlMenu}
+              size={220}
+              bgColor="#ffffff"
+              fgColor="#000000"
+            />
           </div>
         </div>
 
@@ -85,6 +113,7 @@ export default function QRPage() {
 
         {/* BOTONES */}
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          {/* COPIAR */}
           <button
             onClick={copiarLink}
             className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-text-inverse)] px-4 py-2 rounded-lg font-semibold transition"
@@ -92,6 +121,7 @@ export default function QRPage() {
             Copiar link
           </button>
 
+          {/* DESCARGAR */}
           <button
             onClick={descargarQR}
             className="bg-[var(--bg-tertiary)] hover:bg-[var(--bg-card-hover)] text-[var(--text-primary)] px-4 py-2 rounded-lg transition"
@@ -99,9 +129,11 @@ export default function QRPage() {
             Descargar QR
           </button>
 
+          {/* VER MENÚ */}
           <a
             href={urlMenu}
             target="_blank"
+            rel="noopener noreferrer"
             className="bg-[var(--bg-tertiary)] hover:bg-[var(--bg-card-hover)] text-[var(--text-primary)] px-4 py-2 rounded-lg transition"
           >
             Ver menú

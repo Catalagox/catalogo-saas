@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+import { supabase } from "@/lib/supabaseClient";
 
 import MenuHeader from "@/components/public/MenuHeader";
 import MenuFooter from "@/components/public/MenuFooter";
@@ -65,6 +67,9 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
   // 🔥 NO ACTIVAR NADA AL INICIO
   const [categoriaActiva, setCategoriaActiva] = useState<string | null>(null);
 
+  // 🔥 EVITAR TRACKING DUPLICADO
+  const categoriasVisitadas = useRef<Set<string>>(new Set());
+
   if (!catalogo) {
     return (
       <div
@@ -121,6 +126,27 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
     "--color-lupa": colorLupa,
   } as React.CSSProperties;
 
+  // 🔥 TRACKING CATEGORÍAS
+  const trackCategoria = async (categoriaId: string) => {
+    // 🔥 EVITAR REPETIR TRACKING
+    if (categoriasVisitadas.current.has(categoriaId)) return;
+
+    categoriasVisitadas.current.add(categoriaId);
+
+    try {
+      const { error } = await supabase.from("estadisticas").insert({
+        user_id: catalogo.user_id,
+        tipo: "categoria_view",
+      });
+
+      if (error) {
+        console.error("ERROR TRACK CATEGORIA:", error);
+      }
+    } catch (err) {
+      console.error("TRACKING CATEGORIA ERROR:", err);
+    }
+  };
+
   // 🔥 DETECTAR CATEGORÍA ACTIVA REAL
   useEffect(() => {
     const handleScroll = () => {
@@ -139,7 +165,12 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
         }
       });
 
-      setCategoriaActiva(current);
+      if (current && current !== categoriaActiva) {
+        setCategoriaActiva(current);
+
+        // 🔥 TRACKING
+        trackCategoria(current);
+      }
     };
 
     window.addEventListener("scroll", handleScroll);
@@ -149,7 +180,7 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
-  }, [safeCategorias]);
+  }, [safeCategorias, categoriaActiva]);
 
   return (
     <div
@@ -201,6 +232,9 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
                     key={categoria.id}
                     onClick={() => {
                       setCategoriaActiva(categoria.id);
+
+                      // 🔥 TRACKING CLICK CATEGORÍA
+                      trackCategoria(categoria.id);
 
                       const element = document.getElementById(
                         `categoria-${categoria.id}`,
