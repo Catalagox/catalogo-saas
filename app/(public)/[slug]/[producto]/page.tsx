@@ -75,7 +75,6 @@ export default async function ProductoPage({ params }: PageProps) {
   } as React.CSSProperties;
 
   // 🔥 URL PRODUCTO
-  const productoUrl = `https://${process.env.NEXT_PUBLIC_SITE_URL}/${slug}/${producto.slug}`;
 
   // 🔥 MENSAJE WHATSAPP
   const mensaje = `
@@ -90,8 +89,8 @@ $${Number(producto.precio || 0).toLocaleString()}
 📝 *Descripción:*
 ${producto.descripcion || "Sin descripción"}
 
-🔗 *Ver producto:*
-${productoUrl}
+🔖 *Referencia:*
+${producto.slug}
 `;
 
   // 🔥 LINK WHATSAPP
