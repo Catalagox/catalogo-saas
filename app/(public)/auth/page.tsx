@@ -11,11 +11,14 @@ export default function AuthPage() {
 
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  // 🔐 Si ya tiene sesión → validar suscripción
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+
   useEffect(() => {
     const checkSession = async () => {
       const {
@@ -24,35 +27,21 @@ export default function AuthPage() {
 
       if (!session) return;
 
-      const { data: subscription } = await supabase
-        .from("subscriptions")
-        .select("*")
-        .eq("user_id", session.user.id)
-        .maybeSingle();
-
-      const now = new Date();
-
-      const hasAccess =
-        subscription &&
-        subscription.status === "active" &&
-        subscription.current_period_end &&
-        new Date(subscription.current_period_end) > now;
-
-      //router.push(hasAccess ? "/dashboard" : "/suscripcion");
       router.push("/dashboard");
     };
 
     checkSession();
   }, [router]);
-  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     setLoading(true);
+    setErrorMsg("");
+    setSuccessMsg("");
 
     try {
       if (isLogin) {
-        // 🔑 LOGIN
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -60,27 +49,12 @@ export default function AuthPage() {
 
         if (error) throw error;
 
-        const user = data.user;
-        if (!user) return;
+        if (!data.user) {
+          throw new Error("No se pudo iniciar sesión.");
+        }
 
-        /*const { data: subscription } = await supabase
-          .from("subscriptions")
-          .select("*")
-          .eq("user_id", user.id)
-          .maybeSingle(); 
-
-        const now = new Date();
-
-        const hasAccess =
-          subscription &&
-          subscription.status === "active" &&
-          subscription.current_period_end &&
-          new Date(subscription.current_period_end) > now; */
-
-       // router.push(hasAccess ? "/dashboard" : "/suscripcion");
-       router.push("/dashboard");
+        router.push("/dashboard");
       } else {
-        // 🆕 REGISTRO
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -88,18 +62,15 @@ export default function AuthPage() {
 
         if (error) throw error;
 
-        // Si usas confirmación por email
         if (!data.session) {
-          alert("Revisa tu correo para confirmar tu cuenta.");
+          setSuccessMsg("Te enviamos un correo para confirmar tu cuenta.");
           return;
         }
 
-        // Usuario nuevo siempre va a pagar
-       // router.push("/suscripcion");
-       router.push("/dashboard");
+        router.push("/dashboard");
       }
     } catch (error: any) {
-      alert(error.message);
+      setErrorMsg(error.message || "Ocurrió un error. Inténtalo nuevamente.");
     } finally {
       setLoading(false);
     }
@@ -114,13 +85,37 @@ export default function AuthPage() {
     });
   };
 
+  const toggleMode = () => {
+    setIsLogin(!isLogin);
+    setErrorMsg("");
+    setSuccessMsg("");
+  };
+
   return (
-    <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 via-white to-gray-200 px-4">
-      <div className="w-full max-w-md bg-white shadow-2xl rounded-3xl p-10 border border-gray-200">
+    <section
+      className="
+        min-h-screen
+        flex
+        items-center
+        justify-center
+        bg-gradient-to-b
+        from-white
+        via-gray-50
+        to-gray-200
+        px-4
+      "
+    >
+      <div className="w-full max-w-md bg-white shadow-2xl rounded-3xl p-8 md:p-10 border border-gray-200">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-extrabold text-gray-900">
             {isLogin ? "Bienvenido de nuevo" : "Crea tu cuenta"}
           </h1>
+
+          <p className="mt-2 text-gray-500">
+            {isLogin
+              ? "Accede a tu catálogo digital"
+              : "Empieza tu prueba gratuita de 7 días"}
+          </p>
         </div>
 
         <GoogleButton onClick={handleGoogleAuth} />
@@ -131,60 +126,105 @@ export default function AuthPage() {
           <div className="flex-1 h-px bg-gray-300"></div>
         </div>
 
-        <form className="space-y-6" onSubmit={handleSubmit}>
-          <div>
-            <div className="mt-2 flex items-center border rounded-xl px-4 py-3">
-              <FaEnvelope className="mr-3 text-gray-500" />
-              <input
-                type="email"
-                placeholder="tu@email.com"
-                className="w-full outline-none bg-transparent"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
+        {!isLogin && (
+          <div className="mb-5 bg-green-50 border border-green-200 rounded-xl p-3 text-center text-sm text-green-700">
+            🎉 Prueba gratuita durante 7 días.
+          </div>
+        )}
+
+        {errorMsg && (
+          <div className="mb-4 bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl p-3">
+            {errorMsg}
+          </div>
+        )}
+
+        {successMsg && (
+          <div className="mb-4 bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl p-3">
+            {successMsg}
+          </div>
+        )}
+
+        <form className="space-y-5" onSubmit={handleSubmit}>
+          {/* EMAIL */}
+          <div className="flex items-center border border-gray-300 rounded-xl px-4 py-3 bg-white focus-within:ring-2 focus-within:ring-green-500">
+            <FaEnvelope className="mr-3 text-gray-500 shrink-0" />
+
+            <input
+              type="email"
+              placeholder="tu@email.com"
+              className="
+                w-full
+                bg-transparent
+                outline-none
+                text-gray-900
+                placeholder:text-gray-400
+              "
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
           </div>
 
-          <div>
-            <div className="mt-2 flex items-center border rounded-xl px-4 py-3">
-              <FaLock className="mr-3 text-gray-500" />
-              <input
-                type={showPassword ? "text" : "password"}
-                className="w-full outline-none bg-transparent"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? <FaEyeSlash /> : <FaEye />}
-              </button>
-            </div>
+          {/* PASSWORD */}
+          <div className="flex items-center border border-gray-300 rounded-xl px-4 py-3 bg-white focus-within:ring-2 focus-within:ring-green-500">
+            <FaLock className="mr-3 text-gray-500 shrink-0" />
+
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Contraseña"
+              className="
+                w-full
+                bg-transparent
+                outline-none
+                text-gray-900
+                placeholder:text-gray-400
+              "
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+            />
+
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="ml-2 text-gray-500 hover:text-gray-700"
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-xl bg-black text-white font-semibold disabled:opacity-50"
+            className="
+              w-full
+              py-3
+              rounded-xl
+              bg-[#16A34A]
+              hover:bg-[#15803D]
+              text-white
+              font-semibold
+              transition
+              disabled:opacity-50
+            "
           >
             {loading
               ? isLogin
                 ? "Ingresando..."
                 : "Creando cuenta..."
               : isLogin
-              ? "Ingresar"
-              : "Crear cuenta"}
+                ? "Ingresar"
+                : "Crear cuenta"}
           </button>
         </form>
 
-        <div className="text-center mt-6 text-sm">
+        <div className="text-center mt-6 text-sm text-gray-600">
+          {isLogin ? "¿No tienes cuenta?" : "¿Ya tienes cuenta?"}
+
           <button
-            onClick={() => setIsLogin(!isLogin)}
-            className="font-semibold"
+            onClick={toggleMode}
+            className="ml-1 font-semibold text-green-600 hover:text-green-700"
           >
             {isLogin ? "Crear cuenta" : "Iniciar sesión"}
           </button>
