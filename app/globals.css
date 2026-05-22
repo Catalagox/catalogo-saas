@@ -339,27 +339,53 @@
 
 
 /* =======================================================
-   📝 FORMULARIOS
+   📝 FORMULARIOS LIGHT
 ======================================================= */
 
-input,
-textarea,
-select {
+.input-light {
+  background: #ffffff;
   color: #111827;
   -webkit-text-fill-color: #111827;
+
+  border: 1px solid #d1d5db;
+
+  transition: all 0.25s ease;
 }
 
-input::placeholder,
-textarea::placeholder {
+.input-light::placeholder {
   color: #9ca3af;
   opacity: 1;
 }
 
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus,
-textarea:-webkit-autofill,
-select:-webkit-autofill {
+.input-light:-webkit-autofill,
+.input-light:-webkit-autofill:hover,
+.input-light:-webkit-autofill:focus {
   -webkit-text-fill-color: #111827 !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* =======================================================
+   🌙 FORMULARIOS DARK
+======================================================= */
+
+.input-dark {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  -webkit-text-fill-color: var(--text-primary);
+
+  border: 1px solid var(--border-card);
+
+  transition: all 0.25s ease;
+}
+
+.input-dark::placeholder {
+  color: var(--text-secondary);
+  opacity: 1;
+}
+
+.input-dark:-webkit-autofill,
+.input-dark:-webkit-autofill:hover,
+.input-dark:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text-primary) !important;
   transition: background-color 5000s ease-in-out 0s;
 }

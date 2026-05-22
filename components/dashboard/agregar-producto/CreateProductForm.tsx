@@ -80,17 +80,14 @@ export default function CreateProductForm({
     }
   };
 
-  // ✅ NUEVA VERSIÓN: Subida directa sin API externa
   const subirImagen = async (): Promise<string> => {
     if (!imagen) throw new Error("Debes seleccionar una imagen");
     if (!userId) throw new Error("Usuario no autenticado");
 
-    // Crear un nombre único para evitar conflictos de caché
     const fileExt = imagen.name.split(".").pop();
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
     const filePath = `${userId}/${fileName}`;
 
-    // Subida directa al bucket "productos"
     const { data, error: uploadError } = await supabase.storage
       .from("productos")
       .upload(filePath, imagen, {
@@ -102,7 +99,6 @@ export default function CreateProductForm({
       throw new Error("Error al subir al storage: " + uploadError.message);
     }
 
-    // Obtener la URL pública de la imagen subida
     const {
       data: { publicUrl },
     } = supabase.storage.from("productos").getPublicUrl(filePath);
@@ -228,7 +224,8 @@ export default function CreateProductForm({
                 name="nombre"
                 value={producto.nombre}
                 onChange={handleChange}
-                className="w-full px-4 py-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-card)] focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] text-[var(--text-primary)]"
+                placeholder="Ej: Camiseta de algodón"
+                className="input-dark w-full px-4 py-3 rounded-xl focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]"
               />
             </div>
 
@@ -241,32 +238,44 @@ export default function CreateProductForm({
                 type="number"
                 value={producto.precio}
                 onChange={handleChange}
-                className="w-full px-4 py-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-card)] focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] text-[var(--text-primary)]"
+                placeholder="0.00"
+                className="input-dark w-full px-4 py-3 rounded-xl focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]"
               />
             </div>
           </div>
 
-          <select
-            name="categoria_id"
-            value={producto.categoria_id}
-            onChange={handleChange}
-            className="w-full px-4 py-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-card)] text-[var(--text-primary)]"
-          >
-            <option value="">Sin categoría</option>
-            {categorias.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.nombre}
-              </option>
-            ))}
-          </select>
+          <div>
+            <label className="text-sm text-[var(--text-secondary)]">
+              Categoría
+            </label>
+            <select
+              name="categoria_id"
+              value={producto.categoria_id}
+              onChange={handleChange}
+              className="input-dark w-full px-4 py-3 rounded-xl focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]"
+            >
+              <option value="">Sin categoría</option>
+              {categorias.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
 
-          <textarea
-            name="descripcion"
-            rows={4}
-            value={producto.descripcion}
-            onChange={handleChange}
-            className="w-full px-4 py-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-card)] text-[var(--text-primary)]"
-          />
+          <div>
+            <label className="text-sm text-[var(--text-secondary)]">
+              Descripción
+            </label>
+            <textarea
+              name="descripcion"
+              rows={4}
+              value={producto.descripcion}
+              onChange={handleChange}
+              placeholder="Describe los detalles de tu producto..."
+              className="input-dark w-full px-4 py-3 rounded-xl focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]"
+            />
+          </div>
 
           <ButtonPrimary
             onClick={crearProducto}

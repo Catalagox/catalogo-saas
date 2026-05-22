@@ -146,8 +146,8 @@ export default function AuthPage() {
 
         <form className="space-y-5" onSubmit={handleSubmit}>
           {/* EMAIL */}
-          <div className="flex items-center border border-gray-300 rounded-xl px-4 py-3 bg-white focus-within:ring-2 focus-within:ring-green-500">
-            <FaEnvelope className="mr-3 text-gray-500 shrink-0" />
+          <div className="input-light flex items-center rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-green-500 focus-within:border-green-500">
+            <FaEnvelope className="mr-3 text-gray-400 shrink-0" />
 
             <input
               type="email"
@@ -166,8 +166,8 @@ export default function AuthPage() {
           </div>
 
           {/* PASSWORD */}
-          <div className="flex items-center border border-gray-300 rounded-xl px-4 py-3 bg-white focus-within:ring-2 focus-within:ring-green-500">
-            <FaLock className="mr-3 text-gray-500 shrink-0" />
+          <div className="input-light flex items-center rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-green-500 focus-within:border-green-500">
+            <FaLock className="mr-3 text-gray-400 shrink-0" />
 
             <input
               type={showPassword ? "text" : "password"}
@@ -188,7 +188,7 @@ export default function AuthPage() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="ml-2 text-gray-500 hover:text-gray-700"
+              className="ml-2 text-gray-400 hover:text-gray-600 transition-colors"
             >
               {showPassword ? <FaEyeSlash /> : <FaEye />}
             </button>
