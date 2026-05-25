@@ -7,8 +7,7 @@ interface PageProps {
   searchParams: Promise<{ qr?: string }>;
 }
 
-// 1. FUNCIÓN AUXILIAR PARA OBTENER LOS DATOS DEL CATÁLOGO
-// La usamos en los metadatos y en el componente para no repetir código. Next.js hace caché automáticamente de esto.
+// 1. FUNCIÓN AUXILIAR PARA OBTENER LOS DATOS DEL CATÁLOGO Y PROCESAR EL LOGO
 async function getCatalogo(slug: string) {
   const supabase = await createClient();
   
@@ -43,10 +42,27 @@ async function getCatalogo(slug: string) {
     .maybeSingle();
 
   if (error || !data) return null;
-  return data;
+
+  // 🛠️ CONSTRUCCIÓN AUTOMÁTICA DE LA URL DEL LOGO
+  let logoUrl = "https://catalagox.com/default-share-image.png"; // Imagen por defecto por si no tiene logo
+
+  if (data.logo) {
+    if (data.logo.startsWith("http://") || data.logo.startsWith("https://")) {
+      // Si por alguna razón ya se guardó la URL completa
+      logoUrl = data.logo;
+    } else {
+      // Construcción exacta usando tu ID de proyecto 'yhlqooguctlzorinsxde' y tu bucket 'logos'
+      logoUrl = `https://yhlqooguctlzorinsxde.supabase.co/storage/v1/object/public/logos/${data.logo}`;
+    }
+  }
+
+  return {
+    ...data,
+    logoUrl,
+  };
 }
 
-// 2. GENERADOR DINÁMICO DE METADATOS
+// 2. GENERADOR DINÁMICO DE METADATOS (WhatsApp, Facebook, etc.)
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   
@@ -62,12 +78,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const titulo = `Menú Digital - ${catalogoDB.nombre}`;
   const descripcion = `¡Hola! Te invito a ver nuestro menú digital actualizado. Revisa nuestros productos y precios aquí.`;
-  const imagenUrl = catalogoDB.logo || "https://catalagox.com/default-share-image.png"; // Imagen por defecto si no tiene logo
 
   return {
     title: titulo,
     description: descripcion,
-    // Open Graph (Para WhatsApp, Facebook, LinkedIn)
     openGraph: {
       title: titulo,
       description: descripcion,
@@ -75,7 +89,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       siteName: "CatalagoX",
       images: [
         {
-          url: imagenUrl,
+          url: catalogoDB.logoUrl, // URL absoluta final de la imagen del cliente
           width: 800,
           height: 600,
           alt: `Logo de ${catalogoDB.nombre}`,
@@ -83,12 +97,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       ],
       type: "website",
     },
-    // Twitter Cards (Para Twitter/X)
     twitter: {
       card: "summary_large_image",
       title: titulo,
       description: descripcion,
-      images: [imagenUrl],
+      images: [catalogoDB.logoUrl],
     },
   };
 }
@@ -103,7 +116,6 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
     return <div className="p-10 text-center">Slug inválido</div>;
   }
 
-  // Usamos la función auxiliar
   const catalogoDB = await getCatalogo(slug);
 
   if (!catalogoDB) {
@@ -112,6 +124,7 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
 
   const catalogo = {
     ...catalogoDB,
+    logo: catalogoDB.logoUrl, // Le pasamos la URL pública completa ya procesada al componente cliente
     color_primario: catalogoDB.color_primario ?? "#f97316",
     color_fondo: catalogoDB.color_fondo ?? "#111827",
     color_header: catalogoDB.color_header ?? "#f97316",
@@ -126,26 +139,16 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
 
   // 🔥 TRACKING ESTADÍSTICAS
   try {
-    // 🔥 VISTA DEL MENÚ
-    const { error: menuError } = await supabase.from("estadisticas").insert({
+    await supabase.from("estadisticas").insert({
       user_id: catalogo.user_id,
       tipo: "menu_view",
     });
 
-    if (menuError) {
-      console.error("ERROR MENU VIEW:", menuError);
-    }
-
-    // 🔥 ESCANEO QR
     if (qr) {
-      const { error: qrError } = await supabase.from("estadisticas").insert({
+      await supabase.from("estadisticas").insert({
         user_id: catalogo.user_id,
         tipo: "qr_scan",
       });
-
-      if (qrError) {
-        console.error("ERROR QR:", qrError);
-      }
     }
   } catch (err) {
     console.error("TRACKING ERROR:", err);

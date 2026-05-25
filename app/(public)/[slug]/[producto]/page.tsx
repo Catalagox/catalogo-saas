@@ -2,65 +2,115 @@ import { createClient } from "@/lib/supabase/server";
 import BackButton from "@/components/public/BackButton";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { Metadata } from "next";
 
 interface PageProps {
   params: Promise<{ slug: string; producto: string }>;
 }
 
-export default async function ProductoPage({ params }: PageProps) {
-  const { slug, producto: productoSlug } = await params;
-
+// 1. FUNCIÓN AUXILIAR PARA OBTENER LOS DATOS (Evita duplicar consultas)
+async function getProductoData(slug: string, productoSlug: string) {
   const supabase = await createClient();
 
-  if (!slug || !productoSlug) return notFound();
+  if (!slug || !productoSlug) return null;
 
-  // 🔥 CARGAR CATÁLOGO
+  // Cargar catálogo
   const { data: catalogo, error: catalogoError } = await supabase
     .from("catalogos")
     .select(
       `
       id,
       user_id,
-
+      nombre,
       color_fondo,
       color_header,
       color_texto,
       color_precio,
       color_primario,
       color_tarjeta,
-
       whatsapp
     `,
     )
     .eq("slug", slug)
-    .single();
+    .maybeSingle();
 
-  if (catalogoError || !catalogo) {
-    return notFound();
-  }
+  if (catalogoError || !catalogo) return null;
 
-  // 🔥 CARGAR PRODUCTO
+  // Cargar producto
   const { data: producto, error: productoError } = await supabase
     .from("productos")
     .select("*")
     .eq("catalogo_id", catalogo.id)
     .eq("slug", productoSlug)
-    .single();
+    .maybeSingle();
 
-  if (productoError || !producto) {
-    return notFound();
-  }
+  if (productoError || !producto) return null;
+
+  return { catalogo, producto };
+}
+
+// 2. METADATOS DINÁMICOS PARA EL PRODUCTO (Para la vista previa con foto en WhatsApp)
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const { slug, producto: productoSlug } = await params;
+  const data = await getProductoData(slug, productoSlug);
+
+  if (!data) return { title: "Producto no encontrado" };
+
+  const { producto, catalogo } = data;
+  const titulo = `${producto.nombre} | ${catalogo.nombre}`;
+  const descripcion = producto.descripcion
+    ? `${producto.descripcion.substring(0, 150)}... ¡Pídelo aquí!`
+    : `Mira nuestro producto ${producto.nombre} en el menú digital.`;
+
+  // Usar la imagen del producto, si no tiene, podrías usar un fallback por defecto
+  const imagenUrl =
+    producto.imagen_url || "https://catalagox.com/default-share-image.png";
+
+  return {
+    title: titulo,
+    description: descripcion,
+    openGraph: {
+      title: titulo,
+      description: descripcion,
+      url: `https://catalagox.com/${slug}/${productoSlug}`,
+      siteName: catalogo.nombre,
+      images: [
+        {
+          url: imagenUrl,
+          width: 800,
+          height: 600,
+          alt: producto.nombre,
+        },
+      ],
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: titulo,
+      description: descripcion,
+      images: [imagenUrl],
+    },
+  };
+}
+
+// 3. COMPONENTE PRINCIPAL
+export default async function ProductoPage({ params }: PageProps) {
+  const { slug, producto: productoSlug } = await params;
+  const supabase = await createClient();
+
+  const data = await getProductoData(slug, productoSlug);
+  if (!data) return notFound();
+
+  const { catalogo, producto } = data;
 
   // 🔥 TRACKING PRODUCTO
   try {
-    const { error } = await supabase.from("estadisticas").insert({
+    await supabase.from("estadisticas").insert({
       user_id: catalogo.user_id,
       tipo: "producto_view",
     });
-
-    if (error) {
-      console.error("ERROR PRODUCT VIEW:", error);
-    }
   } catch (err) {
     console.error("TRACKING PRODUCT ERROR:", err);
   }
@@ -74,24 +124,17 @@ export default async function ProductoPage({ params }: PageProps) {
     "--color-card": catalogo.color_tarjeta ?? "rgba(255,255,255,0.05)",
   } as React.CSSProperties;
 
-  // 🔥 URL PRODUCTO
+  // 🔥 URL ABSOLUTA DEL PRODUCTO (Es vital para que WhatsApp arme la previsualización)
+  const urlProducto = `https://catalagox.com/${slug}/${productoSlug}`;
 
-  // 🔥 MENSAJE WHATSAPP
-  const mensaje = `
-🛒 *Nuevo pedido*
+  // 🔥 MENSAJE DE WHATSAPP MEJORADO (Estructura clara + Enlace)
+  const mensaje = `🛒 *Nuevo pedido*
 
-📦 *Producto:*
-${producto.nombre}
+📦 *Producto:* ${producto.nombre}
+💰 *Precio:* $${Number(producto.precio || 0).toLocaleString()}
+🔖 *Referencia:* ${producto.slug}
 
-💰 *Precio:*
-$${Number(producto.precio || 0).toLocaleString()}
-
-📝 *Descripción:*
-${producto.descripcion || "Sin descripción"}
-
-🔖 *Referencia:*
-${producto.slug}
-`;
+🔗 *Ver producto:* ${urlProducto}`;
 
   // 🔥 LINK WHATSAPP
   const whatsappUrl = catalogo.whatsapp
@@ -125,7 +168,6 @@ ${producto.slug}
 
       {/* --- HOJA --- */}
       <main className="relative z-10 mt-[50vh] min-h-[50vh] bg-[var(--color-bg)] rounded-t-[45px] shadow-[0_-15px_50px_rgba(0,0,0,0.5)] pb-32">
-        {/* HANDLE */}
         <div className="flex justify-center pt-5">
           <div className="w-16 h-1.5 rounded-full bg-[var(--color-primary)] opacity-70" />
         </div>
@@ -135,12 +177,10 @@ ${producto.slug}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full animate-pulse bg-[var(--color-primary)]" />
-
               <span className="text-[11px] font-black uppercase tracking-[0.2em] text-[var(--color-primary)]">
                 Producto
               </span>
             </div>
-
             <h1 className="text-4xl font-extrabold text-[var(--color-text)] leading-tight">
               {producto.nombre}
             </h1>
@@ -152,7 +192,6 @@ ${producto.slug}
               <p className="text-[10px] font-black uppercase mb-1 tracking-widest text-[var(--color-primary)]">
                 Inversión
               </p>
-
               <p className="text-4xl font-black text-[var(--color-price)]">
                 ${Number(producto.precio || 0).toLocaleString()}
               </p>
@@ -174,7 +213,6 @@ ${producto.slug}
             <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-[var(--color-primary)]">
               Descripción
             </h3>
-
             <div className="text-lg leading-relaxed whitespace-pre-line font-light text-[var(--color-text)]">
               {producto.descripcion
                 ? producto.descripcion
