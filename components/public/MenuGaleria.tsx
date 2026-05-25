@@ -30,7 +30,7 @@ export default function MenuGaleria({ categorias, slug }: MenuGaleriaProps) {
           py-20
           border
           border-dashed
-          rounded-3xl
+          rounded-md
           border-white/10
           bg-white/[0.02]
           backdrop-blur-sm
@@ -139,12 +139,13 @@ export default function MenuGaleria({ categorias, slug }: MenuGaleriaProps) {
               />
             </div>
 
-            {/* 📦 GRID */}
+            {/* 📦 GRID - Corregido para mantener simetría exacta */}
             <div
               className="
                 grid
                 grid-cols-2
                 gap-4
+                items-start
               "
             >
               {productosValidos.map((p) => {
@@ -157,9 +158,11 @@ export default function MenuGaleria({ categorias, slug }: MenuGaleriaProps) {
                     className="
                       group
                       relative
-                      block
+                      w-full
+                      flex
+                      flex-col
                       overflow-hidden
-                      rounded-3xl
+                      rounded-md
                       border
                       border-white/5
                       bg-[var(--color-card)]
@@ -193,6 +196,7 @@ export default function MenuGaleria({ categorias, slug }: MenuGaleriaProps) {
                     <div
                       className="
                         relative
+                        w-full
                         aspect-square
                         overflow-hidden
                         bg-white/[0.03]
@@ -244,7 +248,7 @@ export default function MenuGaleria({ categorias, slug }: MenuGaleriaProps) {
                     </div>
 
                     {/* 📄 INFO */}
-                    <div className="p-4 flex flex-col gap-1.5">
+                    <div className="p-4 flex flex-col gap-1.5 justify-between flex-1">
                       {/* NOMBRE */}
                       <h3
                         className="
