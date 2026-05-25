@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import Logo from "@/components/marketing/ui/Logo";
@@ -24,7 +24,6 @@ type Props = {
 
 export default function Sidebar({ closeMenu }: Props) {
   const pathname = usePathname();
-  const router = useRouter();
 
   const [userEmail, setUserEmail] = useState("");
   const [userName, setUserName] = useState("");
@@ -44,9 +43,13 @@ export default function Sidebar({ closeMenu }: Props) {
     }
   };
 
+  // FUNCIÓN ACTUALIZADA
   const cerrarSesion = async () => {
+    if (closeMenu) closeMenu(); // Cierra el menú responsive si está abierto
     await supabase.auth.signOut();
-    router.push("/login");
+    
+    // Redirección limpia a la página principal de marketing
+    window.location.href = "/";
   };
 
   const links = [
@@ -118,7 +121,7 @@ export default function Sidebar({ closeMenu }: Props) {
 
         <button
           onClick={cerrarSesion}
-          className="flex items-center justify-center gap-2 w-full px-4 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--color-danger)] hover:text-white transition"
+          className="flex items-center justify-center gap-2 w-full px-4 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--color-danger)] hover:text-white transition-all duration-200"
         >
           <LogOut size={16} />
           Cerrar sesión

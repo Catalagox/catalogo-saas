@@ -49,7 +49,7 @@ export default function Logo({
       <span
         className={`font-black tracking-tighter transition-colors ${sizes[size].text} ${textColor}`}
       >
-        Catalogo<span className="text-[var(--color-primary)]">X</span>
+        Catalago<span className="text-[var(--color-primary)]">X</span>
       </span>
     </Link>
   );

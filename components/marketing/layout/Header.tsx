@@ -115,11 +115,55 @@ export default function Header() {
 
       {/* SIDE MENU */}
       <div
-        className={`fixed top-0 right-0 h-full w-[80%] max-w-sm bg-white p-8 shadow-2xl transform transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] md:hidden ${
+        className={`fixed top-0 right-0 h-full w-[80%] max-w-sm bg-white p-8 shadow-2xl flex flex-col justify-between transform transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] md:hidden z-[110] ${
           menuOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        {/* contenido */}
+        <div>
+          {/* Botón de cierre superior interno */}
+          <div className="flex justify-end mb-8">
+            <button
+              onClick={() => setMenuOpen(false)}
+              className="p-2 text-slate-600 hover:text-slate-900 bg-slate-100 rounded-full"
+            >
+              <FaTimes className="text-xl" />
+            </button>
+          </div>
+
+          {/* Navegación móvil */}
+          <nav className="flex flex-col gap-6">
+            {["Inicio", "Contacto", "Suscripcion"].map((item) => (
+              <Link
+                key={item}
+                href={item === "Inicio" ? "/" : `/${item.toLowerCase()}`}
+                onClick={() => setMenuOpen(false)} // Cierra el menú al hacer clic
+                className="text-lg font-bold text-slate-800 hover:text-emerald-600 transition-colors"
+              >
+                {item}
+              </Link>
+            ))}
+          </nav>
+        </div>
+
+        {/* Botones de acción móvil (abajo) */}
+        <div className="flex flex-col gap-4 mt-auto">
+          <Link
+            href="/auth"
+            onClick={() => setMenuOpen(false)}
+            className="w-full text-center px-6 py-3 rounded-full text-sm font-bold border border-slate-200 text-slate-900 hover:bg-slate-50 transition-all"
+          >
+            Login
+          </Link>
+
+          <Link
+            href="/auth"
+            onClick={() => setMenuOpen(false)}
+            className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-bold bg-[var(--color-primary)] text-black shadow-lg hover:bg-black hover:text-white transition-all"
+          >
+            <FaUserPlus />
+            Crear cuenta
+          </Link>
+        </div>
       </div>
     </header>
   );
