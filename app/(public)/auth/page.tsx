@@ -58,6 +58,10 @@ export default function AuthPage() {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            // Esto asegura que si confirma el correo en producción, regrese directo a tu web
+            emailRedirectTo: `${window.location.origin}/dashboard`,
+          },
         });
 
         if (error) throw error;
@@ -77,12 +81,18 @@ export default function AuthPage() {
   };
 
   const handleGoogleAuth = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          // Ajustado dinámicamente: te mandará a catalogox.com/dashboard o localhost:3000/dashboard de forma directa
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+      if (error) throw error;
+    } catch (error: any) {
+      setErrorMsg(error.message || "Error al conectar con Google.");
+    }
   };
 
   const toggleMode = () => {

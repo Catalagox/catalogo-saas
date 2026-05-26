@@ -11,6 +11,11 @@ export default function SuscripcionPage() {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
 
+  const [userData, setUserData] = useState<{
+    id: string;
+    email: string;
+  } | null>(null);
+
   useEffect(() => {
     verificarUsuario();
   }, []);
@@ -25,20 +30,37 @@ export default function SuscripcionPage() {
       return;
     }
 
+    setUserData({
+      id: session.user.id,
+      email: session.user.email || "",
+    });
+
     setChecking(false);
   };
 
   const handleSuscribirse = async () => {
+    if (!userData) return alert("No se encontraron datos del usuario.");
     setLoading(true);
 
     try {
-      const response = await fetch("/api/create-checkout-session", {
+      const response = await fetch("/api/checkout", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: userData.id,
+          email: userData.email,
+        }),
       });
 
       const data = await response.json();
 
-      if (data.url) window.location.href = data.url;
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.error || "Error iniciando el pago.");
+      }
     } catch (error) {
       console.error(error);
       alert("Error iniciando pago");
@@ -49,10 +71,9 @@ export default function SuscripcionPage() {
 
   if (checking) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
-        <div className="w-12 h-12 border-4 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin mb-4"></div>
-
-        <p className="text-[var(--color-subscription-text)] font-medium animate-pulse">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#050807]">
+        <div className="w-12 h-12 border-4 border-[#22c55e] border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="text-[#b4b9b5] font-medium animate-pulse">
           Verificando acceso...
         </p>
       </div>
@@ -60,65 +81,55 @@ export default function SuscripcionPage() {
   }
 
   return (
-    <section className="relative min-h-screen overflow-hidden bg-[#fafafa] px-6 py-24 md:py-20">
-      {/* BLOBS */}
-      <div className="absolute top-0 -left-4 w-72 h-72 bg-emerald-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob" />
-
-      <div className="absolute top-0 -right-4 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000" />
-
-      <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000" />
+    <section className="relative min-h-screen overflow-hidden bg-[#050807] px-6 py-24 md:py-20">
+      {/* BLOBS DE FONDO */}
+      <div className="absolute top-0 -left-4 w-72 h-72 bg-emerald-500 rounded-full mix-blend-screen filter blur-3xl opacity-10 animate-blob" />
+      <div className="absolute top-0 -right-4 w-72 h-72 bg-blue-500 rounded-full mix-blend-screen filter blur-3xl opacity-10 animate-blob animation-delay-2000" />
+      <div className="absolute -bottom-8 left-20 w-72 h-72 bg-emerald-400 rounded-full mix-blend-screen filter blur-3xl opacity-10 animate-blob animation-delay-4000" />
 
       <div className="relative max-w-5xl mx-auto">
         {/* HEADER */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center rounded-full bg-emerald-50 border border-emerald-100 text-[var(--color-primary)] px-4 py-1.5 text-xs font-bold uppercase tracking-wider mb-6 shadow-sm">
+          <div className="inline-flex items-center rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[#22c55e] px-4 py-1.5 text-xs font-bold uppercase tracking-wider mb-6 shadow-sm">
             Acceso Ilimitado
           </div>
 
-          <h1 className="text-4xl md:text-6xl font-black tracking-tight text-[var(--color-subscription-title)] mb-6">
+          <h1 className="text-4xl md:text-6xl font-black tracking-tight text-white mb-6">
             Eleva tu negocio al <br />
-            <span className="text-[var(--color-primary)]">siguiente nivel</span>
+            <span className="text-[#22c55e]">siguiente nivel</span>
           </h1>
 
-          <p className="text-[var(--color-subscription-text)] text-lg max-w-2xl mx-auto font-medium">
+          <p className="text-[#b4b9b5] text-lg max-w-2xl mx-auto font-medium">
             Únete a cientos de restaurantes que ya digitalizaron su experiencia
             con nuestro plan profesional.
           </p>
         </div>
 
-        {/* CARD */}
+        {/* TARJETA PREMIUM PREPARADA PARA MODO OSCURO */}
         <div className="max-w-[440px] mx-auto group relative">
-          {/* Animated Border */}
-          <div className="absolute -inset-0.5 rounded-[42px] bg-gradient-to-r from-emerald-400 via-teal-500 to-emerald-400 opacity-75 blur-sm group-hover:opacity-100 transition-opacity duration-500 group-hover:duration-200 animate-tilt"></div>
+          <div className="absolute -inset-0.5 rounded-[42px] bg-gradient-to-r from-emerald-500 via-emerald-400 to-green-600 opacity-40 blur-md group-hover:opacity-100 transition-opacity duration-500 animate-tilt"></div>
 
-          <div className="relative bg-white rounded-[40px] p-8 md:p-10 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.08)] transition-all duration-500 group-hover:shadow-[0_48px_80px_-16px_rgba(0,0,0,0.12)] group-hover:-translate-y-1">
-            {/* BADGE */}
-            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[var(--color-primary)] text-black text-[10px] font-bold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg">
+          <div className="relative bg-[#0e1412] border border-[#1e261b] rounded-[40px] p-8 md:p-10 shadow-2xl transition-all duration-500 group-hover:-translate-y-1">
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#22c55e] text-[#050807] text-[10px] font-bold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg">
               Recomendado
             </div>
 
-            {/* PRICE */}
+            {/* PRECIO */}
             <div className="text-center mb-10">
-              <h3 className="text-[var(--color-subscription-muted)] font-bold text-sm uppercase tracking-widest mb-2">
+              <h3 className="text-[#7f8781] font-bold text-sm uppercase tracking-widest mb-2">
                 Plan Pro
               </h3>
 
               <div className="flex items-baseline justify-center gap-1">
-                <span className="text-2xl font-bold text-[var(--color-subscription-muted)]">
-                  $
-                </span>
-
-                <span className="text-8xl font-black text-[var(--color-subscription-title)] tracking-tighter">
+                <span className="text-2xl font-bold text-[#7f8781]">$</span>
+                <span className="text-8xl font-black text-white tracking-tighter">
                   5
                 </span>
-
-                <span className="text-[var(--color-subscription-muted)] font-semibold">
-                  /mes
-                </span>
+                <span className="text-[#7f8781] font-semibold">/mes</span>
               </div>
             </div>
 
-            {/* FEATURES */}
+            {/* CARACTERÍSTICAS (TEXTO VISIBLE CON --text-primary / text-white) */}
             <div className="space-y-4 mb-10">
               {[
                 "1 Menú Digital Profesional",
@@ -127,24 +138,24 @@ export default function SuscripcionPage() {
                 "Soporte Prioritario 24/7",
                 "Panel de Administración Pro",
                 "Sin Comisiones por Venta",
+                "Sin Contratos ni Permanencia",
               ].map((item, idx) => (
                 <div key={idx} className="flex items-center gap-4 group/item">
-                  <div className="flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500 text-white transition-transform group-hover/item:scale-110">
+                  <div className="flex items-center justify-center w-6 h-6 rounded-full bg-[#22c55e]/10 text-[#22c55e] border border-[#22c55e]/20 transition-transform group-hover/item:scale-110">
                     <Check size={14} strokeWidth={3} />
                   </div>
-
-                  <span className="text-[var(--color-subscription-text)] font-medium text-[15px]">
+                  <span className="text-[#c4c7c4] font-medium text-[15px]">
                     {item}
                   </span>
                 </div>
               ))}
             </div>
 
-            {/* BUTTON */}
+            {/* BOTÓN INTERACTIVO */}
             <button
               onClick={handleSuscribirse}
               disabled={loading}
-              className="relative overflow-hidden w-full py-5 rounded-2xl bg-[var(--color-primary)] text-black font-bold text-lg shadow-2xl transition-all hover:scale-[1.01] active:scale-[0.98] disabled:opacity-70"
+              className="relative overflow-hidden w-full py-5 rounded-2xl bg-[#22c55e] hover:bg-[#16a34a] text-[#050807] font-bold text-lg shadow-xl transition-all hover:scale-[1.01] active:scale-[0.98] disabled:opacity-70 cursor-pointer"
             >
               <span className="relative z-10 flex items-center justify-center gap-2">
                 {loading ? (
@@ -158,14 +169,13 @@ export default function SuscripcionPage() {
               </span>
 
               {!loading && (
-                <div className="absolute top-0 -inset-full h-full w-1/2 z-5 block transform -skew-x-12 bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-shine" />
+                <div className="absolute top-0 -inset-full h-full w-1/2 z-5 block transform -skew-x-12 bg-gradient-to-r from-transparent via-white/30 to-transparent group-hover:animate-shine" />
               )}
             </button>
 
-            {/* FOOTER */}
-            <div className="mt-6 flex items-center justify-center gap-2 text-[var(--color-subscription-muted)]">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-
+            {/* FOOTER DE LA TARJETA */}
+            <div className="mt-6 flex items-center justify-center gap-2 text-[#7f8781]">
+              <div className="w-1.5 h-1.5 rounded-full bg-[#22c55e] animate-pulse" />
               <p className="text-xs font-medium uppercase tracking-tight">
                 Garantía de satisfacción
               </p>
@@ -173,12 +183,12 @@ export default function SuscripcionPage() {
           </div>
         </div>
 
-        {/* CONTACT */}
-        <p className="text-center text-[var(--color-subscription-muted)] mt-10 text-sm">
+        {/* ENLACE DE CONTACTO */}
+        <p className="text-center text-[#7f8781] mt-10 text-sm">
           ¿Tienes dudas?{" "}
           <Link
             href="/contacto"
-            className="text-[var(--color-primary)] font-bold hover:underline"
+            className="text-[#22c55e] font-bold hover:underline"
           >
             Habla con nosotros
           </Link>
@@ -191,57 +201,45 @@ export default function SuscripcionPage() {
             left: 125%;
           }
         }
-
         .animate-shine {
           animation: shine 1.5s infinite;
         }
-
         @keyframes blob {
           0% {
             transform: translate(0px, 0px) scale(1);
           }
-
           33% {
             transform: translate(30px, -50px) scale(1.1);
           }
-
           66% {
             transform: translate(-20px, 20px) scale(0.9);
           }
-
           100% {
             transform: translate(0px, 0px) scale(1);
           }
         }
-
         .animate-blob {
           animation: blob 7s infinite;
         }
-
         .animation-delay-2000 {
           animation-delay: 2s;
         }
-
         .animation-delay-4000 {
           animation-delay: 4s;
         }
-
         @keyframes tilt {
           0%,
           50%,
           100% {
             transform: rotate(0deg);
           }
-
           25% {
             transform: rotate(0.5deg);
           }
-
           75% {
             transform: rotate(-0.5deg);
           }
         }
-
         .animate-tilt {
           animation: tilt 10s infinite linear;
         }
