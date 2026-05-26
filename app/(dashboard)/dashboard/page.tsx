@@ -90,7 +90,6 @@ export default function DashboardPage() {
     const fechaVencimiento = new Date();
     fechaVencimiento.setDate(fechaVencimiento.getDate() + 7);
 
-    // Generamos un slug básico a partir del nombre
     const slugGenerado = nuevoNombre
       .toLowerCase()
       .trim()
@@ -135,19 +134,24 @@ export default function DashboardPage() {
     setIsCreating(false);
   };
 
+  // El cálculo de fechas se normaliza a medianoche local para obtener una cuenta de días exacta
   const obtenerDiasRestantes = (fechaVencimientoISO: string | null) => {
     if (!fechaVencimientoISO) return { dias: 0, expirado: true };
 
-    const ahora = new Date().getTime();
-    const vencimiento = new Date(fechaVencimientoISO).getTime();
-    const diferenciaMs = vencimiento - ahora;
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
 
-    if (diferenciaMs <= 0) {
+    const vencimiento = new Date(fechaVencimientoISO);
+    vencimiento.setHours(0, 0, 0, 0);
+
+    const diferenciaMs = vencimiento.getTime() - hoy.getTime();
+
+    if (diferenciaMs < 0) {
       return { dias: 0, expirado: true };
     }
 
-    const dias = Math.ceil(diferenciaMs / (1000 * 60 * 60 * 24));
-    return { dias, expirado: false };
+    const dias = Math.floor(diferenciaMs / (1000 * 60 * 60 * 24));
+    return { dias, expirado: false }; 
   };
 
   if (loading) {
@@ -163,6 +167,7 @@ export default function DashboardPage() {
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto space-y-6 md:space-y-10">
+        
         {/* HEADER */}
         <div className="bg-[var(--bg-card)] border-b border-[var(--border-card)] sticky top-0 z-20 backdrop-blur-md px-5 py-6 md:px-10 md:py-8 mb-6 md:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex flex-col gap-2">
@@ -208,19 +213,18 @@ export default function DashboardPage() {
           <div className="bg-red-500/5 border border-red-500/20 rounded-3xl p-6 md:p-10 text-center space-y-4">
             <div className="max-w-md mx-auto">
               <h2 className="text-2xl font-black text-red-400 flex items-center justify-center gap-2">
-                <AlertTriangle className="w-6 h-6 animate-bounce" /> Tu tiempo
-                de prueba ha terminado
+                <AlertTriangle className="w-6 h-6 animate-bounce" /> Tu tiempo de prueba ha terminado
               </h2>
               <p className="text-[var(--text-secondary)] text-sm mt-2">
-                Para seguir gestionando tus productos, ver estadísticas y
-                mantener tu menú QR público disponible para tus clientes, activa
-                tu membresía premium por solo $5 USD al mes.
+                Para seguir gestionando tus productos, ver estadísticas y mantener tu menú QR público disponible para tus clientes, activa tu membresía premium por solo $5 USD al mes.
               </p>
             </div>
 
+            {/* Inyección directa del componente de suscripción */}
             <SuscripcionCard user={user} />
           </div>
         ) : catalogo ? (
+          
           /* GRID DEL DASHBOARD */
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {[
@@ -276,7 +280,7 @@ export default function DashboardPage() {
               </button>
             ))}
 
-            {/* TARJETA ESPECIAL DEL MENÚ PÚBLICO (Abre en pestaña nueva fuera del Dashboard) */}
+            {/* TARJETA DEL MENÚ PÚBLICO */}
             <a
               href={`/${catalogo.slug}`}
               target="_blank"
@@ -293,14 +297,14 @@ export default function DashboardPage() {
             </a>
           </div>
         ) : (
+          
           /* CREAR PRIMER CATALOGO */
           <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-8 max-w-xl">
             <h2 className="text-2xl font-bold mb-3 text-[var(--text-primary)]">
               Crea tu primer menú
             </h2>
             <p className="text-[var(--text-secondary)] mb-6">
-              Configura tu menú digital en menos de 5 minutes y obtén 7 días de
-              prueba completamente gratis.
+              Configura tu menú digital en menos de 5 minutos y obtén 7 días de prueba completamente gratis.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <input

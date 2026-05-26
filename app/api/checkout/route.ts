@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
-// Inicializamos Stripe utilizando la clave secreta guardada en Vercel/.env.local
+// Inicializamos Stripe con la versión exacta de tu cuenta de Stripe (2026-04-22.dahlia)
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-01-27" as any, // Mantiene la compatibilidad con las versiones estables de Stripe
+  apiVersion: "2026-04-22.dahlia" as any, // Cambiado para corregir el error de API inválida
 });
 
 export async function POST(req: Request) {
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
       payment_method_types: ["card"],
       line_items: [
         {
-          price: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID, // El ID de 5 USD que configuramos en tus variables
+          price: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID, // El ID de 5 USD configurado en tus variables
           quantity: 1,
         },
       ],

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { Check, Zap } from "lucide-react";
+import Link from "next/link"; // Importamos el componente Link nativo
 
 interface SuscripcionCardProps {
   user: {
@@ -11,38 +11,9 @@ interface SuscripcionCardProps {
 }
 
 export default function SuscripcionCard({ user }: SuscripcionCardProps) {
-  const [loading, setLoading] = useState(false);
-
-  const handleSuscribirse = async () => {
-    if (!user) return alert("No se encontraron datos del usuario.");
-    setLoading(true);
-
-    try {
-      const response = await fetch("/api/checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: user.id,
-          email: user.email,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert(data.error || "Error iniciando el pago.");
-      }
-    } catch (error) {
-      console.error(error);
-      alert("Error iniciando pago");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Nota: Si tu página está dentro de otra carpeta (ej: dashboard/marketing/suscripcion), 
+  // asegúrate de cambiar este href por la ruta exacta de tu URL.
+  const rutaSuscripcion = "/marketing/suscripcion"; 
 
   return (
     <div className="max-w-[440px] mx-auto group relative my-6">
@@ -91,23 +62,16 @@ export default function SuscripcionCard({ user }: SuscripcionCardProps) {
           ))}
         </div>
 
-        {/* BUTTON */}
-        <button
-          onClick={handleSuscribirse}
-          disabled={loading}
-          className="relative overflow-hidden w-full py-5 rounded-2xl bg-[#16A34A] text-white font-bold text-lg shadow-2xl transition-all hover:scale-[1.01] active:scale-[0.98] disabled:opacity-70 cursor-pointer"
+        {/* BOTÓN REESCRITO COMO LINK (Fijate que cambiamos <button> por <Link>) */}
+        <Link
+          href={rutaSuscripcion}
+          className="relative block text-center overflow-hidden w-full py-5 rounded-2xl bg-[#16A34A] text-white font-bold text-lg shadow-2xl transition-all hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
         >
           <span className="relative z-10 flex items-center justify-center gap-2">
-            {loading ? (
-              "Procesando..."
-            ) : (
-              <>
-                ¡Activar Plan Pro ahora!
-                <Zap size={18} className="fill-current" />
-              </>
-            )}
+            ¡Activar Plan Pro ahora!
+            <Zap size={18} className="fill-current" />
           </span>
-        </button>
+        </Link>
 
         {/* FOOTER */}
         <div className="mt-6 flex items-center justify-center gap-2 text-gray-400">
