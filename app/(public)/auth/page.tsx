@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import GoogleButton from "@/components/marketing/ui/GoogleButton";
 import { supabase } from "@/lib/supabaseClient";
 
-export default function AuthPage() {
+// 1. Convertimos tu lógica actual en un componente interno que consuma los parámetros de la URL de forma segura
+function AuthForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -115,6 +116,120 @@ export default function AuthPage() {
   };
 
   return (
+    <div className="w-full max-w-md bg-white shadow-2xl rounded-3xl p-8 md:p-10 border border-gray-200">
+      {/* HEADER */}
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-extrabold text-gray-900">
+          {isLogin ? "Bienvenido de nuevo" : "Crea tu cuenta"}
+        </h1>
+
+        <p className="mt-2 text-gray-500">
+          {isLogin
+            ? "Accede a tu catálogo digital"
+            : "Empieza tu prueba gratuita de 7 días"}
+        </p>
+      </div>
+
+      {/* GOOGLE */}
+      <GoogleButton onClick={handleGoogleAuth} />
+
+      {/* DIVIDER */}
+      <div className="flex items-center my-6">
+        <div className="flex-1 h-px bg-gray-300"></div>
+        <span className="px-4 text-sm text-gray-500">o</span>
+        <div className="flex-1 h-px bg-gray-300"></div>
+      </div>
+
+      {/* FREE TRIAL */}
+      {!isLogin && (
+        <div className="mb-5 bg-green-50 border border-green-200 rounded-xl p-3 text-center text-sm text-green-700">
+          🎉 Prueba gratuita durante 7 días.
+        </div>
+      )}
+
+      {/* ERROR */}
+      {errorMsg && (
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl p-3">
+          {errorMsg}
+        </div>
+      )}
+
+      {/* SUCCESS */}
+      {successMsg && (
+        <div className="mb-4 bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl p-3">
+          {successMsg}
+        </div>
+      )}
+
+      {/* FORM */}
+      <form className="space-y-5" onSubmit={handleSubmit}>
+        {/* EMAIL */}
+        <div className="input-light flex items-center rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-green-500 focus-within:border-green-500">
+          <FaEnvelope className="mr-3 text-gray-400 shrink-0" />
+          <input
+            type="email"
+            placeholder="tu@email.com"
+            className="w-full bg-transparent outline-none text-gray-900 placeholder:text-gray-400"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+
+        {/* PASSWORD */}
+        <div className="input-light flex items-center rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-green-500 focus-within:border-green-500">
+          <FaLock className="mr-3 text-gray-400 shrink-0" />
+          <input
+            type={showPassword ? "text" : "password"}
+            placeholder="Contraseña"
+            className="w-full bg-transparent outline-none text-gray-900 placeholder:text-gray-400"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            minLength={6}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="ml-2 text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            {showPassword ? <FaEyeSlash /> : <FaEye />}
+          </button>
+        </div>
+
+        {/* SUBMIT */}
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full py-3 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white font-semibold transition disabled:opacity-50"
+        >
+          {loading
+            ? isLogin
+              ? "Ingresando..."
+              : "Creando cuenta..."
+            : isLogin
+              ? "Ingresar"
+              : "Crear cuenta"}
+        </button>
+      </form>
+
+      {/* TOGGLE */}
+      <div className="text-center mt-6 text-sm text-gray-600">
+        {isLogin ? "¿No tienes cuenta?" : "¿Ya tienes cuenta?"}
+        <button
+          onClick={toggleMode}
+          className="ml-1 font-semibold text-green-600 hover:text-green-700"
+        >
+          {isLogin ? "Crear cuenta" : "Iniciar sesión"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// 2. Exportación por defecto obligatoria envuelta en Suspense para mitigar el error de pre-renderizado en producción
+export default function AuthPage() {
+  return (
     <section
       className="
         min-h-screen
@@ -128,142 +243,13 @@ export default function AuthPage() {
         px-4
       "
     >
-      <div className="w-full max-w-md bg-white shadow-2xl rounded-3xl p-8 md:p-10 border border-gray-200">
-        {/* HEADER */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-extrabold text-gray-900">
-            {isLogin ? "Bienvenido de nuevo" : "Crea tu cuenta"}
-          </h1>
-
-          <p className="mt-2 text-gray-500">
-            {isLogin
-              ? "Accede a tu catálogo digital"
-              : "Empieza tu prueba gratuita de 7 días"}
-          </p>
+      <Suspense fallback={
+        <div className="w-full max-w-md bg-white shadow-2xl rounded-3xl p-8 text-center border border-gray-200">
+          <p className="text-gray-500 font-medium animate-pulse">Cargando el sistema de acceso...</p>
         </div>
-
-        {/* GOOGLE */}
-        <GoogleButton onClick={handleGoogleAuth} />
-
-        {/* DIVIDER */}
-        <div className="flex items-center my-6">
-          <div className="flex-1 h-px bg-gray-300"></div>
-
-          <span className="px-4 text-sm text-gray-500">o</span>
-
-          <div className="flex-1 h-px bg-gray-300"></div>
-        </div>
-
-        {/* FREE TRIAL */}
-        {!isLogin && (
-          <div className="mb-5 bg-green-50 border border-green-200 rounded-xl p-3 text-center text-sm text-green-700">
-            🎉 Prueba gratuita durante 7 días.
-          </div>
-        )}
-
-        {/* ERROR */}
-        {errorMsg && (
-          <div className="mb-4 bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl p-3">
-            {errorMsg}
-          </div>
-        )}
-
-        {/* SUCCESS */}
-        {successMsg && (
-          <div className="mb-4 bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl p-3">
-            {successMsg}
-          </div>
-        )}
-
-        {/* FORM */}
-        <form className="space-y-5" onSubmit={handleSubmit}>
-          {/* EMAIL */}
-          <div className="input-light flex items-center rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-green-500 focus-within:border-green-500">
-            <FaEnvelope className="mr-3 text-gray-400 shrink-0" />
-
-            <input
-              type="email"
-              placeholder="tu@email.com"
-              className="
-                w-full
-                bg-transparent
-                outline-none
-                text-gray-900
-                placeholder:text-gray-400
-              "
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-
-          {/* PASSWORD */}
-          <div className="input-light flex items-center rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-green-500 focus-within:border-green-500">
-            <FaLock className="mr-3 text-gray-400 shrink-0" />
-
-            <input
-              type={showPassword ? "text" : "password"}
-              placeholder="Contraseña"
-              className="
-                w-full
-                bg-transparent
-                outline-none
-                text-gray-900
-                placeholder:text-gray-400
-              "
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-            />
-
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="ml-2 text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              {showPassword ? <FaEyeSlash /> : <FaEye />}
-            </button>
-          </div>
-
-          {/* SUBMIT */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="
-              w-full
-              py-3
-              rounded-xl
-              bg-[#16A34A]
-              hover:bg-[#15803D]
-              text-white
-              font-semibold
-              transition
-              disabled:opacity-50
-            "
-          >
-            {loading
-              ? isLogin
-                ? "Ingresando..."
-                : "Creando cuenta..."
-              : isLogin
-                ? "Ingresar"
-                : "Crear cuenta"}
-          </button>
-        </form>
-
-        {/* TOGGLE */}
-        <div className="text-center mt-6 text-sm text-gray-600">
-          {isLogin ? "¿No tienes cuenta?" : "¿Ya tienes cuenta?"}
-
-          <button
-            onClick={toggleMode}
-            className="ml-1 font-semibold text-green-600 hover:text-green-700"
-          >
-            {isLogin ? "Crear cuenta" : "Iniciar sesión"}
-          </button>
-        </div>
-      </div>
+      }>
+        <AuthForm />
+      </Suspense>
     </section>
   );
 }

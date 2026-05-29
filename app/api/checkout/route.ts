@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
-// Inicializamos Stripe con la versión exacta de tu cuenta de Stripe (2026-04-22.dahlia)
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+// Inicializamos Stripe con un fallback seguro para evitar fallos de compilación si la variable está vacía
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_mockKeyForBuild", {
   apiVersion: "2026-04-22.dahlia" as any, // Cambiado para corregir el error de API inválida
 });
 

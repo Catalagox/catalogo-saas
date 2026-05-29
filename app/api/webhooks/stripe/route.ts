@@ -3,18 +3,18 @@ import { headers } from "next/headers";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 
-// Inicializamos Stripe con tu clave secreta
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
+// Inicializamos Stripe con un fallback seguro para evitar fallos de compilación
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_mockKeyForBuild", {
   // @ts-ignore
   apiVersion: "2025-01-27",
 });
 
-// Inicializamos Supabase con la clave de Administrador (Service Role Key)
-// Usamos esta porque el webhook corre en el servidor y necesita permiso para editar usuarios sin importar las políticas RLS
-const supabaseAdmin = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Extraemos las variables con un fallback de texto genérico para el build
+const supabaseUrl = process.env.SUPABASE_URL || "https://placeholder-url.supabase.co";
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "placeholder-key";
+
+// Inicializamos Supabase de manera segura para que no tire error si faltan las variables en el build
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function POST(req: Request) {
   const body = await req.text();
