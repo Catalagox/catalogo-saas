@@ -50,15 +50,32 @@ export async function POST(req: Request) {
     if (supabaseUserId) {
       console.log(`¡Pago exitoso detectado para el usuario: ${supabaseUserId}!`);
 
-      // Calculamos la nueva fecha de vencimiento (Hoy + 30 días)
-      const nuevaFechaVencimiento = new Date();
-      nuevaFechaVencimiento.setDate(nuevaFechaVencimiento.getDate() + 30);
+      // 1. Buscamos primero el catálogo actual del usuario para saber si ya tiene días acumulados (ej. los 7 días gratis)
+      const { data: catalogoActual } = await supabaseAdmin
+        .from("catalogos")
+        .select("plan_vence_el")
+        .eq("user_id", supabaseUserId)
+        .maybeSingle();
 
-      // Le sumamos los 30 días al catálogo de este usuario en Supabase
+      let fechaBase = new Date(); // Por defecto, empezamos a contar desde HOY
+
+      if (catalogoActual?.plan_vence_el) {
+        const vencimientoExistente = new Date(catalogoActual.plan_vence_el);
+        
+        // Si la fecha que ya tenía en la BD está en el futuro, sumamos a partir de ahí
+        if (vencimientoExistente > fechaBase) {
+          fechaBase = vencimientoExistente;
+        }
+      }
+
+      // 2. Ahora sí, le sumamos los 30 días exactos del mes comprado a la fecha base
+      fechaBase.setDate(fechaBase.getDate() + 30);
+
+      // 3. Guardamos la nueva fecha acumulada en Supabase
       const { error } = await supabaseAdmin
         .from("catalogos")
         .update({
-          plan_vence_el: nuevaFechaVencimiento.toISOString(),
+          plan_vence_el: fechaBase.toISOString(),
         })
         .eq("user_id", supabaseUserId);
 
@@ -67,7 +84,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Error interno al guardar en BD" }, { status: 500 });
       }
 
-      console.log(`🚀 Catálogo del usuario ${supabaseUserId} actualizado con éxito por 30 días más.`);
+      console.log(`🚀 Catálogo del usuario ${supabaseUserId} acumulado con éxito. Próximo vencimiento: ${fechaBase.toISOString()}`);
     }
   }
 

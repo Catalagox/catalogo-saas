@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { Check, Zap } from "lucide-react";
@@ -9,48 +9,31 @@ import { Check, Zap } from "lucide-react";
 export default function SuscripcionPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [checking, setChecking] = useState(true);
-
-  const [userData, setUserData] = useState<{
-    id: string;
-    email: string;
-  } | null>(null);
-
-  useEffect(() => {
-    verificarUsuario();
-  }, []);
-
-  const verificarUsuario = async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (!session) {
-      router.push("/auth");
-      return;
-    }
-
-    setUserData({
-      id: session.user.id,
-      email: session.user.email || "",
-    });
-
-    setChecking(false);
-  };
 
   const handleSuscribirse = async () => {
-    if (!userData) return alert("No se encontraron datos del usuario.");
     setLoading(true);
 
     try {
+      // 🔥 Verificar sesión SOLO al intentar pagar
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      // ❌ Usuario no logueado
+      if (!session) {
+        router.push("/auth");
+        return;
+      }
+
+      // ✅ Usuario logueado → continuar checkout
       const response = await fetch("/api/checkout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userId: userData.id,
-          email: userData.email,
+          userId: session.user.id,
+          email: session.user.email,
         }),
       });
 
@@ -68,17 +51,6 @@ export default function SuscripcionPage() {
       setLoading(false);
     }
   };
-
-  if (checking) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#050807]">
-        <div className="w-12 h-12 border-4 border-[#22c55e] border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p className="text-[#b4b9b5] font-medium animate-pulse">
-          Verificando acceso...
-        </p>
-      </div>
-    );
-  }
 
   return (
     <section className="relative min-h-screen overflow-hidden bg-[#050807] px-6 py-24 md:py-20">
@@ -105,7 +77,7 @@ export default function SuscripcionPage() {
           </p>
         </div>
 
-        {/* TARJETA PREMIUM PREPARADA PARA MODO OSCURO */}
+        {/* TARJETA PREMIUM */}
         <div className="max-w-[440px] mx-auto group relative">
           <div className="absolute -inset-0.5 rounded-[42px] bg-gradient-to-r from-emerald-500 via-emerald-400 to-green-600 opacity-40 blur-md group-hover:opacity-100 transition-opacity duration-500 animate-tilt"></div>
 
@@ -122,14 +94,16 @@ export default function SuscripcionPage() {
 
               <div className="flex items-baseline justify-center gap-1">
                 <span className="text-2xl font-bold text-[#7f8781]">$</span>
+
                 <span className="text-8xl font-black text-white tracking-tighter">
                   5
                 </span>
+
                 <span className="text-[#7f8781] font-semibold">/mes</span>
               </div>
             </div>
 
-            {/* CARACTERÍSTICAS (TEXTO VISIBLE CON --text-primary / text-white) */}
+            {/* CARACTERÍSTICAS */}
             <div className="space-y-4 mb-10">
               {[
                 "1 Menú Digital Profesional",
@@ -144,6 +118,7 @@ export default function SuscripcionPage() {
                   <div className="flex items-center justify-center w-6 h-6 rounded-full bg-[#22c55e]/10 text-[#22c55e] border border-[#22c55e]/20 transition-transform group-hover/item:scale-110">
                     <Check size={14} strokeWidth={3} />
                   </div>
+
                   <span className="text-[#c4c7c4] font-medium text-[15px]">
                     {item}
                   </span>
@@ -151,7 +126,7 @@ export default function SuscripcionPage() {
               ))}
             </div>
 
-            {/* BOTÓN INTERACTIVO */}
+            {/* BOTÓN */}
             <button
               onClick={handleSuscribirse}
               disabled={loading}
@@ -173,9 +148,10 @@ export default function SuscripcionPage() {
               )}
             </button>
 
-            {/* FOOTER DE LA TARJETA */}
+            {/* FOOTER */}
             <div className="mt-6 flex items-center justify-center gap-2 text-[#7f8781]">
               <div className="w-1.5 h-1.5 rounded-full bg-[#22c55e] animate-pulse" />
+
               <p className="text-xs font-medium uppercase tracking-tight">
                 Garantía de satisfacción
               </p>
@@ -183,7 +159,7 @@ export default function SuscripcionPage() {
           </div>
         </div>
 
-        {/* ENLACE DE CONTACTO */}
+        {/* CONTACTO */}
         <p className="text-center text-[#7f8781] mt-10 text-sm">
           ¿Tienes dudas?{" "}
           <Link
@@ -201,45 +177,57 @@ export default function SuscripcionPage() {
             left: 125%;
           }
         }
+
         .animate-shine {
           animation: shine 1.5s infinite;
         }
+
         @keyframes blob {
           0% {
             transform: translate(0px, 0px) scale(1);
           }
+
           33% {
             transform: translate(30px, -50px) scale(1.1);
           }
+
           66% {
             transform: translate(-20px, 20px) scale(0.9);
           }
+
           100% {
             transform: translate(0px, 0px) scale(1);
           }
         }
+
         .animate-blob {
           animation: blob 7s infinite;
         }
+
         .animation-delay-2000 {
           animation-delay: 2s;
         }
+
         .animation-delay-4000 {
           animation-delay: 4s;
         }
+
         @keyframes tilt {
           0%,
           50%,
           100% {
             transform: rotate(0deg);
           }
+
           25% {
             transform: rotate(0.5deg);
           }
+
           75% {
             transform: rotate(-0.5deg);
           }
         }
+
         .animate-tilt {
           animation: tilt 10s infinite linear;
         }

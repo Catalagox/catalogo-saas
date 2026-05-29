@@ -6,6 +6,9 @@ import { supabase } from "@/lib/supabaseClient";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 
+// 🔥 IMPORTAMOS TU NUEVO COMPONENTE
+import BotonSuscripcionPortal from "@/components/dashboard/ajustes/BotonSuscripcionPortal";
+
 export default function AjustesPage() {
   const [email, setEmail] = useState("");
   const [nombreMenu, setNombreMenu] = useState("");
@@ -464,18 +467,28 @@ export default function AjustesPage() {
         </div>
 
         {/* CUENTA */}
-        <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 space-y-4">
+        <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 space-y-6">
           <h2 className="text-xl font-semibold text-[var(--text-primary)]">
             Cuenta
           </h2>
 
-          <div>
-            <p className="text-sm text-[var(--text-secondary)]">
-              Correo electrónico
-            </p>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-[var(--text-secondary)] mb-1">
+                Correo electrónico
+              </p>
 
-            <div className="bg-[var(--bg-tertiary)] border border-[var(--border-card)] rounded-lg p-3 text-sm text-[var(--text-primary)]">
-              {email}
+              <div className="bg-[var(--bg-tertiary)] border border-[var(--border-card)] rounded-lg p-3 text-sm text-[var(--text-primary)]">
+                {email}
+              </div>
+            </div>
+
+            {/* 🔥 AQUÍ QUEDA ACOMODADO EL COMPONENTE DE STRIPE */}
+            <div className="border-t border-[var(--border-card)] pt-4">
+              <p className="text-sm font-medium text-[var(--text-primary)] mb-2">
+                Suscripción y Facturación
+              </p>
+              <BotonSuscripcionPortal />
             </div>
           </div>
         </div>
@@ -483,4 +496,3 @@ export default function AjustesPage() {
     </div>
   );
 }
-
