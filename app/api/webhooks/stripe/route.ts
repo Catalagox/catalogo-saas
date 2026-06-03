@@ -19,39 +19,24 @@ export async function POST(req: Request) {
   let event: Stripe.Event;
 
   try {
-    // 🔥 BODY CRUDO (Stripe lo necesita EXACTO)
     const body = await req.text();
-
-    // 🔥 HEADER CORRECTO
     const sig = req.headers.get("stripe-signature");
 
     if (!sig) {
-      return NextResponse.json(
-        { error: "Missing stripe signature" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing stripe signature" }, { status: 400 });
     }
 
-    // 🔥 CONSTRUIR EVENTO STRIPE
-    event = stripe.webhooks.constructEvent(
-      body,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET!
-    );
+    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
   } catch (err: any) {
     console.error(`❌ Error en Webhook: ${err.message}`);
-    return NextResponse.json(
-      { error: err.message },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: err.message }, { status: 400 });
   }
 
   // =====================================================
-  // 1. CHECKOUT COMPLETADO (Primer pago exitoso)
+  // 1. CHECKOUT COMPLETADO
   // =====================================================
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
-
     const supabaseUserId = session.metadata?.supabaseUserId;
     const customerId = session.customer as string;
     const subscriptionId = session.subscription as string;
@@ -72,10 +57,7 @@ export async function POST(req: Request) {
   // =====================================================
   // 2. SUBSCRIPTION CREATED / UPDATED
   // =====================================================
-  if (
-    event.type === "customer.subscription.created" ||
-    event.type === "customer.subscription.updated"
-  ) {
+  if (event.type === "customer.subscription.created" || event.type === "customer.subscription.updated") {
     const subscription = event.data.object as Stripe.Subscription;
     const customerId = subscription.customer as string;
     const supabaseUserId = subscription.metadata?.supabaseUserId;
@@ -83,32 +65,22 @@ export async function POST(req: Request) {
     const updateData = {
       stripe_subscription_id: subscription.id,
       subscription_status: subscription.status, 
-      suscripcion_activa:
-        subscription.status === "active" ||
-        subscription.status === "trialing",
+      suscripcion_activa: subscription.status === "active" || subscription.status === "trialing",
     };
 
     if (customerId) {
-      await supabaseAdmin
-        .from("catalogos")
-        .update(updateData)
-        .eq("stripe_customer_id", customerId);
+      await supabaseAdmin.from("catalogos").update(updateData).eq("stripe_customer_id", customerId);
     } else if (supabaseUserId) {
-      await supabaseAdmin
-        .from("catalogos")
-        .update(updateData)
-        .eq("user_id", supabaseUserId);
+      await supabaseAdmin.from("catalogos").update(updateData).eq("user_id", supabaseUserId);
     }
   }
 
   // =====================================================
-  // 🔥 NUEVO: 3. FACTURA PAGADA CON ÉXITO (invoice_payment.paid)
+  // 🔥 NUEVO: 3. FACTURA PAGADA CON ÉXITO (Maneja invoice.payment_succeeded e invoice_payment.paid)
   // =====================================================
-  if (event.type === "invoice_payment.paid") {
-    const invoicePayment = event.data.object as any;
-    
-    // Buscamos el ID del cliente que viene en la factura para saber a quién activar
-    const customerId = invoicePayment.customer; 
+  if (event.type === "invoice.payment_succeeded" || event.type === "invoice_payment.paid") {
+    const invoice = event.data.object as any;
+    const customerId = invoice.customer; 
 
     if (customerId) {
       await supabaseAdmin
