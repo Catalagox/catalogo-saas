@@ -19,43 +19,58 @@ export default function DashboardLayout({
 
   useEffect(() => {
     const checkUser = async () => {
+      // 🔥 SOLUCIÓN CACHÉ: Si viene de un pago exitoso, obligamos a refrescar los datos
+      if (typeof window !== "undefined" && window.location.search.includes("success=true")) {
+        router.refresh();
+      }
+
       const { data } = await supabase.auth.getUser();
 
-      // Usuario no autenticado
+      // 🔴 no logueado
       if (!data.user) {
         router.push("/auth");
         return;
       }
 
-      // Buscar catálogo del usuario
+      // 🔍 traer info completa de suscripción
       const { data: catalogo } = await supabase
         .from("catalogos")
-        .select(
-          `
+        .select(`
           suscripcion_activa,
-          plan_vence_el
-        `,
-        )
+          plan_vence_el,
+          subscription_status
+        `)
         .eq("user_id", data.user.id)
         .maybeSingle();
 
-      // No existe catálogo
+      // 🔴 no tiene catálogo
       if (!catalogo) {
         router.push("/suscripcion");
         return;
       }
 
-      // Suscripción inactiva
-      if (!catalogo.suscripcion_activa) {
+      const now = Date.now();
+
+      const trialValido =
+        catalogo.plan_vence_el &&
+        new Date(catalogo.plan_vence_el).getTime() > now;
+
+      const stripeActivo =
+        catalogo.subscription_status === "active" ||
+        catalogo.subscription_status === "trialing";
+
+      const stripeEnProblema =
+        catalogo.subscription_status === "past_due" ||
+        catalogo.subscription_status === "canceled";
+
+      // 🔴 BLOQUEO TOTAL
+      if (stripeEnProblema) {
         router.push("/suscripcion");
         return;
       }
 
-      // Plan vencido
-      if (
-        catalogo.plan_vence_el &&
-        new Date(catalogo.plan_vence_el).getTime() < Date.now()
-      ) {
+      // 🔴 SIN SUSCRIPCIÓN NI TRIAL
+      if (!stripeActivo && !trialValido) {
         router.push("/suscripcion");
         return;
       }
@@ -90,7 +105,6 @@ export default function DashboardLayout({
           ${open ? "visible" : "invisible"}
         `}
       >
-        {/* OVERLAY */}
         <div
           className={`
             absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-300
@@ -99,7 +113,6 @@ export default function DashboardLayout({
           onClick={() => setOpen(false)}
         />
 
-        {/* PANEL */}
         <aside
           className={`
             relative flex h-full w-72 max-w-[85vw] flex-col border-r border-[var(--border-card)]
@@ -108,7 +121,6 @@ export default function DashboardLayout({
             ${open ? "translate-x-0" : "-translate-x-full"}
           `}
         >
-          {/* MOBILE SIDEBAR HEADER */}
           <div className="flex items-center justify-between border-b border-[var(--border-card)] px-4 py-4">
             <Logo size="sm" />
 
@@ -120,7 +132,6 @@ export default function DashboardLayout({
             </button>
           </div>
 
-          {/* SIDEBAR CONTENT */}
           <div className="flex-1 overflow-y-auto">
             <Sidebar closeMenu={() => setOpen(false)} />
           </div>
@@ -129,7 +140,6 @@ export default function DashboardLayout({
 
       {/* CONTENT */}
       <div className="flex min-w-0 flex-1 flex-col">
-        {/* HEADER MOBILE */}
         <header className="sticky top-0 z-40 flex items-center justify-between border-b border-[var(--border-card)] bg-[var(--bg-main)]/90 px-4 py-4 backdrop-blur-md lg:hidden">
           <Logo size="sm" />
 
@@ -141,7 +151,6 @@ export default function DashboardLayout({
           </button>
         </header>
 
-        {/* MAIN */}
         <main className="mx-auto flex-1 w-full max-w-[1600px] p-4 md:p-6 lg:p-10">
           {children}
         </main>
