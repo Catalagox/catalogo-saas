@@ -10,7 +10,7 @@ interface PageProps {
 // 1. FUNCIÓN AUXILIAR PARA OBTENER LOS DATOS DEL CATÁLOGO Y PROCESAR EL LOGO
 async function getCatalogo(slug: string) {
   const supabase = await createClient();
-  
+
   const { data, error } = await supabase
     .from("catalogos")
     .select(
@@ -35,7 +35,10 @@ async function getCatalogo(slug: string) {
       instagram,
       facebook,
       tiktok,
-      youtube
+      youtube,
+      plan_vence_el,
+      suscripcion_activa,
+      subscription_status
       `
     )
     .eq("slug", slug)
@@ -43,15 +46,33 @@ async function getCatalogo(slug: string) {
 
   if (error || !data) return null;
 
+  // 🔒 VERIFICAR SUSCRIPCIÓN
+  const fechaVencimiento = data.plan_vence_el
+    ? new Date(data.plan_vence_el)
+    : null;
+
+  const vencida =
+    !fechaVencimiento ||
+    fechaVencimiento.getTime() < Date.now();
+
+  if (
+    data.suscripcion_activa === false ||
+    data.subscription_status === "canceled" ||
+    vencida
+  ) {
+    return null;
+  }
+
   // 🛠️ CONSTRUCCIÓN AUTOMÁTICA DE LA URL DEL LOGO
-  let logoUrl = "https://catalagox.com/default-share-image.png"; // Imagen por defecto por si no tiene logo
+  let logoUrl = "https://catalagox.com/default-share-image.png";
 
   if (data.logo) {
-    if (data.logo.startsWith("http://") || data.logo.startsWith("https://")) {
-      // Si por alguna razón ya se guardó la URL completa
+    if (
+      data.logo.startsWith("http://") ||
+      data.logo.startsWith("https://")
+    ) {
       logoUrl = data.logo;
     } else {
-      // Construcción exacta usando tu ID de proyecto 'yhlqooguctlzorinsxde' y tu bucket 'logos'
       logoUrl = `https://yhlqooguctlzorinsxde.supabase.co/storage/v1/object/public/logos/${data.logo}`;
     }
   }
@@ -62,10 +83,12 @@ async function getCatalogo(slug: string) {
   };
 }
 
-// 2. GENERADOR DINÁMICO DE METADATOS (WhatsApp, Facebook, etc.)
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+// 2. GENERADOR DINÁMICO DE METADATOS
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  
+
   if (!slug) return {};
 
   const catalogoDB = await getCatalogo(slug);
@@ -77,7 +100,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const titulo = `Menú Digital - ${catalogoDB.nombre}`;
-  const descripcion = `¡Hola! Te invito a ver nuestro menú digital actualizado. Revisa nuestros productos y precios aquí.`;
+  const descripcion =
+    "¡Hola! Te invito a ver nuestro menú digital actualizado. Revisa nuestros productos y precios aquí.";
 
   return {
     title: titulo,
@@ -89,7 +113,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       siteName: "CatalagoX",
       images: [
         {
-          url: catalogoDB.logoUrl, // URL absoluta final de la imagen del cliente
+          url: catalogoDB.logoUrl,
           width: 800,
           height: 600,
           alt: `Logo de ${catalogoDB.nombre}`,
@@ -106,10 +130,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-// 3. COMPONENTE PRINCIPAL DE LA PÁGINA
-export default async function MenuPage({ params, searchParams }: PageProps) {
+// 3. COMPONENTE PRINCIPAL
+export default async function MenuPage({
+  params,
+  searchParams,
+}: PageProps) {
   const { slug } = await params;
   const { qr } = await searchParams;
+
   const supabase = await createClient();
 
   if (!slug) {
@@ -119,12 +147,16 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
   const catalogoDB = await getCatalogo(slug);
 
   if (!catalogoDB) {
-    return <div className="p-10 text-center">Menú no encontrado</div>;
+    return (
+      <div className="p-10 text-center">
+        Menú no disponible
+      </div>
+    );
   }
 
   const catalogo = {
     ...catalogoDB,
-    logo: catalogoDB.logoUrl, // Le pasamos la URL pública completa ya procesada al componente cliente
+    logo: catalogoDB.logoUrl,
     color_primario: catalogoDB.color_primario ?? "#f97316",
     color_fondo: catalogoDB.color_fondo ?? "#111827",
     color_header: catalogoDB.color_header ?? "#f97316",
@@ -176,8 +208,18 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
 
   if (categoriasError) {
     console.error("Error categorías:", categoriasError);
-    return <div className="p-10 text-center">Error al cargar categorías</div>;
+
+    return (
+      <div className="p-10 text-center">
+        Error al cargar categorías
+      </div>
+    );
   }
 
-  return <MenuClient catalogo={catalogo} categorias={categorias ?? []} />;
+  return (
+    <MenuClient
+      catalogo={catalogo}
+      categorias={categorias ?? []}
+    />
+  );
 }

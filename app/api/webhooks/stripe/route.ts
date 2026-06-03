@@ -3,91 +3,142 @@ import { headers } from "next/headers";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 
-// Inicializamos Stripe con un fallback seguro para evitar fallos de compilación
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_mockKeyForBuild", {
-  // @ts-ignore
-  apiVersion: "2025-01-27",
-});
+const stripe = new Stripe(
+  process.env.STRIPE_SECRET_KEY || "sk_test_mockKeyForBuild",
+  {
+    // @ts-ignore
+    apiVersion: "2025-01-27",
+  }
+);
 
-// Extraemos las variables con un fallback de texto genérico para el build
-const supabaseUrl = process.env.SUPABASE_URL || "https://placeholder-url.supabase.co";
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "placeholder-key";
+const supabaseUrl =
+  process.env.SUPABASE_URL || "https://placeholder-url.supabase.co";
 
-// Inicializamos Supabase de manera segura para que no tire error si faltan las variables en el build
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+const supabaseServiceKey =
+  process.env.SUPABASE_SERVICE_ROLE_KEY || "placeholder-key";
+
+const supabaseAdmin = createClient(
+  supabaseUrl,
+  supabaseServiceKey
+);
 
 export async function POST(req: Request) {
   const body = await req.text();
   const headersList = await headers();
+
   const sig = headersList.get("stripe-signature");
 
-  // El "Webhook Secret" es una clave que te da Stripe para asegurarse de que nadie intente hackearte mandando pagos falsos
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
   let event: Stripe.Event;
 
   try {
     if (!sig || !webhookSecret) {
-      console.error("Falta la firma de Stripe o el Webhook Secret");
-      return NextResponse.json({ error: "Faltan firmas de seguridad" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Faltan firmas de seguridad" },
+        { status: 400 }
+      );
     }
-    // Stripe verifica que la petición sea 100% real y no alterada
-    event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
+
+    event = stripe.webhooks.constructEvent(
+      body,
+      sig,
+      webhookSecret
+    );
   } catch (err: any) {
-    console.error(`❌ Error de verificación de Webhook: ${err.message}`);
-    return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
+    return NextResponse.json(
+      { error: err.message },
+      { status: 400 }
+    );
   }
 
-  // --- AQUÍ EMPIEZA LA LÓGICA DE NEGOCIO ---
-  
-  // Escuchamos el evento cuando una suscripción se procesa con éxito
+  // =====================================================
+  // NUEVA SUSCRIPCIÓN
+  // =====================================================
+
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
 
-    // Recuperamos el ID de Supabase que guardamos en la "cajita secreta" (metadata) en el archivo checkout/route.ts
     const supabaseUserId = session.metadata?.supabaseUserId;
 
     if (supabaseUserId) {
-      console.log(`¡Pago exitoso detectado para el usuario: ${supabaseUserId}!`);
-
-      // 1. Buscamos primero el catálogo actual del usuario para saber si ya tiene días acumulados (ej. los 7 días gratis)
-      const { data: catalogoActual } = await supabaseAdmin
-        .from("catalogos")
-        .select("plan_vence_el")
-        .eq("user_id", supabaseUserId)
-        .maybeSingle();
-
-      let fechaBase = new Date(); // Por defecto, empezamos a contar desde HOY
-
-      if (catalogoActual?.plan_vence_el) {
-        const vencimientoExistente = new Date(catalogoActual.plan_vence_el);
-        
-        // Si la fecha que ya tenía en la BD está en el futuro, sumamos a partir de ahí
-        if (vencimientoExistente > fechaBase) {
-          fechaBase = vencimientoExistente;
-        }
-      }
-
-      // 2. Ahora sí, le sumamos los 30 días exactos del mes comprado a la fecha base
-      fechaBase.setDate(fechaBase.getDate() + 30);
-
-      // 3. Guardamos la nueva fecha acumulada en Supabase
-      const { error } = await supabaseAdmin
+      await supabaseAdmin
         .from("catalogos")
         .update({
-          plan_vence_el: fechaBase.toISOString(),
+          stripe_customer_id:
+            typeof session.customer === "string"
+              ? session.customer
+              : null,
+
+          stripe_subscription_id:
+            typeof session.subscription === "string"
+              ? session.subscription
+              : null,
+
+          subscription_status: "active",
+
+          suscripcion_activa: true,
         })
         .eq("user_id", supabaseUserId);
-
-      if (error) {
-        console.error("Error al actualizar la membresía en Supabase:", error);
-        return NextResponse.json({ error: "Error interno al guardar en BD" }, { status: 500 });
-      }
-
-      console.log(`🚀 Catálogo del usuario ${supabaseUserId} acumulado con éxito. Próximo vencimiento: ${fechaBase.toISOString()}`);
     }
   }
 
-  // Le respondemos a Stripe con un 200 OK para decirle "recibido correctamente"
-  return NextResponse.json({ received: true }, { status: 200 });
+  // =====================================================
+  // CAMBIO DE ESTADO DE SUSCRIPCIÓN
+  // =====================================================
+
+  if (event.type === "customer.subscription.updated") {
+    const subscription = event.data.object as any;
+
+    await supabaseAdmin
+      .from("catalogos")
+      .update({
+        subscription_status: subscription.status,
+        suscripcion_activa:
+          subscription.status === "active" ||
+          subscription.status === "trialing",
+      })
+      .eq("stripe_subscription_id", subscription.id);
+  }
+
+  // =====================================================
+  // SUSCRIPCIÓN CANCELADA
+  // =====================================================
+
+  if (event.type === "customer.subscription.deleted") {
+    const subscription = event.data.object as any;
+
+    await supabaseAdmin
+      .from("catalogos")
+      .update({
+        subscription_status: "canceled",
+        suscripcion_activa: false,
+      })
+      .eq("stripe_subscription_id", subscription.id);
+  }
+
+  // =====================================================
+  // PAGO FALLIDO
+  // =====================================================
+
+  if (event.type === "invoice.payment_failed") {
+    const invoice = event.data.object as any;
+
+const subscriptionId = invoice.subscription ?? null;
+
+    if (subscriptionId) {
+      await supabaseAdmin
+        .from("catalogos")
+        .update({
+          subscription_status: "past_due",
+          suscripcion_activa: false,
+        })
+        .eq("stripe_subscription_id", subscriptionId);
+    }
+  }
+
+  return NextResponse.json(
+    { received: true },
+    { status: 200 }
+  );
 }

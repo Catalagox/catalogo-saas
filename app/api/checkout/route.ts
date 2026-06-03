@@ -31,7 +31,7 @@ export async function POST(req: Request) {
       mode: "subscription",
       // URLs a las que Stripe enviará de vuelta al dueño del restaurante
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard?success=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/marketing/suscripcion?canceled=true`,
+      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/suscripcion?canceled=true`,
       // Metadatos cruciales: guardamos el ID de Supabase para saber a quién activar en la BD cuando pague
       metadata: {
         supabaseUserId: userId,

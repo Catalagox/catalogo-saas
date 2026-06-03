@@ -85,10 +85,13 @@ export default function CreateProductForm({
     if (!userId) throw new Error("Usuario no autenticado");
 
     const fileExt = imagen.name.split(".").pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+    const fileName = `${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2, 9)}.${fileExt}`;
+
     const filePath = `${userId}/${fileName}`;
 
-    const { data, error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabase.storage
       .from("productos")
       .upload(filePath, imagen, {
         cacheControl: "3600",
@@ -108,9 +111,32 @@ export default function CreateProductForm({
 
   const crearProducto = async () => {
     if (!userId) return alert("Usuario no autenticado");
-    if (!producto.nombre.trim() || !producto.precio)
+
+    // 🔒 Verificar suscripción activa
+    const { data: catalogo, error: catalogoError } = await supabase
+      .from("catalogos")
+      .select("suscripcion_activa")
+      .eq("id", catalogoId)
+      .single();
+
+    if (catalogoError) {
+      console.error(catalogoError);
+      return alert("No se pudo validar la suscripción.");
+    }
+
+    if (!catalogo?.suscripcion_activa) {
+      return alert(
+        "Tu suscripción está vencida. Debes renovar tu plan para seguir agregando productos."
+      );
+    }
+
+    if (!producto.nombre.trim() || !producto.precio) {
       return alert("Nombre y precio son obligatorios");
-    if (!imagen) return alert("Debes subir una imagen");
+    }
+
+    if (!imagen) {
+      return alert("Debes subir una imagen");
+    }
 
     try {
       setLoading(true);
@@ -134,6 +160,7 @@ export default function CreateProductForm({
 
       resetForm();
       onCreated();
+
       alert("Producto creado correctamente");
     } catch (err: any) {
       console.error("Error al crear producto:", err);
@@ -145,7 +172,6 @@ export default function CreateProductForm({
 
   return (
     <div className="max-w-4xl mx-auto bg-[var(--bg-card)] border border-[var(--border-card)] p-5 md:p-8 rounded-2xl shadow-2xl mb-12">
-      {/* HEADER */}
       <div className="flex items-center gap-3 mb-8">
         <div className="p-2 bg-[var(--color-primary)]/10 rounded-lg">
           <Plus className="w-5 h-5 text-[var(--color-primary)]" />
@@ -157,7 +183,6 @@ export default function CreateProductForm({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-        {/* IMAGEN */}
         <div className="lg:col-span-2">
           <label className="block text-sm text-[var(--text-secondary)] mb-3">
             Imagen de portada
@@ -213,7 +238,6 @@ export default function CreateProductForm({
           />
         </div>
 
-        {/* FORM */}
         <div className="lg:col-span-3 space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -248,6 +272,7 @@ export default function CreateProductForm({
             <label className="text-sm text-[var(--text-secondary)]">
               Categoría
             </label>
+
             <select
               name="categoria_id"
               value={producto.categoria_id}
@@ -255,6 +280,7 @@ export default function CreateProductForm({
               className="input-dark w-full px-4 py-3 rounded-xl focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]"
             >
               <option value="">Sin categoría</option>
+
               {categorias.map((cat) => (
                 <option key={cat.id} value={cat.id}>
                   {cat.nombre}
@@ -267,6 +293,7 @@ export default function CreateProductForm({
             <label className="text-sm text-[var(--text-secondary)]">
               Descripción
             </label>
+
             <textarea
               name="descripcion"
               rows={4}

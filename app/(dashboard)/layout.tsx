@@ -21,11 +21,46 @@ export default function DashboardLayout({
     const checkUser = async () => {
       const { data } = await supabase.auth.getUser();
 
+      // Usuario no autenticado
       if (!data.user) {
         router.push("/auth");
-      } else {
-        setLoading(false);
+        return;
       }
+
+      // Buscar catálogo del usuario
+      const { data: catalogo } = await supabase
+        .from("catalogos")
+        .select(
+          `
+          suscripcion_activa,
+          plan_vence_el
+        `,
+        )
+        .eq("user_id", data.user.id)
+        .maybeSingle();
+
+      // No existe catálogo
+      if (!catalogo) {
+        router.push("/suscripcion");
+        return;
+      }
+
+      // Suscripción inactiva
+      if (!catalogo.suscripcion_activa) {
+        router.push("/suscripcion");
+        return;
+      }
+
+      // Plan vencido
+      if (
+        catalogo.plan_vence_el &&
+        new Date(catalogo.plan_vence_el).getTime() < Date.now()
+      ) {
+        router.push("/suscripcion");
+        return;
+      }
+
+      setLoading(false);
     };
 
     checkUser();
