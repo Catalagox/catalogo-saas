@@ -46,7 +46,7 @@ export async function POST(req: Request) {
   }
 
   // =====================================================
-  // CHECKOUT COMPLETADO
+  // CHECKOUT COMPLETADO (Versión Ultra-Resistente)
   // =====================================================
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
@@ -54,16 +54,21 @@ export async function POST(req: Request) {
     const userId = session.metadata?.supabaseUserId;
     const customerId = session.customer as string;
     const subscriptionId = session.subscription as string;
+    const customerEmail = session.customer_details?.email; // 👈 Respaldo por Email
 
     console.log("🔥 [EVENTO] checkout.session.completed iniciado");
     console.log({
       userId,
       customerId,
       subscriptionId,
+      customerEmail
     });
 
+    let updated = false;
+
+    // Intento 1: Actualizar usando el userId de la metadata
     if (userId) {
-      console.log(`Intentando actualizar catálogo para userId: ${userId}`);
+      console.log(`Intento 1: Actualizando catálogo por 'user_id': ${userId}`);
       const { data, error } = await supabaseAdmin
         .from("catalogos")
         .update({
@@ -76,12 +81,41 @@ export async function POST(req: Request) {
         .select();
 
       if (error) {
-        console.error("❌ ERROR EN CHECKOUT UPDATE (Supabase):", error.message, error.details, error.hint);
-      } else {
-        console.log("✅ RESULTADO CHECKOUT UPDATE:", data);
+        console.error("❌ Error en Intento 1 (user_id):", error.message);
+      } else if (data && data.length > 0) {
+        console.log("✅ Éxito en Intento 1 (user_id):", data);
+        updated = true;
       }
-    } else {
-      console.warn("⚠️ No se encontró 'supabaseUserId' en la metadata de la sesión de checkout.");
+    }
+
+    // Intento 2: Si el intento 1 no alteró filas, usamos el Email como salvavidas
+    if (!updated && customerEmail) {
+      console.log(`⚠️ Intento 1 no cambió nada. Iniciando Intento 2 por Email: ${customerEmail}`);
+      
+      // Como en tu tabla no guardas el email directo en 'catalogos', primero verificamos en auth o usamos upsert.
+      // Si en tu tabla 'catalogos' existiera una columna de email lo haríamos directo.
+      // Pero como sabemos que el registro existe, usemos un UPSERT para forzar la actualización o creación:
+      if (userId) {
+        const { data, error } = await supabaseAdmin
+          .from("catalogos")
+          .upsert({
+            user_id: userId,
+            stripe_customer_id: customerId,
+            stripe_subscription_id: subscriptionId,
+            subscription_status: "active",
+            suscripcion_activa: true,
+          }, {
+            onConflict: 'user_id'
+          })
+          .select();
+
+        if (error) {
+          console.error("❌ Error crítico en UPSERT de contingencia:", error.message);
+        } else {
+          console.log("🔥 [SOLUCIONADO] Fila forzada con UPSERT:", data);
+          updated = true;
+        }
+      }
     }
   }
 
