@@ -2,9 +2,8 @@
 
 import { CreditCard } from "lucide-react";
 
-// ⚠️ REEMPLAZA ESTA URL por el enlace que copiaste de tu Dashboard de Stripe
-// (Configuración ➔ Portal de clientes ➔ Enlace directo)
-const ENLACE_PORTAL_STRIPE = "https://billing.stripe.com/p/login/TU_ENLACE_REAL_AQUÍ";
+// Enlace real de producción para Catalogox
+const ENLACE_PORTAL_STRIPE = "https://billing.stripe.com/p/login/4gM5kE6sV3EP57Zck16sw00";
 
 export default function BotonSuscripcionPortal() {
   
