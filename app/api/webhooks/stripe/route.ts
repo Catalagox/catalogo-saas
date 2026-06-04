@@ -76,11 +76,20 @@ export async function POST(req: Request) {
   }
 
   // =====================================================
-  // 🔥 NUEVO: 3. FACTURA PAGADA CON ÉXITO (Maneja invoice.payment_succeeded e invoice_payment.paid)
+  // 🔥 SECCIÓN 3 MEJORADA: FACTURA PAGADA CON ÉXITO Y VENCIMIENTO
   // =====================================================
   if (event.type === "invoice.payment_succeeded" || event.type === "invoice_payment.paid") {
     const invoice = event.data.object as any;
     const customerId = invoice.customer; 
+
+    // 1. Extraemos el timestamp de finalización del período del primer elemento de la factura
+    const periodEndTimestamp = invoice.lines?.data?.[0]?.period?.end;
+    let planVenceEl: string | null = null;
+
+    if (periodEndTimestamp) {
+      // 2. Stripe da el tiempo en segundos, JS necesita milisegundos. Lo convertimos a formato ISO para Supabase
+      planVenceEl = new Date(periodEndTimestamp * 1000).toISOString();
+    }
 
     if (customerId) {
       await supabaseAdmin
@@ -88,6 +97,7 @@ export async function POST(req: Request) {
         .update({
           subscription_status: "active",
           suscripcion_activa: true,
+          plan_vence_el: planVenceEl, // ✅ Guarda la fecha exacta de vencimiento (ej: 2026-07-03...)
         })
         .eq("stripe_customer_id", customerId);
     }
