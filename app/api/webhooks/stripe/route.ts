@@ -35,72 +35,77 @@ export async function POST(req: Request) {
       process.env.STRIPE_WEBHOOK_SECRET!
     );
 
-    console.log("✅ Evento recibido:", event.type);
+    console.log("✅ Evento recibido con éxito:", event.type);
   } catch (err: any) {
-    console.error("❌ Error en Webhook:", err.message);
-    return NextResponse.json({ error: err.message }, { status: 400 });
+    console.error("❌ Error Webhook (Firma inválida):", err.message);
+
+    return NextResponse.json(
+      { error: err.message },
+      { status: 400 }
+    );
   }
 
   // =====================================================
-  // 1. CHECKOUT COMPLETADO
+  // CHECKOUT COMPLETADO
   // =====================================================
   if (event.type === "checkout.session.completed") {
-    console.log("🔥 CHECKOUT COMPLETED");
-
     const session = event.data.object as Stripe.Checkout.Session;
 
-    const supabaseUserId = session.metadata?.supabaseUserId;
+    const userId = session.metadata?.supabaseUserId;
     const customerId = session.customer as string;
     const subscriptionId = session.subscription as string;
 
+    console.log("🔥 [EVENTO] checkout.session.completed iniciado");
     console.log({
-      supabaseUserId,
+      userId,
       customerId,
       subscriptionId,
     });
 
-    if (supabaseUserId) {
+    if (userId) {
+      console.log(`Intentando actualizar catálogo para userId: ${userId}`);
       const { data, error } = await supabaseAdmin
         .from("catalogos")
         .update({
-          stripe_customer_id: customerId || null,
-          stripe_subscription_id: subscriptionId || null,
+          stripe_customer_id: customerId,
+          stripe_subscription_id: subscriptionId,
           subscription_status: "active",
           suscripcion_activa: true,
         })
-        .eq("user_id", supabaseUserId)
+        .eq("user_id", userId)
         .select();
 
-      console.log("📌 Resultado UPDATE checkout:");
-      console.log("data:", data);
-      console.log("error:", error);
+      if (error) {
+        console.error("❌ ERROR EN CHECKOUT UPDATE (Supabase):", error.message, error.details, error.hint);
+      } else {
+        console.log("✅ RESULTADO CHECKOUT UPDATE:", data);
+      }
     } else {
-      console.log("❌ supabaseUserId no encontrado");
+      console.warn("⚠️ No se encontró 'supabaseUserId' en la metadata de la sesión de checkout.");
     }
   }
 
   // =====================================================
-  // 2. SUBSCRIPTION CREATED / UPDATED
+  // SUBSCRIPTION CREATED / UPDATED
   // =====================================================
   if (
     event.type === "customer.subscription.created" ||
     event.type === "customer.subscription.updated"
   ) {
-    console.log("🔥 SUBSCRIPTION EVENT");
-
     const subscription = event.data.object as Stripe.Subscription;
-
     const customerId = subscription.customer as string;
-    const supabaseUserId = subscription.metadata?.supabaseUserId;
+    const userId = subscription.metadata?.supabaseUserId;
 
+    console.log(`🔥 [EVENTO] ${event.type} iniciado`);
     console.log({
+      userId,
       customerId,
-      supabaseUserId,
       subscriptionId: subscription.id,
       status: subscription.status,
     });
 
     const updateData = {
+      stripe_customer_id: customerId,
       stripe_subscription_id: subscription.id,
       subscription_status: subscription.status,
       suscripcion_activa:
@@ -108,56 +113,69 @@ export async function POST(req: Request) {
         subscription.status === "trialing",
     };
 
-    let result;
+    if (userId) {
+      console.log(`Actualizando por 'user_id': ${userId}`);
+      const { data, error } = await supabaseAdmin
+        .from("catalogos")
+        .update(updateData)
+        .eq("user_id", userId)
+        .select();
 
-    if (customerId) {
-      result = await supabaseAdmin
+      if (error) console.error("❌ ERROR EN SUBSCRIPTION UPDATE (Por user_id):", error.message);
+      else console.log("✅ RESULTADO SUBSCRIPTION UPDATE (Por user_id):", data);
+    } else {
+      console.log(`Actualizando por 'stripe_customer_id': ${customerId}`);
+      const { data, error } = await supabaseAdmin
         .from("catalogos")
         .update(updateData)
         .eq("stripe_customer_id", customerId)
         .select();
-    } else if (supabaseUserId) {
-      result = await supabaseAdmin
-        .from("catalogos")
-        .update(updateData)
-        .eq("user_id", supabaseUserId)
-        .select();
-    }
 
-    console.log("📌 Resultado UPDATE subscription:");
-    console.log(result);
+      if (error) console.error("❌ ERROR EN SUBSCRIPTION UPDATE (Por customer_id):", error.message);
+      else console.log("✅ RESULTADO SUBSCRIPTION UPDATE (Por customer_id):", data);
+    }
   }
 
   // =====================================================
-  // 3. FACTURA PAGADA
+  // FACTURA PAGADA
   // =====================================================
-  if (
-    event.type === "invoice.payment_succeeded" ||
-    event.type === "invoice_payment.paid"
-  ) {
-    console.log("🔥 INVOICE PAYMENT SUCCEEDED");
-
+  if (event.type === "invoice.payment_succeeded") {
     const invoice = event.data.object as any;
-
     const customerId = invoice.customer;
 
-    const periodEndTimestamp =
-      invoice.lines?.data?.[0]?.period?.end;
+    const userId =
+      invoice.parent?.subscription_details?.metadata?.supabaseUserId ||
+      invoice.lines?.data?.[0]?.metadata?.supabaseUserId;
 
-    let planVenceEl: string | null = null;
+    const periodEnd = invoice.lines?.data?.[0]?.period?.end;
+    const planVenceEl = periodEnd
+      ? new Date(periodEnd * 1000).toISOString()
+      : null;
 
-    if (periodEndTimestamp) {
-      planVenceEl = new Date(
-        periodEndTimestamp * 1000
-      ).toISOString();
-    }
-
+    console.log("🔥 [EVENTO] invoice.payment_succeeded iniciado");
     console.log({
       customerId,
+      userId,
       planVenceEl,
     });
 
-    if (customerId) {
+    if (userId) {
+      console.log(`Actualizando factura por 'user_id': ${userId}`);
+      const { data, error } = await supabaseAdmin
+        .from("catalogos")
+        .update({
+          stripe_customer_id: customerId,
+          subscription_status: "active",
+          suscripcion_activa: true,
+          plan_vence_el: planVenceEl,
+        })
+        .eq("user_id", userId)
+        .select();
+
+      if (error) console.error("❌ ERROR EN INVOICE UPDATE (Por user_id):", error.message);
+      else console.log("✅ RESULTADO INVOICE UPDATE (Por user_id):", data);
+    } else {
+      console.log(`Actualizando factura por 'stripe_customer_id': ${customerId}`);
       const { data, error } = await supabaseAdmin
         .from("catalogos")
         .update({
@@ -168,56 +186,49 @@ export async function POST(req: Request) {
         .eq("stripe_customer_id", customerId)
         .select();
 
-      console.log("📌 Resultado UPDATE invoice:");
-      console.log("data:", data);
-      console.log("error:", error);
+      if (error) console.error("❌ ERROR EN INVOICE UPDATE (Por customer_id):", error.message);
+      else console.log("✅ RESULTADO INVOICE UPDATE (Por customer_id):", data);
     }
   }
 
   // =====================================================
-  // 4. SUBSCRIPTION DELETED
+  // SUBSCRIPTION CANCELADA
   // =====================================================
   if (event.type === "customer.subscription.deleted") {
-    console.log("🔥 SUBSCRIPTION DELETED");
-
     const subscription = event.data.object as Stripe.Subscription;
-
     const customerId = subscription.customer as string;
 
-    const { data, error } = await supabaseAdmin
+    console.log("🔥 [EVENTO] customer.subscription.deleted");
+
+    const { error } = await supabaseAdmin
       .from("catalogos")
       .update({
         subscription_status: "canceled",
         suscripcion_activa: false,
       })
-      .eq("stripe_customer_id", customerId)
-      .select();
+      .eq("stripe_customer_id", customerId);
 
-    console.log(data);
-    console.log(error);
+    if (error) console.error("❌ ERROR EN CANCELACIÓN:", error.message);
   }
 
   // =====================================================
-  // 5. PAYMENT FAILED
+  // PAGO FALLIDO
   // =====================================================
   if (event.type === "invoice.payment_failed") {
-    console.log("🔥 PAYMENT FAILED");
-
     const invoice = event.data.object as any;
-
     const customerId = invoice.customer;
 
-    const { data, error } = await supabaseAdmin
+    console.log("🔥 [EVENTO] invoice.payment_failed");
+
+    const { error } = await supabaseAdmin
       .from("catalogos")
       .update({
         subscription_status: "past_due",
         suscripcion_activa: false,
       })
-      .eq("stripe_customer_id", customerId)
-      .select();
+      .eq("stripe_customer_id", customerId);
 
-    console.log(data);
-    console.log(error);
+    if (error) console.error("❌ ERROR EN PAGO FALLIDO:", error.message);
   }
 
   return NextResponse.json(
