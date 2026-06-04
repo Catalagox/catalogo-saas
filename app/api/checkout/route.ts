@@ -19,32 +19,42 @@ export async function POST(req: Request) {
       );
     }
 
-    // 🔥 CREAR O REUTILIZAR CUSTOMER
-    let customerId: string | undefined;
+    let customerId: string;
 
+    // Buscar customer existente
     const existingCustomers = await stripe.customers.list({
       email,
       limit: 1,
     });
 
     if (existingCustomers.data.length > 0) {
-      customerId = existingCustomers.data[0].id;
+      const customer = existingCustomers.data[0];
+
+      customerId = customer.id;
+
+      // 🔥 Asegurar metadata correcta
+      await stripe.customers.update(customerId, {
+        metadata: {
+          supabaseUserId: userId,
+        },
+      });
     } else {
-      const newCustomer = await stripe.customers.create({
+      // Crear customer nuevo
+      const customer = await stripe.customers.create({
         email,
         metadata: {
           supabaseUserId: userId,
         },
       });
 
-      customerId = newCustomer.id;
+      customerId = customer.id;
     }
 
-    // 🟢 CREAR CHECKOUT SESSION
+    // Crear Checkout Session
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
 
-      customer: customerId, // 🔥 Clave para evitar duplicados en Stripe
+      customer: customerId,
 
       payment_method_types: ["card"],
 
@@ -55,7 +65,6 @@ export async function POST(req: Request) {
         },
       ],
 
-      // Redirecciones automáticas post-pago
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard?success=true`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/suscripcion?canceled=true`,
 
@@ -70,11 +79,18 @@ export async function POST(req: Request) {
       },
     });
 
-    return NextResponse.json({ url: session.url });
+    return NextResponse.json({
+      url: session.url,
+    });
   } catch (error: any) {
     console.error("Error crítico en la API de Checkout:", error);
+
     return NextResponse.json(
-      { error: error?.message || "Fallo en el servidor al iniciar la pasarela de pago" },
+      {
+        error:
+          error?.message ||
+          "Fallo en el servidor al iniciar la pasarela de pago",
+      },
       { status: 500 }
     );
   }
