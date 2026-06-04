@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
-import { cookies } from "next/headers";
 
+// Inicializamos Stripe con tu variable de Vercel
 const stripe = new Stripe(
   process.env.STRIPE_SECRET_KEY || "sk_test_mockKeyForBuild",
   {
@@ -11,50 +11,40 @@ const stripe = new Stripe(
   }
 );
 
-const supabaseAdmin = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 export async function POST(req: Request) {
   try {
-    // 1. Obtener de forma nativa las cookies del navegador
-    const cookieStore = await cookies();
-    
-    // 2. Buscar la cookie de sesión que guarda Supabase automáticamente
-    // Nota: El formato estándar de la cookie de Supabase suele ser "sb-<proyecto>-auth-token"
-    // Para no errar con el nombre del proyecto, buscamos cualquier cookie que contenga "-auth-token"
-    const allCookies = cookieStore.getAll();
-    const authCookie = allCookies.find(c => c.name.endsWith("-auth-token"));
-
-    if (!authCookie) {
-      console.error("❌ No se encontró la cookie de sesión de Supabase.");
-      return NextResponse.json({ error: "Sesión no encontrada. Por favor, inicia sesión nuevamente." }, { status: 401 });
+    // 1. Extraer el token enviado por el botón del frontend
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return NextResponse.json({ error: "No autorizado. Falta el token." }, { status: 401 });
     }
 
-    // 3. Extraer el token de acceso (access_token) del valor de la cookie
-    let accessToken: string;
-    try {
-      const parsedCookie = JSON.parse(authCookie.value);
-      accessToken = parsedCookie.access_token;
-    } catch {
-      // En algunas configuraciones el valor viene como un array o texto directo
-      accessToken = authCookie.value;
+    const token = authHeader.replace("Bearer ", "");
+
+    // 2. IMPORTANTE: Usamos NEXT_PUBLIC_SUPABASE_URL para que coincida exactamente con tu frontend
+    const urlSupabase = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+    const claveAnonSupabase = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!urlSupabase || !claveAnonSupabase) {
+      console.error("❌ Faltan variables de entorno de Supabase en el servidor.");
+      return NextResponse.json({ error: "Error de configuración en el servidor." }, { status: 500 });
     }
 
-    if (!accessToken) {
-      return NextResponse.json({ error: "Token de acceso inválido." }, { status: 401 });
-    }
+    // 3. Crear el cliente de usuario con la misma URL del frontend
+    const supabaseUserClient = createClient(urlSupabase, claveAnonSupabase);
 
-    // 4. Validar el token con nuestro cliente de confianza de Supabase
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(accessToken);
+    // 4. Validar el token del usuario
+    const { data: { user }, error: authError } = await supabaseUserClient.auth.getUser(token);
 
     if (authError || !user) {
-      console.error("❌ Supabase rechazó el token:", authError?.message);
-      return NextResponse.json({ error: "Usuario inválido o sesión expirada." }, { status: 401 });
+      console.error("❌ Supabase Auth Error en producción:", authError?.message);
+      return NextResponse.json({ error: "Sesión inválida o vencida. Inicia sesión de nuevo." }, { status: 401 });
     }
 
-    // 5. Buscar el stripe_customer_id en la base de datos
+    // 5. Crear el cliente Admin para buscar el cliente de Stripe de forma segura
+    const supabaseAdmin = createClient(urlSupabase, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+
+    // 6. Buscar el stripe_customer_id en la base de datos
     const { data: catalogo } = await supabaseAdmin
       .from("catalogos")
       .select("stripe_customer_id")
@@ -63,12 +53,12 @@ export async function POST(req: Request) {
 
     if (!catalogo || !catalogo.stripe_customer_id) {
       return NextResponse.json(
-        { error: "No se encontró tu ID de cliente de Stripe. ¿Ya hiciste tu primer pago?" },
+        { error: "No se encontró tu ID de cliente de Stripe. ¿Ya realizaste un pago?" },
         { status: 404 }
       );
     }
 
-    // 6. Crear la sesión del portal en Stripe
+    // 7. Crear la sesión del portal en Stripe
     const returnUrl = `${new URL(req.url).origin}/dashboard/ajustes`;
 
     const portalSession = await stripe.billingPortal.sessions.create({
@@ -76,6 +66,7 @@ export async function POST(req: Request) {
       return_url: returnUrl,
     });
 
+    // Devolvemos la URL mágica de Stripe
     return NextResponse.json({ url: portalSession.url });
 
   } catch (error: any) {
