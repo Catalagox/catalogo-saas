@@ -89,7 +89,7 @@ export default function EstadisticasPage() {
               {[
                 {
                   icon: <BarChart3 className="text-[var(--color-primary)]" />,
-                  label: "Vistas del menú",
+                  label: "Vistas del catálogo",
                   value: menuViews,
                   tag: "Total",
                 },

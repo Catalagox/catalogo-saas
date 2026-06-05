@@ -16,6 +16,7 @@ import {
   Palette,
   BarChart3,
   PlusCircle,
+  HelpCircle, // 👈 Icono importado para el botón de ayuda
 } from "lucide-react";
 
 type Props = {
@@ -61,10 +62,11 @@ export default function Sidebar({ closeMenu }: Props) {
     },
     { name: "Productos", href: "/dashboard/productos", icon: Package },
     { name: "Categorías", href: "/dashboard/categorias", icon: Tags },
-    { name: "QR del menú", href: "/dashboard/qr", icon: QrCode },
+    { name: "QR del catálogo", href: "/dashboard/qr", icon: QrCode },
     { name: "Apariencia", href: "/dashboard/apariencia", icon: Palette },
     { name: "Estadísticas", href: "/dashboard/estadistica", icon: BarChart3 },
     { name: "Ajustes", href: "/dashboard/ajustes", icon: Settings },
+    { name: "Ayuda", href: "/contacto", icon: HelpCircle }, // 👈 Nuevo botón agregado debajo de Ajustes
   ];
 
   const avatar = `https://ui-avatars.com/api/?name=${userName || userEmail}&background=111827&color=fff`;

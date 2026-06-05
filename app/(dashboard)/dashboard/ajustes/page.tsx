@@ -258,7 +258,7 @@ export default function AjustesPage() {
           {/* URL AUTOMÁTICA */}
           <div className="space-y-1">
             <p className="text-sm text-[var(--text-secondary)]">
-              URL de tu menú
+              URL de tu catálogo
             </p>
 
             <div className="bg-[var(--bg-tertiary)] border border-[var(--border-card)] rounded-lg p-3 text-sm break-all text-[var(--text-primary)]">

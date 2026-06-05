@@ -14,7 +14,7 @@ export default function CategoryHeader() {
         </h1>
 
         <p className="text-[var(--text-secondary)] mt-2">
-          Organiza tu menú creando categorías.
+          Organiza tu catálogo creando categorías.
         </p>
       </div>
     </div>

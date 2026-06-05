@@ -179,7 +179,7 @@ export default function DashboardPage() {
             {[
               {
                 icon: <MenuSquare className="text-orange-500 mb-3" />,
-                label: "Menú",
+                label: "Catálogo",
                 value: catalogo.nombre,
                 action: () => irA("/dashboard/agregar-producto"),
               },
@@ -263,7 +263,7 @@ export default function DashboardPage() {
               <Globe className="text-cyan-500 mb-3" />
 
               <p className="text-[var(--text-secondary)] text-sm">
-                Menú público
+                Catálogo público
               </p>
 
               <h3 className="text-xl font-bold text-[var(--text-primary)]">
@@ -275,11 +275,11 @@ export default function DashboardPage() {
           /* CREAR MENÚ */
           <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-8 max-w-xl">
             <h2 className="text-2xl font-bold mb-3 text-[var(--text-primary)]">
-              Crea tu primer menú
+              Crea tu primer catálogo
             </h2>
 
             <p className="text-[var(--text-secondary)] mb-6">
-              Configura tu menú digital en menos de 5 minutos y obtén 7 días de
+              Configura tu catálogo digital en menos de 5 minutos y obtén 7 días de
               prueba completamente gratis.
             </p>
 

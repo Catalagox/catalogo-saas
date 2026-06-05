@@ -64,7 +64,7 @@ export default function Hero() {
           "
               >
                 <span className="text-center leading-tight">
-                  ¡Empezar ahora!
+                  ¡Empezar gratis!
                 </span>
                 <FaRocket className="animate-bounce flex-shrink-0 text-xl" />
               </Link>

@@ -99,9 +99,9 @@ export async function generateMetadata({
     };
   }
 
-  const titulo = `Menú Digital - ${catalogoDB.nombre}`;
+  const titulo = `Catálogo Digital - ${catalogoDB.nombre}`;
   const descripcion =
-    "¡Hola! Te invito a ver nuestro menú digital actualizado. Revisa nuestros productos y precios aquí.";
+    "¡Hola! Te invito a ver nuestro catálogo digital actualizado. Revisa nuestros productos y precios aquí.";
 
   return {
     title: titulo,
@@ -114,15 +114,15 @@ export async function generateMetadata({
       images: [
         {
           url: catalogoDB.logoUrl,
-          width: 800,
-          height: 600,
+          width: 400,  // Ajustado a 400x400 (Relación 1:1) ideal para previsualizaciones de WhatsApp
+          height: 400, // Ajustado a 400x400 (Relación 1:1) ideal para previsualizaciones de WhatsApp
           alt: `Logo de ${catalogoDB.nombre}`,
         },
       ],
       type: "website",
     },
     twitter: {
-      card: "summary_large_image",
+      card: "summary", // Cambiado de 'summary_large_image' a 'summary' para mantener la consistencia del logo cuadrado
       title: titulo,
       description: descripcion,
       images: [catalogoDB.logoUrl],
@@ -149,7 +149,7 @@ export default async function MenuPage({
   if (!catalogoDB) {
     return (
       <div className="p-10 text-center">
-        Menú no disponible
+        Catálogo no disponible
       </div>
     );
   }

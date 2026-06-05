@@ -54,7 +54,7 @@ export default function ContactoPage() {
 
               {/* WHATSAPP */}
               <a
-                href="https://wa.me/5491122744966?text=Hola,%20quiero%20más%20información%20sobre%20sus%20servicios."
+                href="https://wa.me/5491176617374?text=Hola,%20quiero%20más%20información%20sobre%20sus%20servicios."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group flex items-center justify-center gap-4 w-full bg-green-600 text-white py-4 rounded-2xl font-semibold text-lg transition-all duration-300 hover:bg-green-700 hover:scale-[1.02]"

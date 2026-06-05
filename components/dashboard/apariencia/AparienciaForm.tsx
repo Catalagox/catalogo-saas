@@ -81,7 +81,7 @@ export default function AparienciaForm({
       <div className="flex items-center justify-between bg-[var(--bg-card)] border border-[var(--border-card)] rounded-xl p-4">
         <div>
           <p className="text-sm text-[var(--text-secondary)]">
-            Estilo del menú
+            Estilo del catálogo
           </p>
 
           <h2 className="text-lg font-bold text-[var(--text-primary)]">

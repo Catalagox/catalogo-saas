@@ -122,7 +122,7 @@ export default function QRPage() {
 
         {/* LINK */}
         <p className="text-sm text-[var(--text-secondary)] mb-2">
-          Link de tu menú
+          Link de tu catálogo
         </p>
 
         <p className="text-xs break-all bg-[var(--bg-tertiary)] border border-[var(--border-card)] text-[var(--text-secondary)] p-3 rounded-lg mb-6 max-w-md mx-auto">
@@ -157,7 +157,7 @@ export default function QRPage() {
             className="flex items-center justify-center gap-2 bg-[var(--bg-tertiary)] hover:bg-[var(--bg-card-hover)] text-[var(--text-primary)] border border-[var(--border-card)] px-4 py-3 rounded-xl font-medium transition w-full"
           >
             <ExternalLink size={18} />
-            <span>Ver menú</span>
+            <span>Ver catálogo</span>
           </a>
         </div>
       </div>
