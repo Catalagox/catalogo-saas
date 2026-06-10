@@ -190,7 +190,7 @@ export default async function ProductoPage({ params }: PageProps) {
           <div className="flex justify-between items-center p-6 rounded-[2rem] bg-[var(--color-card)] border border-white/5">
             <div>
               <p className="text-[10px] font-black uppercase mb-1 tracking-widest text-[var(--color-primary)]">
-                Inversión
+                Precio
               </p>
               <p className="text-4xl font-black text-[var(--color-price)]">
                 ${Number(producto.precio || 0).toLocaleString()}
@@ -220,12 +220,6 @@ export default async function ProductoPage({ params }: PageProps) {
             </div>
           </div>
 
-          {/* REFERENCIA */}
-          <div className="pt-6 border-t border-white/10">
-            <p className="text-[10px] uppercase tracking-widest text-[var(--color-text)] font-medium">
-              Referencia: {producto.slug}
-            </p>
-          </div>
         </div>
       </main>
 

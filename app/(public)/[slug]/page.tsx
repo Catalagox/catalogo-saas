@@ -73,8 +73,9 @@ async function getCatalogo(slug: string) {
     ) {
       logoUrl = data.logo;
     } else {
-      // 🚨 FIX: Asegura que espacios o caracteres especiales en el nombre del archivo no rompan el crawler de WhatsApp
-      logoUrl = encodeURI(`https://yhlqooguctlzorinsxde.supabase.co/storage/v1/object/public/logos/${data.logo}`);
+      // ✅ FIX: Solo codificamos el nombre del archivo para no romper los slashes (/) de la estructura de la URL
+      const archivoCodificado = encodeURIComponent(data.logo);
+      logoUrl = `https://yhlqooguctlzorinsxde.supabase.co/storage/v1/object/public/logos/${archivoCodificado}`;
     }
   }
 
@@ -118,7 +119,7 @@ export async function generateMetadata({
       description: descripcion,
       url: `https://catalagox.com/${slug}`,
       siteName: "CatalagoX",
-      locale: "es_AR",
+      locale: "es_ES", // Formato estándar global más amigable con bots móviles
       type: "website",
 
       images: [
