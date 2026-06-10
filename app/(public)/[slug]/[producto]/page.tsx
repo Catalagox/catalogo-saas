@@ -132,7 +132,7 @@ export default async function ProductoPage({ params }: PageProps) {
 
 📦 *Producto:* ${producto.nombre}
 💰 *Precio:* $${Number(producto.precio || 0).toLocaleString()}
-🔖 *Referencia:* ${producto.slug}
+
 
 🔗 *Ver producto:* ${urlProducto}`;
 
