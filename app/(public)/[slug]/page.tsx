@@ -73,7 +73,8 @@ async function getCatalogo(slug: string) {
     ) {
       logoUrl = data.logo;
     } else {
-      logoUrl = `https://yhlqooguctlzorinsxde.supabase.co/storage/v1/object/public/logos/${data.logo}`;
+      // 🚨 FIX: Asegura que espacios o caracteres especiales en el nombre del archivo no rompan el crawler de WhatsApp
+      logoUrl = encodeURI(`https://yhlqooguctlzorinsxde.supabase.co/storage/v1/object/public/logos/${data.logo}`);
     }
   }
 

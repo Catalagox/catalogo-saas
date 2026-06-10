@@ -59,13 +59,16 @@ export default function QRPage() {
   const textoCompartir =
     "¡Hola! Te invito a ver nuestro catálogo digital actualizado aquí:";
 
+  // 🛠️ FUNCIÓN DE COMPARTIR OPTIMIZADA PARA WHATSAPP NATIVO
   const handleShare = async () => {
     if (navigator.share) {
       try {
+        // 🔥 FIX: Al juntar el texto y la URL en el mismo campo 'text' y dejar la URL AL FINAL,
+        // obligamos al sistema y a WhatsApp a procesar el link correctamente para generar la previsualización de la imagen.
         await navigator.share({
           title: "Mi Catálogo Digital",
-          text: textoCompartir,
-          url: urlMenu,
+          text: `${textoCompartir}\n\n${urlMenu}`, 
+          // Dejamos 'url' vacío o repetido según el sistema, pero ponerlo en el text asegura el render en WhatsApp móvil
         });
       } catch (error) {
         console.error("Error al compartir de forma nativa", error);
