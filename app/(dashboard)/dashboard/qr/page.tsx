@@ -66,8 +66,8 @@ export default function QRPage() {
       try {
         await navigator.share({
           title: "Mi Catálogo Digital",
-          // Forzamos la URL al final del texto para que el scraper de WhatsApp la lea al vuelo
-          text: `${textoCompartir}\n\n${urlMenu}`,
+          text: textoCompartir, // El mensaje va aquí
+          url: urlMenu,         // ✅ Forzamos la URL en su propiedad nativa para que WhatsApp genere la imagen
         });
       } catch (error) {
         console.error("Error al compartir nativo, abriendo modal...", error);
