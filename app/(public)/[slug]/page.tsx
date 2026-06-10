@@ -83,7 +83,6 @@ async function getCatalogo(slug: string) {
   };
 }
 
-// 2. GENERADOR DINÁMICO DE METADATOS
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
@@ -104,28 +103,43 @@ export async function generateMetadata({
     "¡Hola! Te invito a ver nuestro catálogo digital actualizado. Revisa nuestros productos y precios aquí.";
 
   return {
+    metadataBase: new URL("https://catalagox.com"),
+
     title: titulo,
     description: descripcion,
+
+    alternates: {
+      canonical: `https://catalagox.com/${slug}`,
+    },
+
     openGraph: {
       title: titulo,
       description: descripcion,
       url: `https://catalagox.com/${slug}`,
       siteName: "CatalagoX",
+      locale: "es_AR",
+      type: "website",
+
       images: [
         {
           url: catalogoDB.logoUrl,
-          width: 400,  // Ajustado a 400x400 (Relación 1:1) ideal para previsualizaciones de WhatsApp
-          height: 400, // Ajustado a 400x400 (Relación 1:1) ideal para previsualizaciones de WhatsApp
+          width: 1200,
+          height: 630,
           alt: `Logo de ${catalogoDB.nombre}`,
         },
       ],
-      type: "website",
     },
+
     twitter: {
-      card: "summary", // Cambiado de 'summary_large_image' a 'summary' para mantener la consistencia del logo cuadrado
+      card: "summary_large_image",
       title: titulo,
       description: descripcion,
-      images: [catalogoDB.logoUrl],
+      images: [
+        {
+          url: catalogoDB.logoUrl,
+          alt: `Logo de ${catalogoDB.nombre}`,
+        },
+      ],
     },
   };
 }
