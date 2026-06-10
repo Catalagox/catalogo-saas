@@ -59,21 +59,22 @@ export default function QRPage() {
   const textoCompartir =
     "¡Hola! Te invito a ver nuestro catálogo digital actualizado aquí:";
 
-  // 🛠️ FUNCIÓN DE COMPARTIR OPTIMIZADA PARA WHATSAPP NATIVO
+  // 🛠️ CONTROL DE COMPARTIR PROFESIONAL (NATIVO EN MÓVIL / MODAL EN PC)
   const handleShare = async () => {
-    if (navigator.share) {
+    // Detectamos si el navegador soporta compartir nativamente y si es un dispositivo móvil
+    if (navigator.share && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
       try {
-        // 🔥 FIX: Al juntar el texto y la URL en el mismo campo 'text' y dejar la URL AL FINAL,
-        // obligamos al sistema y a WhatsApp a procesar el link correctamente para generar la previsualización de la imagen.
         await navigator.share({
           title: "Mi Catálogo Digital",
-          text: `${textoCompartir}\n\n${urlMenu}`, 
-          // Dejamos 'url' vacío o repetido según el sistema, pero ponerlo en el text asegura el render en WhatsApp móvil
+          // Forzamos la URL al final del texto para que el scraper de WhatsApp la lea al vuelo
+          text: `${textoCompartir}\n\n${urlMenu}`,
         });
       } catch (error) {
-        console.error("Error al compartir de forma nativa", error);
+        console.error("Error al compartir nativo, abriendo modal...", error);
+        setShowShareModal(true);
       }
     } else {
+      // Si está en PC, abre el modal con los botones dedicados automáticamente
       setShowShareModal(true);
     }
   };
@@ -81,9 +82,7 @@ export default function QRPage() {
   const copiarLink = async () => {
     try {
       await navigator.clipboard.writeText(urlMenu);
-
       setCopiado(true);
-
       setTimeout(() => {
         setCopiado(false);
       }, 2000);
@@ -103,7 +102,6 @@ export default function QRPage() {
       });
 
       const link = document.createElement("a");
-
       link.download = `qr-${slug}.png`;
       link.href = dataUrl;
       link.click();
@@ -179,6 +177,7 @@ export default function QRPage() {
         </div>
       </div>
 
+      {/* MODAL DE COMPARTIR */}
       {showShareModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-[var(--bg-card)] border border-[var(--border-card)] p-6 rounded-2xl max-w-sm w-full shadow-2xl relative text-center">
