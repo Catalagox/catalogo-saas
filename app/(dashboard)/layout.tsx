@@ -43,9 +43,11 @@ export default function DashboardLayout({
         .eq("user_id", data.user.id)
         .maybeSingle();
 
-      // 🔴 no tiene catálogo
+      // ✨ ACTUALIZADO: Si no tiene catálogo, es un usuario recién registrado.
+      // Permitimos que entre al dashboard para que pueda usar el formulario de creación 
+      // y así activar sus 7 días gratis.
       if (!catalogo) {
-        router.push("/suscripcion");
+        setLoading(false);
         return;
       }
 

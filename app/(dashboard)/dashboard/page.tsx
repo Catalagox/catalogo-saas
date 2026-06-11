@@ -35,19 +35,16 @@ export default function DashboardPage() {
   const [productosCount, setProductosCount] = useState(0);
   const [categoriasCount, setCategoriasCount] = useState(0);
 
-  // 1. Este es tu useEffect original que carga los datos al entrar
+  // 1. Carga los datos al entrar de forma segura
   useEffect(() => {
     inicializar();
   }, []);
 
-  // 🔥 2. AQUÍ VA EL NUEVO CODIGO ACTUALIZADO:
-  // Detecta si el usuario viene redirigido desde Stripe (?success=true)
+  // 2. Detecta si el usuario viene redirigido desde Stripe (?success=true)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("success") === "true") {
-      inicializar(); // Vuelve a consultar Supabase para pintar los días nuevos acumulados
-      
-      // Limpia el "?success=true" de la barra de direcciones para dejar la URL limpia
+      inicializar(); 
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
@@ -55,42 +52,50 @@ export default function DashboardPage() {
   const irA = (ruta: string) => router.push(ruta);
 
   const inicializar = async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-    if (!session) {
-      router.push("/");
-      return;
+      // Si no hay sesión, dejamos que el Layout se encargue o lo mandamos a auth
+      if (!session) {
+        router.push("/auth");
+        return;
+      }
+
+      setUser(session.user);
+
+      // Consultamos el catálogo de este usuario específico
+      const { data: catalogoData } = await supabase
+        .from("catalogos")
+        .select("id, nombre, slug, created_at, plan_vence_el")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+
+      if (catalogoData) {
+        setCatalogo(catalogoData);
+        
+        // Solo buscamos productos y categorías si el catálogo realmente existe
+        const { count: productos } = await supabase
+          .from("productos")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", session.user.id);
+
+        setProductosCount(productos || 0);
+
+        const { count: categories } = await supabase
+          .from("categorias")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", session.user.id);
+
+        setCategoriasCount(categories || 0);
+      }
+    } catch (error) {
+      console.error("Error al inicializar el dashboard:", error);
+    } finally {
+      // Nos aseguramos de apagar el cargando pase lo que pase
+      setLoading(false);
     }
-
-    setUser(session.user);
-
-    const { data: catalogoData } = await supabase
-      .from("catalogos")
-      .select("id, nombre, slug, created_at, plan_vence_el")
-      .eq("user_id", session.user.id)
-      .maybeSingle();
-
-    if (catalogoData) {
-      setCatalogo(catalogoData);
-    }
-
-    const { count: productos } = await supabase
-      .from("productos")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", session.user.id);
-
-    setProductosCount(productos || 0);
-
-    const { count: categories } = await supabase
-      .from("categorias")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", session.user.id);
-
-    setCategoriasCount(categories || 0);
-
-    loading && setLoading(false);
   };
 
   const crearCatalogo = async () => {
@@ -98,6 +103,7 @@ export default function DashboardPage() {
 
     setIsCreating(true);
 
+    // 🎁 AQUÍ SE ASIGNAN LOS 7 DÍAS GRATIS
     const fechaVencimiento = new Date();
     fechaVencimiento.setDate(fechaVencimiento.getDate() + 7);
 
@@ -116,7 +122,7 @@ export default function DashboardPage() {
           slug: slugGenerado,
           user_id: user.id,
           plan_vence_el: fechaVencimiento.toISOString(),
-        },
+        }
       ])
       .select()
       .single();
@@ -143,6 +149,9 @@ export default function DashboardPage() {
     setCategoriasCount(1);
     setNuevoNombre("");
     setIsCreating(false);
+    
+    // Forzamos al layout a enterarse de que el catálogo ya existe y tiene días de prueba válidos
+    router.refresh();
   };
 
   if (loading) {
@@ -272,7 +281,7 @@ export default function DashboardPage() {
             </a>
           </div>
         ) : (
-          /* CREAR MENÚ */
+          /* CREAR MENÚ (VISTA PARA USUARIOS EN TRIAL DE 7 DÍAS GRATIS) */
           <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-8 max-w-xl">
             <h2 className="text-2xl font-bold mb-3 text-[var(--text-primary)]">
               Crea tu primer catálogo
