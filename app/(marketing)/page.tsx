@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Hero from "@/components/marketing/Hero";
-import RedirectIfLoggedIn from "@/components/marketing/auth/RedirectIfLoggedIn"; // <-- Importamos el componente
+import RedirectIfLoggedIn from "@/components/marketing/auth/RedirectIfLoggedIn";
 
 export const metadata: Metadata = {
   title: "Menú QR y Catálogo Digital para Negocios",
@@ -18,19 +18,12 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <>
-      {/* Intercepta la sesión: si está logueado redirige, si no, se oculta */}
       <RedirectIfLoggedIn />
 
-      <main className="
-        min-h-screen 
-        flex 
-        items-center 
-        justify-center 
-        bg-gradient-to-b 
-        from-white 
-        via-gray-50 
-        to-gray-200
-      ">
+      {/* Agregamos relative y overflow-hidden para que los círculos de colores 
+        que se muevan de fondo no generen scroll horizontal.
+      */}
+      <main className="relative min-h-screen w-full overflow-hidden bg-white">
         <Hero />
       </main>
     </>

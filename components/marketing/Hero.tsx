@@ -6,6 +6,7 @@ import {
   FaRocket,
   FaPalette,
   FaMobileAlt,
+  FaWhatsapp, // Unificado correctamente aquí
 } from "react-icons/fa";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -15,68 +16,214 @@ import { useInView } from "react-intersection-observer";
 export default function Hero() {
   return (
     <section className="w-full">
-      {/* HERO */}
-      <div className="relative w-full min-h-screen flex items-center px-4 sm:px-6 overflow-hidden">
-        {/* Imagen de fondo con efecto de zoom sutil */}
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-[2000ms] hover:scale-105"
-          style={{
-            backgroundImage:
-              "url('/Gemini_Generated_Image_9oqc4l9oqc4l9oqc.png')",
-          }}
-        />
+      {/* HERO RENOVADO, CORREGIDO Y MAGNÍFICO */}
+      <div className="relative w-full min-h-screen flex items-center px-4 sm:px-6 overflow-hidden bg-[#030712]">
+        
+        {/* Malla de Fondo Futurista (Grid Pattern) */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f293710_1px,transparent_1px),linear-gradient(to_bottom,#1f293710_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
 
-        {/* Overlay - Gradiente para mejorar la lectura del texto */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/80" />
+        {/* Super Glow Aurora Superior (Mezcla de colores y desenfoque masivo) */}
+        <div className="absolute top-[-300px] left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-gradient-to-r from-emerald-500 via-[var(--color-primary)] to-lime-400 opacity-30 blur-[160px] rounded-full animate-pulse duration-[6000ms]" />
 
-        {/* Contenido centrado y animado */}
-        <div className="relative z-10 max-w-7xl mx-auto text-center py-20 w-full">
+        {/* Glow Izquierdo Dinámico */}
+        <div className="absolute top-[20%] left-[-200px] w-[600px] h-[600px] bg-emerald-500/20 blur-[130px] rounded-full mix-blend-screen" />
+
+        {/* Glow Derecho Dinámico */}
+        <div className="absolute bottom-[10%] right-[-200px] w-[600px] h-[600px] bg-lime-400/15 blur-[130px] rounded-full mix-blend-screen" />
+
+        {/* Contenedor Principal */}
+        <div className="relative z-10 max-w-7xl mx-auto text-center py-24 w-full">
+          
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+            className="relative z-10 flex flex-col items-center"
           >
-            <h1 className="text-4xl sm:text-6xl md:text-8xl font-black text-white leading-none tracking-tighter">
-              <span className="text-[var(--color-primary)]">Catálogos</span>{" "}
-              <br className="hidden md:block" />
-              <span className="inline-block mt-2">Digitales & Menús QR</span>
+            {/* Badge Premium de Entrada - Espaciado mb-3 para acercarlo al título */}
+            <motion.span 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+              className="inline-flex items-center gap-2 px-4 py-2 mb-3 text-xs font-semibold tracking-wider text-emerald-400 uppercase bg-emerald-500/10 rounded-full border border-emerald-500/20 backdrop-blur-md shadow-[0_0_30px_rgba(34,197,94,0.1)]"
+            >
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              Digitaliza tu negocio en minutos
+            </motion.span>
+
+            {/* Título Ajustado (Sin padding extra vertical para no alejar elementos) */}
+            <h1 className="
+              text-4xl sm:text-6xl md:text-7xl lg:text-[5.5rem] 
+              font-black text-white 
+              leading-[1.1] sm:leading-[1.15] 
+              tracking-tighter max-w-5xl mx-auto
+              flex flex-col gap-1 sm:gap-2
+              px-4 pt-2 pb-0 overflow-visible
+            ">
+              {/* Línea 1 */}
+              <span className="
+                block text-transparent bg-clip-text 
+                bg-gradient-to-r from-white via-gray-200 to-gray-400
+                select-none filter backdrop-blur-[0.1px]
+              ">
+                Lleva tus productos al
+              </span>
+
+              {/* Línea 2 */}
+              <span className="
+                relative inline-block text-transparent bg-clip-text 
+                bg-gradient-to-r from-emerald-400 via-[var(--color-primary)] to-lime-300
+                pb-3 select-none
+              ">
+                Catálogo Digital
+                
+                {/* Capa trasera de luz */}
+                <span className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-lime-300 blur-2xl opacity-30 -z-10 pointer-events-none select-none" />
+              </span>
             </h1>
 
-            <p className="mt-8 text-lg sm:text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed font-medium">
-              Crea catálogos profesionales y menús digitales con código QR.
-              Moderniza tu negocio y permite que tus clientes accedan a tu
-              información desde cualquier celular con una experiencia premium.
+            {/* Subtítulo Estilizado - mt-2 para pegarlo armónicamente al título */}
+            <p className="mt-2 text-lg sm:text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed font-medium balance">
+              Crea Catálogos y Menús interactivos con <span className="text-white font-semibold">Código QR</span>. 
+              Digitaliza tu stock, recibe pedidos al instante y ofrece una experiencia premium 
+              que enamora a tus clientes desde el primer segundo.
             </p>
 
-            {/* Contenedor del Botón - Optimizado para que no se desborden las letras */}
-            <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6">
+            {/* Contenedor Único del Botón - mt-10 para mantener la proporción equilibrada */}
+            <div className="mt-10 flex items-center justify-center w-full px-4">
               <Link
                 href="/auth"
                 className="
-            relative inline-flex items-center justify-center gap-3 
-            w-full max-w-[340px] sm:max-w-none sm:w-auto 
-            px-8 sm:px-12 py-4 sm:py-5 
-            bg-[var(--color-primary)] text-black rounded-2xl 
-            font-black text-base sm:text-lg 
-            hover:bg-white transition-all duration-300 
-            shadow-[0_20px_40px_rgba(var(--color-primary-rgb),0.3)] 
-            hover:-translate-y-1 active:scale-95
-          "
+                  group relative inline-flex items-center justify-center gap-3 
+                  w-full max-w-[340px] sm:max-w-none sm:w-auto px-12 py-5 
+                  bg-gradient-to-r from-emerald-400 via-[var(--color-primary)] to-emerald-500 
+                  text-black rounded-2xl font-black text-lg sm:text-xl
+                  overflow-hidden transition-all duration-300
+                  shadow-[0_20px_40px_rgba(34,197,94,0.3)] 
+                  hover:shadow-[0_20px_50px_rgba(52,211,153,0.5)]
+                  hover:-translate-y-1 active:scale-95
+                "
               >
-                <span className="text-center leading-tight">
+                {/* Destello reflectante en Hover */}
+                <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
+                
+                <span className="relative z-10 text-slate-950 text-center leading-tight">
                   ¡Empezar gratis!
                 </span>
-                <FaRocket className="animate-bounce flex-shrink-0 text-xl" />
+                
+                {/* Cohete con animación de rebote constante recuperada */}
+                <FaRocket className="animate-bounce flex-shrink-0 text-xl text-slate-950 relative z-10" />
               </Link>
             </div>
           </motion.div>
         </div>
 
-        {/* Decoración: Indicador de Scroll (Opcional) */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-40">
-          <div className="w-[2px] h-10 bg-gradient-to-b from-[var(--color-primary)] to-transparent" />
+        {/* Indicador de Scroll Minimalista */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-50">
+          <div className="w-[1px] h-12 bg-gradient-to-b from-emerald-500 to-transparent animate-pulse" />
         </div>
       </div>
+
+
+
+      
+      
+
+
+
+
+{/* SECCIÓN WHATSAPP: PEDIDOS EN TIEMPO REAL */}
+      <div className="w-full py-20 sm:py-32 bg-gradient-to-bl from-black via-[#021a10] to-black relative overflow-hidden border-t border-b border-white/5">
+        {/* DECORACIÓN AMBIENTAL WHATSAPP */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-[20%] -right-[10%] w-[50%] h-[50%] bg-emerald-500/5 blur-[140px] rounded-full"></div>
+          <div className="absolute bottom-10 left-10 w-72 h-72 border border-emerald-500/5 rounded-full scale-125 animate-pulse"></div>
+        </div>
+
+        <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20 items-center relative z-10">
+          
+          {/* COLUMNA IZQUIERDA: TEXTO DE PROPUESTA DE VALOR (REEMPLAZA AL SIMULADOR) */}
+          <div className="text-center md:text-left order-2 md:order-1 flex flex-col justify-center">
+            <span className="inline-block w-fit px-4 py-1.5 mb-6 text-xs font-bold tracking-widest text-emerald-400 uppercase bg-emerald-500/10 rounded-full border border-emerald-500/20 mx-auto md:mx-0">
+              Cero Comisiones
+            </span>
+
+            <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-6 leading-[1.15] tracking-tight">
+              Sin intermediarios. <br />
+              El control total de tus <span className="text-emerald-400">ventas</span>.
+            </h3>
+
+            <p className="text-gray-400 text-lg leading-relaxed mb-8 max-w-lg mx-auto md:mx-0">
+              Al recibir los pedidos directamente en tu chat de atención, eliminas las apps de delivery que se quedan con tus ganancias. Creas una línea directa con tus comensales y construyes una base de clientes propia desde el primer día.
+            </p>
+
+            {/* Bloque Destacado de Texto Corregido */}
+            <div className="p-6 rounded-2xl bg-emerald-950/30 border border-emerald-500/20 backdrop-blur-sm max-w-lg mx-auto md:mx-0 shadow-[0_4px_30px_rgba(16,185,129,0.05)]">
+              <p className="text-sm text-gray-300 font-mono leading-relaxed">
+                <span className="text-emerald-400 font-bold">💡 Tip de conversión:</span> Un canal personalizado de atención a través de WhatsApp incrementa la tasa de recompra de los clientes en más de un <span className="text-emerald-400 font-bold">35%</span> en comparación con plataformas externas.
+              </p>
+            </div>
+          </div>
+
+          {/* COLUMNA DERECHA: EXPLICACIÓN DEL BENEFICIO */}
+          <div className="text-center md:text-left order-1 md:order-2">
+            {/* Badge Superior */}
+            <span className="inline-block px-4 py-1.5 mb-6 text-xs font-bold tracking-widest text-emerald-400 uppercase bg-emerald-500/10 rounded-full border border-emerald-500/20">
+              Automatización Inteligente
+            </span>
+
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-6 leading-[1.1] tracking-tight">
+              Recibe los pedidos directo en tu{" "}
+              <span className="text-emerald-400">WhatsApp</span>
+            </h2>
+
+            <p className="text-gray-400 text-lg sm:text-xl mb-10 max-w-lg mx-auto md:mx-0 leading-relaxed">
+              Olvídate de anotar mensajes confusos. Tu catálogo organiza el carrito de compras y genera un{" "}
+              <span className="text-white font-medium">mensaje limpio, estructurado y listo</span> para procesar en tu chat de atención.
+            </p>
+
+            {/* LISTA DE BENEFICIOS CON ESTILO WHATSAPP */}
+            <ul className="space-y-5 mb-10">
+              {[
+                "Mensajes automáticos con el detalle exacto del pedido",
+                "Reduce los errores de toma de órdenes a cero",
+                "Sin comisiones por venta, el canal es 100% tuyo",
+                "Fideliza clientes guardando su contacto al instante",
+              ].map((item, index) => (
+                <li
+                  key={index}
+                  className="flex items-center gap-4 text-gray-200 justify-center md:justify-start group"
+                >
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center group-hover:bg-emerald-400 transition-colors">
+                    <svg
+                      className="w-4 h-4 text-emerald-400 group-hover:text-black"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="3"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  </span>
+                  <span className="text-base sm:text-lg">{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+        </div>
+      </div>
+
+
+
+
+
+  
+
 
       {/* BLOQUE PRO + MOCKUP */}
       <div className="w-full py-20 sm:py-32 bg-gradient-to-br from-[#041d14] via-[#06281c] to-black relative overflow-hidden">
