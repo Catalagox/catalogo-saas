@@ -16,114 +16,102 @@ import { useInView } from "react-intersection-observer";
 export default function Hero() {
   return (
     <section className="w-full">
-      {/* HERO RENOVADO, CORREGIDO Y MAGNÍFICO */}
-      <div className="relative w-full min-h-screen flex items-center px-4 sm:px-6 overflow-hidden bg-[#030712]">
-        
-        {/* Malla de Fondo Futurista (Grid Pattern) */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f293710_1px,transparent_1px),linear-gradient(to_bottom,#1f293710_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
 
-        {/* Super Glow Aurora Superior (Mezcla de colores y desenfoque masivo) */}
-        <div className="absolute top-[-300px] left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-gradient-to-r from-emerald-500 via-[var(--color-primary)] to-lime-400 opacity-30 blur-[160px] rounded-full animate-pulse duration-[6000ms]" />
 
-        {/* Glow Izquierdo Dinámico */}
-        <div className="absolute top-[20%] left-[-200px] w-[600px] h-[600px] bg-emerald-500/20 blur-[130px] rounded-full mix-blend-screen" />
+{/* HERO RENOVADO Y ADAPTADO AL ESTILO WHATSAPP */}
+<div className="relative w-full min-h-screen flex items-center px-4 sm:px-6 overflow-hidden bg-gradient-to-bl from-black via-[#021a10] to-black border-b border-white/5">
+  
+  {/* DECORACIÓN AMBIENTAL (Círculos estáticos de fondo tipo WhatsApp) */}
+  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    {/* Círculo 1: Resplandor suave superior */}
+    <div className="absolute top-[10%] -left-[10%] w-[50%] h-[50%] bg-emerald-500/5 blur-[140px] rounded-full" />
+    
+    {/* Círculo 2: Resplandor suave inferior derecho */}
+    <div className="absolute bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-emerald-500/5 blur-[140px] rounded-full" />
+    
+    {/* Círculo 3: Anillo estructural estático (sin animación) */}
+    <div className="absolute top-[40%] left-1/2 -translate-x-1/2 w-96 h-96 border border-emerald-500/5 rounded-full scale-150" />
+  </div>
 
-        {/* Glow Derecho Dinámico */}
-        <div className="absolute bottom-[10%] right-[-200px] w-[600px] h-[600px] bg-lime-400/15 blur-[130px] rounded-full mix-blend-screen" />
+  {/* Contenedor Principal */}
+  <div className="relative z-10 max-w-7xl mx-auto text-center py-24 w-full">
+    
+    <motion.div
+      initial={{ opacity: 0, y: 40 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+      className="relative z-10 flex flex-col items-center"
+    >
+      {/* Badge Premium de Entrada - Responsivo: Más pequeño en móviles, normal en pantallas grandes */}
+      <motion.span 
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.2 }}
+        className="inline-flex items-center gap-2 mb-3 text-[10px] sm:text-xs font-bold tracking-normal sm:tracking-widest text-emerald-400 uppercase bg-emerald-500/10 px-3 py-1 sm:px-4 sm:py-2 rounded-full border border-emerald-500/20 backdrop-blur-md"
+      >
+        Digitaliza tu negocio en minutos
+      </motion.span>
 
-        {/* Contenedor Principal */}
-        <div className="relative z-10 max-w-7xl mx-auto text-center py-24 w-full">
+      {/* Título Estilizado con la nueva paleta de color */}
+      <h1 className="
+        text-4xl sm:text-6xl md:text-7xl lg:text-[5.5rem] 
+        font-black text-white 
+        leading-[1.1] sm:leading-[1.15] 
+        tracking-tighter max-w-5xl mx-auto
+        flex flex-col gap-1 sm:gap-2
+        px-4 pt-2 pb-0 overflow-visible
+      ">
+        {/* Línea 1: Blanco puro y sólido, sin degradados */}
+        <span className="block text-white select-none filter backdrop-blur-[0.1px]">
+          Lleva tus productos al
+        </span>
+
+        {/* Línea 2 */}
+        <span className="relative inline-block text-emerald-400 pb-3 select-none">
+          Catálogo Digital
+        </span>
+      </h1>
+
+      {/* Subtítulo Estilizado */}
+      <p className="mt-2 text-lg sm:text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto leading-relaxed font-medium balance">
+        Crea Catálogos y Menús interactivos con <span className="text-white font-semibold">Código QR</span>. 
+        Digitaliza tu stock, recibe pedidos al instante y ofrece una experiencia premium 
+        que enamora a tus clientes desde el primer segundo.
+      </p>
+
+      {/* Contenedor Único del Botón */}
+      <div className="mt-10 flex items-center justify-center w-full px-4">
+        <Link
+          href="/auth"
+          className="
+            group relative inline-flex items-center justify-center gap-3 
+            w-full max-w-[340px] sm:max-w-none sm:w-auto px-12 py-5 
+            bg-emerald-500 text-black rounded-2xl font-black text-lg sm:text-xl
+            overflow-hidden transition-all duration-300
+            shadow-[0_10px_30px_rgba(16,185,129,0.2)] 
+            hover:shadow-[0_15px_40px_rgba(16,185,129,0.4)]
+            hover:-translate-y-1 active:scale-95
+          "
+        >
+          {/* Destello sutil en Hover */}
+          <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
           
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-            className="relative z-10 flex flex-col items-center"
-          >
-            {/* Badge Premium de Entrada - Espaciado mb-3 para acercarlo al título */}
-            <motion.span 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 }}
-              className="inline-flex items-center gap-2 px-4 py-2 mb-3 text-xs font-semibold tracking-wider text-emerald-400 uppercase bg-emerald-500/10 rounded-full border border-emerald-500/20 backdrop-blur-md shadow-[0_0_30px_rgba(34,197,94,0.1)]"
-            >
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-              Digitaliza tu negocio en minutos
-            </motion.span>
-
-            {/* Título Ajustado (Sin padding extra vertical para no alejar elementos) */}
-            <h1 className="
-              text-4xl sm:text-6xl md:text-7xl lg:text-[5.5rem] 
-              font-black text-white 
-              leading-[1.1] sm:leading-[1.15] 
-              tracking-tighter max-w-5xl mx-auto
-              flex flex-col gap-1 sm:gap-2
-              px-4 pt-2 pb-0 overflow-visible
-            ">
-              {/* Línea 1 */}
-              <span className="
-                block text-transparent bg-clip-text 
-                bg-gradient-to-r from-white via-gray-200 to-gray-400
-                select-none filter backdrop-blur-[0.1px]
-              ">
-                Lleva tus productos al
-              </span>
-
-              {/* Línea 2 */}
-              <span className="
-                relative inline-block text-transparent bg-clip-text 
-                bg-gradient-to-r from-emerald-400 via-[var(--color-primary)] to-lime-300
-                pb-3 select-none
-              ">
-                Catálogo Digital
-                
-                {/* Capa trasera de luz */}
-                <span className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-lime-300 blur-2xl opacity-30 -z-10 pointer-events-none select-none" />
-              </span>
-            </h1>
-
-            {/* Subtítulo Estilizado - mt-2 para pegarlo armónicamente al título */}
-            <p className="mt-2 text-lg sm:text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed font-medium balance">
-              Crea Catálogos y Menús interactivos con <span className="text-white font-semibold">Código QR</span>. 
-              Digitaliza tu stock, recibe pedidos al instante y ofrece una experiencia premium 
-              que enamora a tus clientes desde el primer segundo.
-            </p>
-
-            {/* Contenedor Único del Botón - mt-10 para mantener la proporción equilibrada */}
-            <div className="mt-10 flex items-center justify-center w-full px-4">
-              <Link
-                href="/auth"
-                className="
-                  group relative inline-flex items-center justify-center gap-3 
-                  w-full max-w-[340px] sm:max-w-none sm:w-auto px-12 py-5 
-                  bg-gradient-to-r from-emerald-400 via-[var(--color-primary)] to-emerald-500 
-                  text-black rounded-2xl font-black text-lg sm:text-xl
-                  overflow-hidden transition-all duration-300
-                  shadow-[0_20px_40px_rgba(34,197,94,0.3)] 
-                  hover:shadow-[0_20px_50px_rgba(52,211,153,0.5)]
-                  hover:-translate-y-1 active:scale-95
-                "
-              >
-                {/* Destello reflectante en Hover */}
-                <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
-                
-                <span className="relative z-10 text-slate-950 text-center leading-tight">
-                  ¡Empezar gratis!
-                </span>
-                
-                {/* Cohete con animación de rebote constante recuperada */}
-                <FaRocket className="animate-bounce flex-shrink-0 text-xl text-slate-950 relative z-10" />
-              </Link>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Indicador de Scroll Minimalista */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-50">
-          <div className="w-[1px] h-12 bg-gradient-to-b from-emerald-500 to-transparent animate-pulse" />
-        </div>
+          <span className="relative z-10 text-slate-950 text-center leading-tight">
+            ¡Empezar gratis!
+          </span>
+          
+          {/* Cohete dinámico con animación de rebote reactivada */}
+          <FaRocket className="animate-bounce flex-shrink-0 text-xl text-slate-950 relative z-10" />
+        </Link>
       </div>
+    </motion.div>
+  </div>
 
+  {/* Indicador de Scroll Minimalista Limpio */}
+  <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-30">
+    <div className="w-[1px] h-12 bg-gradient-to-b from-emerald-500 to-transparent" />
+  </div>
+</div>
 
 
       
