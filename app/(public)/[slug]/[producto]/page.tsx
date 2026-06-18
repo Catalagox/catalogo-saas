@@ -14,11 +14,9 @@ async function getProductoData(slug: string, productoSlug: string) {
 
   if (!slug || !productoSlug) return null;
 
-  // Cargar catálogo
   const { data: catalogo, error: catalogoError } = await supabase
     .from("catalogos")
-    .select(
-      `
+    .select(`
       id,
       user_id,
       nombre,
@@ -29,14 +27,12 @@ async function getProductoData(slug: string, productoSlug: string) {
       color_primario,
       color_tarjeta,
       whatsapp
-    `,
-    )
+    `)
     .eq("slug", slug)
     .maybeSingle();
 
   if (catalogoError || !catalogo) return null;
 
-  // Cargar producto (Asegúrate de que 'categoria' exista en tu tabla de productos)
   const { data: producto, error: productoError } = await supabase
     .from("productos")
     .select("*")
@@ -50,9 +46,7 @@ async function getProductoData(slug: string, productoSlug: string) {
 }
 
 // 2. METADATOS DINÁMICOS
-export async function generateMetadata({
-  params,
-}: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug, producto: productoSlug } = await params;
   const data = await getProductoData(slug, productoSlug);
 
@@ -64,8 +58,7 @@ export async function generateMetadata({
     ? `${producto.descripcion.substring(0, 150)}... ¡Pídelo aquí!`
     : `Mira nuestro producto ${producto.nombre} en el menú digital.`;
 
-  const imagenUrl =
-    producto.imagen_url || "https://catalagox.com/default-share-image.png";
+  const imagenUrl = producto.imagen_url || "https://catalagox.com/default-share-image.png";
 
   return {
     title: titulo,
@@ -75,14 +68,7 @@ export async function generateMetadata({
       description: descripcion,
       url: `https://catalagox.com/${slug}/${productoSlug}`,
       siteName: catalogo.nombre,
-      images: [
-        {
-          url: imagenUrl,
-          width: 800,
-          height: 600,
-          alt: producto.nombre,
-        },
-      ],
+      images: [{ url: imagenUrl, width: 800, height: 600, alt: producto.nombre }],
       type: "website",
     },
     twitter: {
@@ -104,7 +90,6 @@ export default async function ProductoPage({ params }: PageProps) {
 
   const { catalogo, producto } = data;
 
-  // TRACKING PRODUCTO
   try {
     await supabase.from("estadisticas").insert({
       user_id: catalogo.user_id,
@@ -114,7 +99,6 @@ export default async function ProductoPage({ params }: PageProps) {
     console.error("TRACKING PRODUCT ERROR:", err);
   }
 
-  // THEME
   const theme = {
     "--color-bg": catalogo.color_fondo ?? "#111827",
     "--color-text": catalogo.color_texto ?? "#ffffff",
@@ -126,7 +110,6 @@ export default async function ProductoPage({ params }: PageProps) {
   const urlProducto = `https://catalagox.com/${slug}/${productoSlug}`;
 
   const mensaje = `🛒 *Nuevo pedido*
-
 📦 *Producto:* ${producto.nombre}
 💰 *Precio:* $${Number(producto.precio || 0).toLocaleString()}
 
@@ -137,12 +120,14 @@ export default async function ProductoPage({ params }: PageProps) {
     : "#";
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] pb-32" style={theme}>
+    <div className="block min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] pb-32" style={theme}>
       
-      {/* --- 1. IMAGEN (ARRIBA) --- */}
-      <div className="relative w-full h-[45vh] sm:h-[50vh] bg-black">
-        {/* Botón flotante para volver atrás sobre la imagen */}
-        <div className="absolute top-6 left-6 z-10">
+      {/* --- 1. SECCIÓN DE LA IMAGEN (ARRIBA) --- */}
+      {/* Añadidos estilos forzados de ancho y alto estricto para asegurar renderizado en producción */}
+      <div className="relative w-full block h-[45vh] min-h-[300px] max-h-[500px] bg-black overflow-hidden">
+        
+        {/* Botón de volver */}
+        <div className="absolute top-6 left-6 z-30">
           <BackButton />
         </div>
 
@@ -151,16 +136,18 @@ export default async function ProductoPage({ params }: PageProps) {
             src={producto.imagen_url}
             alt={producto.nombre}
             fill
+            sizes="100vw"
             priority
-            className="object-cover"
+            className="object-cover z-10"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gray-900 text-gray-500">
+          <div className="w-full h-full flex items-center justify-center bg-gray-900 text-gray-500 z-10">
             Sin imagen disponible
           </div>
         )}
-        {/* Sombreado sutil inferior para fusionar con el fondo si es oscuro */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-bg)]/40 via-transparent to-transparent" />
+        
+        {/* Gradiente decorativo */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-bg)]/50 via-transparent to-transparent z-20" />
       </div>
 
       {/* --- CUERPO DE LA INFORMACIÓN --- */}
@@ -171,8 +158,7 @@ export default async function ProductoPage({ params }: PageProps) {
           <div className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-[var(--color-primary)] animate-pulse" />
             <span className="text-xs font-black uppercase tracking-[0.2em] text-[var(--color-primary)]">
-              {/* Renderiza la categoría si existe en tu BD, si no, usa un fallback */}
-              {producto.categoria || "General"}
+              {producto.categoria || "Producto"}
             </span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight">
