@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
 import BackButton from "@/components/public/BackButton";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 
@@ -123,7 +122,6 @@ export default async function ProductoPage({ params }: PageProps) {
     <div className="block min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] pb-32" style={theme}>
       
       {/* --- 1. SECCIÓN DE LA IMAGEN (ARRIBA) --- */}
-      {/* Añadidos estilos forzados de ancho y alto estricto para asegurar renderizado en producción */}
       <div className="relative w-full block h-[45vh] min-h-[300px] max-h-[500px] bg-black overflow-hidden">
         
         {/* Botón de volver */}
@@ -132,13 +130,11 @@ export default async function ProductoPage({ params }: PageProps) {
         </div>
 
         {producto.imagen_url ? (
-          <Image
+          /* Usamos la etiqueta <img> nativa para evitar restricciones de Next.js en producción */
+          <img
             src={producto.imagen_url}
             alt={producto.nombre}
-            fill
-            sizes="100vw"
-            priority
-            className="object-cover z-10"
+            className="w-full h-full object-cover z-10"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gray-900 text-gray-500 z-10">
