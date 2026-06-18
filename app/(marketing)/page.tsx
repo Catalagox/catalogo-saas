@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Hero from "@/components/marketing/Hero";
 import RedirectIfLoggedIn from "@/components/marketing/auth/RedirectIfLoggedIn";
+import PelotaMundial from "@/components/PelotaMundial";
 
 export const metadata: Metadata = {
   title: "Menú QR y Catálogo Digital para Negocios",
@@ -19,6 +20,7 @@ export default function Home() {
   return (
     <>
       <RedirectIfLoggedIn />
+      <PelotaMundial />
 
       {/* Agregamos relative y overflow-hidden para que los círculos de colores 
         que se muevan de fondo no generen scroll horizontal.

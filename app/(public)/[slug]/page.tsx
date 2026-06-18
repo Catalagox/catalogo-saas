@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import MenuClient from "@/components/public/MenuClient";
 import { Metadata } from "next";
+import PelotaMundial from "@/components/PelotaMundial";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -233,9 +234,12 @@ export default async function MenuPage({
   }
 
   return (
+    <>
+    <PelotaMundial />
     <MenuClient
       catalogo={catalogo}
       categorias={categorias ?? []}
     />
+    </>
   );
 }
