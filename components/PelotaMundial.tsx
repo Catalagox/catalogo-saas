@@ -23,7 +23,7 @@ export default function PelotaMundial() {
 
         /* La pelota gira constantemente */
         .pelota {
-          animation: girar 0.8s linear infinite;
+          animation: girar 3s linear infinite;
         }
 
         @keyframes recorrer {

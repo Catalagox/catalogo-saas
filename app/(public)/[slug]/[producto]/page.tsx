@@ -8,7 +8,7 @@ interface PageProps {
   params: Promise<{ slug: string; producto: string }>;
 }
 
-// 1. FUNCIÓN AUXILIAR PARA OBTENER LOS DATOS (Evita duplicar consultas)
+// 1. FUNCIÓN AUXILIAR PARA OBTENER LOS DATOS
 async function getProductoData(slug: string, productoSlug: string) {
   const supabase = await createClient();
 
@@ -36,7 +36,7 @@ async function getProductoData(slug: string, productoSlug: string) {
 
   if (catalogoError || !catalogo) return null;
 
-  // Cargar producto
+  // Cargar producto (Asegúrate de que 'categoria' exista en tu tabla de productos)
   const { data: producto, error: productoError } = await supabase
     .from("productos")
     .select("*")
@@ -49,7 +49,7 @@ async function getProductoData(slug: string, productoSlug: string) {
   return { catalogo, producto };
 }
 
-// 2. METADATOS DINÁMICOS PARA EL PRODUCTO (Para la vista previa con foto en WhatsApp)
+// 2. METADATOS DINÁMICOS
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
@@ -64,7 +64,6 @@ export async function generateMetadata({
     ? `${producto.descripcion.substring(0, 150)}... ¡Pídelo aquí!`
     : `Mira nuestro producto ${producto.nombre} en el menú digital.`;
 
-  // Usar la imagen del producto, si no tiene, podrías usar un fallback por defecto
   const imagenUrl =
     producto.imagen_url || "https://catalagox.com/default-share-image.png";
 
@@ -105,7 +104,7 @@ export default async function ProductoPage({ params }: PageProps) {
 
   const { catalogo, producto } = data;
 
-  // 🔥 TRACKING PRODUCTO
+  // TRACKING PRODUCTO
   try {
     await supabase.from("estadisticas").insert({
       user_id: catalogo.user_id,
@@ -115,7 +114,7 @@ export default async function ProductoPage({ params }: PageProps) {
     console.error("TRACKING PRODUCT ERROR:", err);
   }
 
-  // 🔥 THEME
+  // THEME
   const theme = {
     "--color-bg": catalogo.color_fondo ?? "#111827",
     "--color-text": catalogo.color_texto ?? "#ffffff",
@@ -124,28 +123,26 @@ export default async function ProductoPage({ params }: PageProps) {
     "--color-card": catalogo.color_tarjeta ?? "rgba(255,255,255,0.05)",
   } as React.CSSProperties;
 
-  // 🔥 URL ABSOLUTA DEL PRODUCTO (Es vital para que WhatsApp arme la previsualización)
   const urlProducto = `https://catalagox.com/${slug}/${productoSlug}`;
 
-  // 🔥 MENSAJE DE WHATSAPP MEJORADO (Estructura clara + Enlace)
   const mensaje = `🛒 *Nuevo pedido*
 
 📦 *Producto:* ${producto.nombre}
 💰 *Precio:* $${Number(producto.precio || 0).toLocaleString()}
 
-
 🔗 *Ver producto:* ${urlProducto}`;
 
-  // 🔥 LINK WHATSAPP
   const whatsappUrl = catalogo.whatsapp
     ? `https://wa.me/${catalogo.whatsapp}?text=${encodeURIComponent(mensaje)}`
     : "#";
 
   return (
-    <div className="relative min-h-screen bg-black" style={theme}>
-      {/* --- HERO IMAGE --- */}
-      <div className="fixed top-0 left-0 w-full h-[60vh] z-0">
-        <div className="absolute top-6 left-6 z-50">
+    <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] pb-32" style={theme}>
+      
+      {/* --- 1. IMAGEN (ARRIBA) --- */}
+      <div className="relative w-full h-[45vh] sm:h-[50vh] bg-black">
+        {/* Botón flotante para volver atrás sobre la imagen */}
+        <div className="absolute top-6 left-6 z-10">
           <BackButton />
         </div>
 
@@ -155,75 +152,71 @@ export default async function ProductoPage({ params }: PageProps) {
             alt={producto.nombre}
             fill
             priority
-            className="object-cover opacity-90"
+            className="object-cover"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gray-900 text-gray-500">
             Sin imagen disponible
           </div>
         )}
-
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-transparent" />
+        {/* Sombreado sutil inferior para fusionar con el fondo si es oscuro */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-bg)]/40 via-transparent to-transparent" />
       </div>
 
-      {/* --- HOJA --- */}
-      <main className="relative z-10 mt-[50vh] min-h-[50vh] bg-[var(--color-bg)] rounded-t-[45px] shadow-[0_-15px_50px_rgba(0,0,0,0.5)] pb-32">
-        <div className="flex justify-center pt-5">
-          <div className="w-16 h-1.5 rounded-full bg-[var(--color-primary)] opacity-70" />
+      {/* --- CUERPO DE LA INFORMACIÓN --- */}
+      <main className="max-w-2xl mx-auto px-6 pt-8 space-y-8">
+        
+        {/* --- 2. CATEGORÍA Y TÍTULO --- */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-[var(--color-primary)] animate-pulse" />
+            <span className="text-xs font-black uppercase tracking-[0.2em] text-[var(--color-primary)]">
+              {/* Renderiza la categoría si existe en tu BD, si no, usa un fallback */}
+              {producto.categoria || "General"}
+            </span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight">
+            {producto.nombre}
+          </h1>
         </div>
 
-        <div className="max-w-2xl mx-auto px-8 py-10 space-y-10">
-          {/* TÍTULO */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full animate-pulse bg-[var(--color-primary)]" />
-              <span className="text-[11px] font-black uppercase tracking-[0.2em] text-[var(--color-primary)]">
-                Producto
-              </span>
-            </div>
-            <h1 className="text-4xl font-extrabold text-[var(--color-text)] leading-tight">
-              {producto.nombre}
-            </h1>
+        {/* --- 3. PRECIO --- */}
+        <div className="flex justify-between items-center p-6 rounded-2xl bg-[var(--color-card)] border border-white/5">
+          <div>
+            <p className="text-[10px] font-black uppercase mb-1 tracking-widest opacity-60">
+              Precio
+            </p>
+            <p className="text-3xl font-black text-[var(--color-price)]">
+              ${Number(producto.precio || 0).toLocaleString()}
+            </p>
           </div>
 
-          {/* PRECIO */}
-          <div className="flex justify-between items-center p-6 rounded-[2rem] bg-[var(--color-card)] border border-white/5">
-            <div>
-              <p className="text-[10px] font-black uppercase mb-1 tracking-widest text-[var(--color-primary)]">
-                Precio
-              </p>
-              <p className="text-4xl font-black text-[var(--color-price)]">
-                ${Number(producto.precio || 0).toLocaleString()}
-              </p>
-            </div>
-
-            <div
-              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest ${
-                producto.disponible
-                  ? "bg-green-500/10 text-green-400 border border-green-500/20"
-                  : "bg-red-500/10 text-red-400 border border-red-500/20"
-              }`}
-            >
-              {producto.disponible ? "Disponible" : "Agotado"}
-            </div>
+          <div
+            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest ${
+              producto.disponible
+                ? "bg-green-500/10 text-green-400 border border-green-500/20"
+                : "bg-red-500/10 text-red-400 border border-red-500/20"
+            }`}
+          >
+            {producto.disponible ? "Disponible" : "Agotado"}
           </div>
-
-          {/* DESCRIPCIÓN */}
-          <div className="space-y-4">
-            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-[var(--color-primary)]">
-              Descripción
-            </h3>
-            <div className="text-lg leading-relaxed whitespace-pre-line font-light text-[var(--color-text)]">
-              {producto.descripcion
-                ? producto.descripcion
-                : "No hay detalles adicionales para este producto."}
-            </div>
-          </div>
-
         </div>
+
+        {/* --- 4. DESCRIPCIÓN --- */}
+        <div className="space-y-3">
+          <h3 className="text-xs font-black uppercase tracking-[0.2em] opacity-60">
+            Descripción
+          </h3>
+          <div className="text-base sm:text-lg leading-relaxed whitespace-pre-line font-light opacity-90">
+            {producto.descripcion
+              ? producto.descripcion
+              : "No hay detalles adicionales para este producto."}
+          </div>
+        </div>
+
       </main>
 
-      {/* --- BOTÓN FIJO --- */}
+      {/* --- BOTÓN FIJO EN LA PARTE INFERIOR --- */}
       <div className="fixed bottom-0 left-0 w-full p-6 z-50 bg-gradient-to-t from-[var(--color-bg)] via-[var(--color-bg)] to-transparent">
         <div className="max-w-2xl mx-auto">
           <a
