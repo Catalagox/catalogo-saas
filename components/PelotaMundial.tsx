@@ -1,18 +1,15 @@
 "use client";
 
-import Image from "next/image";
-
 export default function PelotaMundial() {
   return (
     <>
       <div className="pelota-mundial fixed top-10 left-[-120px] z-[9999]">
         <div className="relative w-16 h-16 md:w-20 md:h-20">
-          <Image
+          <img
             src="/Pelota-Mundial-2026.png"
             alt="Pelota Mundial 2026"
             width={80}
             height={80}
-            priority
             className="pelota"
           />
         </div>
@@ -59,8 +56,7 @@ export default function PelotaMundial() {
           }
 
           30% {
-            transform: translateX(calc(100vw + 120px))
-              translateY(-10px)
+            transform: translateX(calc(100vw + 120px)) translateY(-10px)
               rotate(1800deg);
             opacity: 1;
           }
@@ -71,8 +67,7 @@ export default function PelotaMundial() {
           }
 
           100% {
-            transform: translateX(calc(100vw + 120px))
-              translateY(-10px)
+            transform: translateX(calc(100vw + 120px)) translateY(-10px)
               rotate(1800deg);
             opacity: 0;
           }
