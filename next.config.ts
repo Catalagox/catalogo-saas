@@ -7,7 +7,9 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**",
+        // 🔥 CORRECCIÓN: Reemplaza esto con tu dominio real de Supabase 
+        // O usa '*.supabase.co' si quieres permitir subdominios de Supabase.
+        hostname: "*.supabase.co", 
       },
     ],
   },
