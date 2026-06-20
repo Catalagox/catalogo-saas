@@ -1,9 +1,8 @@
 "use client";
 
 import { useRouter, useParams } from "next/navigation";
-import Image from "next/image";
 
-// 🔥 Tipado real (mejor que any)
+// 🔥 Tipado real
 interface Producto {
   id: string;
   nombre: string;
@@ -34,14 +33,14 @@ export default function ProductoCard({ producto }: Props) {
       onClick={handleClick}
       className="group rounded-2xl p-3 flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-all duration-300 bg-[var(--color-card)] border border-white/10 hover:border-[var(--color-categoria)]"
     >
-      {/* 🖼️ IMAGEN */}
+      {/* 🖼️ IMAGEN ESTÁNDAR (Adiós Next Image fallas) */}
       {producto.imagen_url ? (
-        <div className="relative w-24 h-24 flex-shrink-0 overflow-hidden rounded-xl">
-          <Image
+        <div className="relative w-24 h-24 flex-shrink-0 overflow-hidden rounded-xl bg-white">
+          <img
             src={producto.imagen_url}
             alt={producto.nombre}
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-110"
+            loading="lazy"
+            className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
           />
         </div>
       ) : (
@@ -52,7 +51,6 @@ export default function ProductoCard({ producto }: Props) {
 
       {/* 📦 INFO */}
       <div className="flex-1 flex flex-col min-w-0">
-
         {/* NOMBRE */}
         <h3 className="font-semibold text-base leading-tight truncate text-[var(--color-text)]">
           {producto.nombre}
@@ -67,7 +65,6 @@ export default function ProductoCard({ producto }: Props) {
 
         {/* PRECIO */}
         <div className="mt-2 flex items-center justify-between">
-
           <span className="text-sm font-bold text-[var(--color-price)]">
             ${Number(producto.precio || 0).toLocaleString()}
           </span>
@@ -76,9 +73,7 @@ export default function ProductoCard({ producto }: Props) {
           <span className="text-[10px] px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition bg-[var(--color-price)]/20 text-[var(--color-price)]">
             Ver
           </span>
-
         </div>
-
       </div>
     </div>
   );
