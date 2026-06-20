@@ -81,14 +81,11 @@ export default function MenuLista({ categorias }: MenuListaProps) {
   return (
     <div
       className="
-        space-y-8
-        pb-0
+        space-y-14
+        pb-16
         animate-fade-in
       "
     >
-      {/* Ajustado space-y-14 a space-y-8 para optimizar el espacio móvil
-        y pb-16 a pb-0 para que ensamble pegado al footer.
-      */}
       {safeCategorias.map((categoria) => (
         /* 🔥 IMPORTANTE PARA EL MENU HORIZONTAL */
         <section
