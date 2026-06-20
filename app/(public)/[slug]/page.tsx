@@ -120,7 +120,7 @@ export async function generateMetadata({
       description: descripcion,
       url: `https://catalagox.com/${slug}`,
       siteName: "CatalagoX",
-      locale: "es_ES", // Formato estándar global más amigable con bots móviles
+      locale: "es_ES",
       type: "website",
 
       images: [
@@ -215,7 +215,7 @@ export default async function MenuPage({
         descripcion,
         precio,
         imagen_url,
-        disponible,
+        available: disponible, 
         slug
       )
       `
@@ -234,12 +234,20 @@ export default async function MenuPage({
   }
 
   return (
-    <>
-    <PelotaMundial />
-    <MenuClient
-      catalogo={catalogo}
-      categorias={categorias ?? []}
-    />
-    </>
+    <div 
+      className="min-h-screen w-full transition-colors duration-300 relative"
+      style={{ backgroundColor: catalogo.color_fondo }}
+    >
+      <PelotaMundial />
+      
+      {/* Quitamos el contenedor limitador "max-w-2xl". 
+        Ahora el contenido fluye al 100% del ancho de la pantalla, permitiendo que MenuClient
+        controle la expansión total del Header/Footer y organice los productos en 4 columnas.
+      */}
+      <MenuClient
+        catalogo={catalogo}
+        categorias={categorias ?? []}
+      />
+    </div>
   );
 }

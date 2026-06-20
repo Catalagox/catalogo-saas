@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Search, X } from "lucide-react";
+import { Search, X, Menu } from "lucide-react"; // Añadí Menu para estandarizar iconos
 
 type Producto = {
   id: string;
@@ -11,7 +11,6 @@ type Producto = {
 type Categoria = {
   id: string;
   nombre: string;
-
   productos?: Producto[];
 };
 
@@ -19,21 +18,15 @@ type Props = {
   catalogo: {
     nombre: string;
     logo?: string;
-
     color_lupa?: string;
   };
-
   categorias: Categoria[];
 };
 
 export default function MenuHeader({ catalogo, categorias }: Props) {
   const [open, setOpen] = useState(false);
-
-  // 🔥 SEARCH
   const [searchOpen, setSearchOpen] = useState(false);
-
   const [search, setSearch] = useState("");
-
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -42,16 +35,13 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
     };
 
     window.addEventListener("scroll", handleScroll);
-
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // 🔥 RESULTADOS EN TIEMPO REAL
+  // 🔥 BUSCADOR EN TIEMPO REAL
   const resultados = useMemo(() => {
     if (!search.trim()) return [];
-
     const texto = search.toLowerCase();
-
     const encontrados: {
       tipo: "categoria" | "producto";
       nombre: string;
@@ -59,7 +49,6 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
     }[] = [];
 
     categorias.forEach((cat) => {
-      // 🔥 BUSCAR CATEGORÍA
       if (cat.nombre.toLowerCase().includes(texto)) {
         encontrados.push({
           tipo: "categoria",
@@ -68,7 +57,6 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
         });
       }
 
-      // 🔥 BUSCAR PRODUCTOS
       cat.productos?.forEach((producto) => {
         if (producto.nombre.toLowerCase().includes(texto)) {
           encontrados.push({
@@ -83,330 +71,177 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
     return encontrados.slice(0, 8);
   }, [search, categorias]);
 
-  // 🔥 IR A RESULTADO
   const irAResultado = (categoriaId: string) => {
     const element = document.getElementById(`cat-${categoriaId}`);
-
     if (element) {
       element.scrollIntoView({
         behavior: "smooth",
         block: "start",
       });
     }
-
     setSearchOpen(false);
     setSearch("");
   };
 
   return (
     <>
-      {/* HEADER */}
+      {/* HEADER PRINCIPAL */}
       <header
-        className="
-          sticky
-          top-0
-          z-50
-          transition-all
-          duration-300
-          bg-[var(--color-header)]
-        "
+        className="sticky top-0 z-50 w-full transition-all duration-300 bg-[var(--color-header)]"
         style={{
           boxShadow: scrolled ? "0 8px 20px rgba(0,0,0,0.3)" : "none",
         }}
       >
-        <div className="max-w-3xl mx-auto px-5 py-4">
-          {/* TOP */}
-          <div className="relative flex items-center justify-between">
-            {/* IZQUIERDA */}
-            <div className="flex items-center gap-4">
-              {/* 🍔 HAMBURGUESA */}
-              <button
-                onClick={() => setOpen(true)}
-                className="
-                  flex
-                  flex-col
-                  justify-center
-                  items-center
-                  w-8
-                  h-8
-                  md:hidden
-                "
-              >
-                <span className="block w-6 h-[2px] mb-1.5 bg-[var(--color-hamburguesa)]" />
-
-                <span className="block w-6 h-[2px] mb-1.5 bg-[var(--color-hamburguesa)]" />
-
-                <span className="block w-6 h-[2px] bg-[var(--color-hamburguesa)]" />
-              </button>
-            </div>
-
-            {/* 🔥 LOGO CENTRADO */}
-            <div
-              className="
-                absolute
-                left-1/2
-                -translate-x-1/2
-                flex
-                items-center
-                justify-center
-              "
+        {/* Cambiamos max-w-3xl a max-w-7xl para aprovechar la pantalla completa expandida */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+          
+          {/* BLOQUE IZQUIERDO / CENTRO RESPONSIVO */}
+          <div className="flex items-center gap-4 md:w-auto">
+            {/* 🍔 BOTÓN HAMBURGUESA (Solo móvil/tablet) */}
+            <button
+              onClick={() => setOpen(true)}
+              className="p-2 md:hidden flex items-center justify-center transition-opacity hover:opacity-80"
+              aria-label="Abrir menú"
             >
+              <Menu size={26} className="text-[var(--color-hamburguesa)]" />
+            </button>
+
+            {/* 🏷️ LOGO / NOMBRE */}
+            {/* Explicación del cambio:
+              - En móviles se mantiene en absoluto centrado (`absolute left-1/2 -translate-x-1/2`).
+              - En pantallas grandes (`md:relative md:left-0 md:translate-x-0`) se reubica de forma fluida a la izquierda.
+            */}
+            <div className="absolute left-1/2 -translate-x-1/2 md:relative md:left-0 md:translate-x-0 flex items-center z-10">
               {catalogo.logo ? (
                 <img
                   src={catalogo.logo}
                   alt={catalogo.nombre}
-                  className="
-                    h-12
-                    w-auto
-                    object-contain
-                  "
+                  className="h-12 w-auto object-contain max-w-[150px] md:max-w-[180px]"
                 />
               ) : (
-                <h1 className="text-lg font-bold text-[var(--color-text)]">
+                <h1 className="text-xl font-bold tracking-tight text-[var(--color-text)] whitespace-nowrap">
                   {catalogo.nombre}
                 </h1>
               )}
             </div>
-
-            {/* DERECHA */}
-            <div className="flex items-center gap-4 ml-auto">
-              {/* DESKTOP NAV */}
-              <nav className="hidden md:flex items-center gap-3">
-                {categorias.slice(0, 5).map((cat) => (
-                  <a
-                    key={cat.id}
-                    href={`#cat-${cat.id}`}
-                    className="
-                      text-xs
-                      font-semibold
-                      uppercase
-                      tracking-wider
-                      transition
-                      text-[var(--color-categoria)]
-                    "
-                  >
-                    {cat.nombre}
-                  </a>
-                ))}
-              </nav>
-
-              {/* 🔍 LUPA */}
-              <button
-                onClick={() => setSearchOpen(!searchOpen)}
-                className="
-                  w-9
-                  h-9
-                  rounded-full
-                  flex
-                  items-center
-                  justify-center
-                  transition
-                "
-              >
-                {searchOpen ? (
-                  <X
-                    size={20}
-                    style={{
-                      color: catalogo.color_lupa || "#ffffff",
-                    }}
-                  />
-                ) : (
-                  <Search
-                    size={20}
-                    style={{
-                      color: catalogo.color_lupa || "#ffffff",
-                    }}
-                  />
-                )}
-              </button>
-            </div>
           </div>
 
-          {/* 🔥 BARRA BÚSQUEDA */}
-          {searchOpen && (
-            <div className="mt-4 relative">
-              {/* INPUT */}
-              <div
-                className="
-                  flex
-                  items-center
-                  gap-2
-                  rounded-2xl
-                  px-4
-                  py-3
-                  border
-                  bg-white/10
-                  backdrop-blur-md
-                "
-                style={{
-                  borderColor: `${catalogo.color_lupa || "#ffffff"}40`,
-                }}
-              >
-                <Search
-                  size={18}
-                  style={{
-                    color: catalogo.color_lupa || "#ffffff",
-                  }}
-                />
+          {/* BLOQUE DERECHO (NAVEGACIÓN + ACCIONES) */}
+          <div className="flex items-center gap-6 lg:gap-8">
+            {/* 🗺️ NAVEGACIÓN DESKTOP (Evita colisiones) */}
+            <nav className="hidden md:flex items-center gap-5 lg:gap-8 max-w-[50vw] overflow-x-auto no-scrollbar py-1">
+              {categorias.slice(0, 7).map((cat) => ( // Expandido a 7 categorías máximas visibles
+                <a
+                  key={cat.id}
+                  href={`#cat-${cat.id}`}
+                  className="text-sm font-medium uppercase tracking-wider whitespace-nowrap transition-all duration-200 hover:opacity-80 text-[var(--color-categoria)] relative after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-[2px] after:bottom-0 after:left-0 after:bg-[var(--color-categoria)] after:origin-bottom-right after:transition-transform after:duration-200 hover:after:scale-x-100 hover:after:origin-bottom-left"
+                >
+                  {cat.nombre}
+                </a>
+              ))}
+            </nav>
 
+            {/* 🔍 LUPA DE BÚSQUEDA */}
+            <button
+              onClick={() => setSearchOpen(!searchOpen)}
+              className="p-2 rounded-full transition-transform duration-200 hover:scale-105"
+              aria-label="Buscar"
+            >
+              {searchOpen ? (
+                <X size={22} style={{ color: catalogo.color_lupa || "#ffffff" }} />
+              ) : (
+                <Search size={22} style={{ color: catalogo.color_lupa || "#ffffff" }} />
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* 🔍 PANEL DESPLEGABLE DE BÚSQUEDA */}
+        {searchOpen && (
+          <div className="max-w-3xl mx-auto px-4 pb-4 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="relative">
+              <div
+                className="flex items-center gap-3 rounded-2xl px-4 py-3.5 border bg-white/10 backdrop-blur-md shadow-lg"
+                style={{ borderColor: `${catalogo.color_lupa || "#ffffff"}30` }}
+              >
+                <Search size={18} style={{ color: catalogo.color_lupa || "#ffffff" }} />
                 <input
                   type="text"
                   placeholder="Buscar productos o categorías..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="
-                    bg-transparent
-                    outline-none
-                    w-full
-                    text-sm
-                    text-[var(--color-text)]
-                    placeholder:text-white/60
-                  "
+                  className="bg-transparent outline-none w-full text-sm text-[var(--color-text)] placeholder:text-white/50"
+                  autoFocus
                 />
               </div>
 
-              {/* 🔥 RESULTADOS */}
+              {/* RESULTADOS DE BÚSQUEDA */}
               {search.trim() && (
                 <div
-                  className="
-                    absolute
-                    top-full
-                    left-0
-                    right-0
-                    mt-2
-                    rounded-2xl
-                    overflow-hidden
-                    border
-                    backdrop-blur-xl
-                    bg-black/70
-                    z-50
-                  "
-                  style={{
-                    borderColor: `${catalogo.color_lupa || "#ffffff"}20`,
-                  }}
+                  className="absolute top-full left-0 right-0 mt-2 rounded-2xl overflow-hidden border backdrop-blur-xl bg-black/85 shadow-2xl z-50 divide-y divide-white/5"
+                  style={{ borderColor: `${catalogo.color_lupa || "#ffffff"}20` }}
                 >
                   {resultados.length > 0 ? (
                     resultados.map((item, index) => (
                       <button
                         key={index}
                         onClick={() => irAResultado(item.categoriaId)}
-                        className="
-                          w-full
-                          text-left
-                          px-4
-                          py-3
-                          border-b
-                          border-white/10
-                          hover:bg-white/10
-                          transition
-                        "
+                        className="w-full text-left px-5 py-3.5 flex items-center justify-between hover:bg-white/10 transition-colors"
                       >
-                        <div className="flex items-center justify-between">
-                          <span className="text-[var(--color-text)] text-sm">
-                            {item.nombre}
-                          </span>
-
-                          <span
-                            className="
-                              text-[10px]
-                              uppercase
-                              opacity-60
-                            "
-                            style={{
-                              color: catalogo.color_lupa || "#ffffff",
-                            }}
-                          >
-                            {item.tipo}
-                          </span>
-                        </div>
+                        <span className="text-[var(--color-text)] text-sm font-medium">
+                          {item.nombre}
+                        </span>
+                        <span
+                          className="text-[10px] font-bold tracking-widest uppercase opacity-60 px-2 py-0.5 rounded border border-white/10"
+                          style={{ color: catalogo.color_lupa || "#ffffff" }}
+                        >
+                          {item.tipo}
+                        </span>
                       </button>
                     ))
                   ) : (
-                    <div
-                      className="
-                        px-4
-                        py-4
-                        text-sm
-                        text-center
-                        text-[var(--color-text)]
-                      "
-                    >
-                      No encontramos resultados para{" "}
-                      <span
-                        style={{
-                          color: catalogo.color_lupa || "#ffffff",
-                        }}
-                      >
-                        "{search}"
-                      </span>
+                    <div className="px-5 py-6 text-sm text-center text-[var(--color-text)] opacity-80">
+                      No encontramos resultados para <span className="font-semibold" style={{ color: catalogo.color_lupa || "#ffffff" }}>"{search}"</span>
                     </div>
                   )}
                 </div>
               )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </header>
 
-      {/* OVERLAY */}
+      {/* OVERLAY DEL MENU LATERAL */}
       {open && (
         <div
           onClick={() => setOpen(false)}
-          className="
-            fixed
-            inset-0
-            bg-black/60
-            backdrop-blur-sm
-            z-[60]
-          "
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] animate-in fade-in duration-300"
         />
       )}
 
-      {/* DRAWER */}
+      {/* MENÚ DRAWER (MÓVIL / SIDEBAR) */}
       <aside
-        className={`
-          fixed
-          top-0
-          left-0
-          h-full
-          w-[280px]
-          z-[70]
-          transform
-          transition-transform
-          duration-300
-          ${open ? "translate-x-0" : "-translate-x-full"}
-          bg-[var(--color-header)]
-        `}
+        className={`fixed top-0 left-0 h-full w-[280px] z-[70] transform transition-transform duration-300 shadow-2xl ${
+          open ? "translate-x-0" : "-translate-x-full"
+        } bg-[var(--color-header)]`}
       >
-        {/* HEADER DRAWER */}
-        <div className="p-6 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-[var(--color-text)]">Menú</h2>
-
+        <div className="p-6 flex items-center justify-between border-b border-white/10">
+          <h2 className="text-xl font-bold text-[var(--color-text)]">Categorías</h2>
           <button
             onClick={() => setOpen(false)}
-            className="text-2xl text-[var(--color-hamburguesa)]"
+            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 text-[var(--color-text)] transition-colors text-lg"
           >
             ✕
           </button>
         </div>
 
-        {/* LINKS */}
-        <nav>
+        <nav className="py-2 overflow-y-auto max-h-[calc(100vh-80px)]">
           {categorias.map((cat) => (
             <a
               key={cat.id}
               href={`#cat-${cat.id}`}
               onClick={() => setOpen(false)}
-              className="
-                block
-                px-6
-                py-4
-                text-lg
-                border-b
-                border-white/10
-                transition
-                text-[var(--color-categoria)]
-              "
+              className="block px-6 py-4 text-base font-medium border-b border-white/5 transition-colors hover:bg-white/5 text-[var(--color-categoria)]"
             >
               {cat.nombre}
             </a>

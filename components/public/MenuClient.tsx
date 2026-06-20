@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-
 import { supabase } from "@/lib/supabaseClient";
-
 import MenuHeader from "@/components/public/MenuHeader";
 import MenuFooter from "@/components/public/MenuFooter";
 import MenuLista from "@/components/public/MenuLista";
@@ -31,9 +29,7 @@ interface Catalogo {
   nombre: string;
   logo?: string;
   user_id: string;
-
   estilo_menu?: "lista" | "galeria";
-
   slug?: string;
 
   // 🎨 COLORES
@@ -64,55 +60,37 @@ interface MenuClientProps {
 }
 
 export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
-  // 🔥 NO ACTIVAR NADA AL INICIO
   const [categoriaActiva, setCategoriaActiva] = useState<string | null>(null);
+  
+  // 🔥 ESTADOS PARA EL EFECTO AUTOMÁTICO TIPO MERCADO LIBRE
+  const [showCategories, setShowCategories] = useState(true);
+  const lastScrollY = useRef(0);
 
-  // 🔥 EVITAR TRACKING DUPLICADO
+  // Evitar tracking duplicado
   const categoriasVisitadas = useRef<Set<string>>(new Set());
 
   if (!catalogo) {
     return (
-      <div
-        className="
-          flex
-          items-center
-          justify-center
-          min-h-screen
-          text-gray-400
-        "
-      >
+      <div className="flex items-center justify-center min-h-screen text-gray-400">
         Cargando menú...
       </div>
     );
   }
 
   const safeCategorias = categorias ?? [];
-
-  // 🔥 VIEW MODE
   const viewMode = catalogo.estilo_menu ?? "lista";
 
-  // 🎨 VARIABLES
   const colorFondo = catalogo.color_fondo ?? "#111827";
-
   const colorHeader = catalogo.color_header ?? "#1680f9";
-
   const colorFooter = catalogo.color_footer ?? "#111827";
-
   const colorTexto = catalogo.color_texto ?? "#ffffff";
-
   const colorPrecio = catalogo.color_precio ?? "#22c55e";
-
   const colorHamburguesa = catalogo.color_hamburguesa ?? "#ffffff";
-
   const colorTarjeta = catalogo.color_tarjeta ?? "#ffffff10";
-
   const colorCategoria = catalogo.color_categoria ?? "#ffffff";
-
   const colorPrimario = catalogo.color_primario ?? "#f97316";
-
   const colorLupa = catalogo.color_lupa ?? "#ffffff";
 
-  // 🎨 CSS VARIABLES
   const theme = {
     "--color-bg": colorFondo,
     "--color-header": colorHeader,
@@ -126,40 +104,41 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
     "--color-lupa": colorLupa,
   } as React.CSSProperties;
 
-  // 🔥 TRACKING CATEGORÍAS
   const trackCategoria = async (categoriaId: string) => {
-    // 🔥 EVITAR REPETIR TRACKING
     if (categoriasVisitadas.current.has(categoriaId)) return;
-
     categoriasVisitadas.current.add(categoriaId);
 
     try {
-      const { error } = await supabase.from("estadisticas").insert({
+      await supabase.from("estadisticas").insert({
         user_id: catalogo.user_id,
         tipo: "categoria_view",
       });
-
-      if (error) {
-        console.error("ERROR TRACK CATEGORIA:", error);
-      }
     } catch (err) {
       console.error("TRACKING CATEGORIA ERROR:", err);
     }
   };
 
-  // 🔥 DETECTAR CATEGORÍA ACTIVA REAL
+  // 🔥 DETECTAR SCROLL: CAMBIO DE CATEGORÍA ACTIVA + EFECTO OCULTAR/MOSTRAR
   useEffect(() => {
     const handleScroll = () => {
-      let current: string | null = null;
+      const currentScrollY = window.scrollY;
 
+      // 1. LÓGICA MOSTRAR/OCULTAR (Estilo Mercado Libre)
+      if (currentScrollY > lastScrollY.current && currentScrollY > 150) {
+        setShowCategories(false);
+      } else {
+        setShowCategories(true);
+      }
+      lastScrollY.current = currentScrollY;
+
+      // 2. LÓGICA DETECTAR CATEGORÍA ACTIVA
+      let current: string | null = null;
       safeCategorias.forEach((categoria) => {
         const element = document.getElementById(`categoria-${categoria.id}`);
-
         if (element) {
           const rect = element.getBoundingClientRect();
-
-          // 🔥 SOLO SI ESTÁ REALMENTE VISIBLE
-          if (rect.top <= 140 && rect.bottom >= 140) {
+          const offsetCheck = showCategories ? 160 : 90;
+          if (rect.top <= offsetCheck && rect.bottom >= offsetCheck) {
             current = categoria.id;
           }
         }
@@ -167,63 +146,33 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
 
       if (current && current !== categoriaActiva) {
         setCategoriaActiva(current);
-
-        // 🔥 TRACKING
         trackCategoria(current);
       }
     };
 
-    window.addEventListener("scroll", handleScroll);
-
-    handleScroll();
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, [safeCategorias, categoriaActiva]);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [safeCategorias, categoriaActiva, showCategories]);
 
   return (
     <div
-      className="
-        min-h-screen
-        flex
-        flex-col
-        bg-[var(--color-bg)]
-      "
+      className="min-h-screen w-full flex flex-col bg-[var(--color-bg)] transition-colors duration-300"
       style={theme}
     >
-      {/* HEADER */}
+      {/* HEADER PRINCIPAL */}
       <MenuHeader catalogo={catalogo} categorias={safeCategorias} />
 
-      {/* 🔥 CATEGORÍAS */}
+      {/* 🔥 SUB-BARRA DE CATEGORÍAS (Mismo fondo sólido y sin blur transparente) */}
       {safeCategorias.length > 0 && (
         <div
-          className="
-            sticky
-            top-0
-            z-40
-            border-b
-            border-white/10
-            backdrop-blur-xl
-            bg-[var(--color-bg)]/90
-          "
+          className={`sticky z-40 w-full border-b border-white/10 bg-[var(--color-bg)] transition-all duration-300 ease-in-out ${
+            showCategories 
+              ? "top-20 opacity-100 translate-y-0" 
+              : "top-0 md:top-20 opacity-0 -translate-y-full pointer-events-none"
+          }`}
         >
-          <div
-            className="
-              overflow-x-auto
-              whitespace-nowrap
-              scrollbar-hide
-            "
-          >
-            <div
-              className="
-                flex
-                gap-3
-                px-4
-                py-3
-                min-w-max
-              "
-            >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="overflow-x-auto whitespace-nowrap py-3 flex gap-3 scrollbar-hide">
               {safeCategorias.map((categoria) => {
                 const isActive = categoriaActiva === categoria.id;
 
@@ -232,50 +181,23 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
                     key={categoria.id}
                     onClick={() => {
                       setCategoriaActiva(categoria.id);
-
-                      // 🔥 TRACKING CLICK CATEGORÍA
                       trackCategoria(categoria.id);
 
                       const element = document.getElementById(
                         `categoria-${categoria.id}`,
                       );
 
-                      element?.scrollIntoView({
-                        behavior: "smooth",
-                        block: "start",
-                      });
+                      if (element) {
+                        const yOffset = showCategories ? -150 : -90;
+                        const y = element.getBoundingClientRect().top + window.scrollY + yOffset;
+                        window.scrollTo({ top: y, behavior: "smooth" });
+                      }
                     }}
-                    className={`
-                        px-5
-                        py-2.5
-                        rounded-2xl
-                        text-sm
-                        font-bold
-                        tracking-wide
-                        transition-all
-                        duration-300
-                        border
-                        flex-shrink-0
-                        shadow-sm
-                        backdrop-blur-md
-
-                        ${
-                          isActive
-                            ? `
-                              bg-[var(--color-primary)]
-                              text-white
-                              border-[var(--color-primary)]
-                              scale-105
-                              shadow-lg
-                            `
-                            : `
-                              bg-[var(--color-card)]
-                              hover:bg-white/10
-                              text-[var(--color-categoria)]
-                              border-[var(--color-categoria)]/20
-                            `
-                        }
-                      `}
+                    className={`px-5 py-2.5 rounded-2xl text-sm font-bold tracking-wide transition-all duration-300 border flex-shrink-0 shadow-sm ${
+                      isActive
+                        ? `bg-[var(--color-primary)] text-white border-[var(--color-primary)] scale-105 shadow-lg`
+                        : `bg-[var(--color-card)] hover:bg-white/10 text-[var(--color-categoria)] border-[var(--color-categoria)]/20`
+                    }`}
                   >
                     {categoria.nombre}
                   </button>
@@ -286,28 +208,14 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
         </div>
       )}
 
-      {/* MAIN */}
-      <main
-        className="
-          max-w-3xl
-          mx-auto
-          w-full
-          p-4
-          flex-grow
-        "
-      >
+      {/* 🛍️ MAIN (Sin paddings laterales en móvil y pegado al footer sin márgenes inferiores) */}
+      <main className="max-w-7xl mx-auto w-full px-0 sm:px-6 lg:px-8 pt-8 pb-0 mb-0 flex-grow">
         {viewMode === "lista" ? (
           <MenuLista categorias={safeCategorias} />
         ) : catalogo.slug ? (
           <MenuGaleria categorias={safeCategorias} slug={catalogo.slug} />
         ) : (
-          <div
-            className="
-              text-center
-              text-red-400
-              py-10
-            "
-          >
+          <div className="text-center text-red-400 py-10">
             Error: slug no disponible
           </div>
         )}

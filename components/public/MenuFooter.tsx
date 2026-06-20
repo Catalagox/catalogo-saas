@@ -45,12 +45,12 @@ export default function MenuFooter({
   ].filter((red) => isValidUrl(red.href));
 
   return (
-    <footer
-      className="mt-16 pt-10 pb-12"
-      style={{
-        backgroundColor: "#000000",
-      }}
-    >
+   <footer
+  className="mt-0 pt-10 pb-12"
+  style={{
+    backgroundColor: "#000000",
+  }}
+>
       <div className="max-w-3xl mx-auto px-6 flex flex-col items-center">
         {/* TÍTULO */}
         {redes.length > 0 && (
