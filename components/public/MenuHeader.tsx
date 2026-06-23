@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Search, X, Menu } from "lucide-react"; // Añadí Menu para estandarizar iconos
+import { Search, X, Menu } from "lucide-react";
 
 type Producto = {
   id: string;
@@ -19,6 +19,8 @@ type Props = {
     nombre: string;
     logo?: string;
     color_lupa?: string;
+    color_text_header?: string;
+    color_border_header?: string;
   };
   categorias: Categoria[];
 };
@@ -80,24 +82,22 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
       });
     }
     setSearchOpen(false);
-    setSearch("");
+    setSearch(""); // ✅ Limpieza corregida sin errores
   };
 
   return (
     <>
       {/* HEADER PRINCIPAL */}
+
       <header
-        className="sticky top-0 z-50 w-full transition-all duration-300 bg-[var(--color-header)]"
+        className="sticky top-0 z-50 w-full transition-all duration-300 bg-[var(--color-header)] border-b border-[var(--color-border-header,rgba(255,255,255,0.1))]"
         style={{
-          boxShadow: scrolled ? "0 8px 20px rgba(0,0,0,0.3)" : "none",
+          boxShadow: "none",
         }}
       >
-        {/* Cambiamos max-w-3xl a max-w-7xl para aprovechar la pantalla completa expandida */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          
           {/* BLOQUE IZQUIERDO / CENTRO RESPONSIVO */}
           <div className="flex items-center gap-4 md:w-auto">
-            {/* 🍔 BOTÓN HAMBURGUESA (Solo móvil/tablet) */}
             <button
               onClick={() => setOpen(true)}
               className="p-2 md:hidden flex items-center justify-center transition-opacity hover:opacity-80"
@@ -106,11 +106,6 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
               <Menu size={26} className="text-[var(--color-hamburguesa)]" />
             </button>
 
-            {/* 🏷️ LOGO / NOMBRE */}
-            {/* Explicación del cambio:
-              - En móviles se mantiene en absoluto centrado (`absolute left-1/2 -translate-x-1/2`).
-              - En pantallas grandes (`md:relative md:left-0 md:translate-x-0`) se reubica de forma fluida a la izquierda.
-            */}
             <div className="absolute left-1/2 -translate-x-1/2 md:relative md:left-0 md:translate-x-0 flex items-center z-10">
               {catalogo.logo ? (
                 <img
@@ -119,7 +114,7 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
                   className="h-12 w-auto object-contain max-w-[150px] md:max-w-[180px]"
                 />
               ) : (
-                <h1 className="text-xl font-bold tracking-tight text-[var(--color-text)] whitespace-nowrap">
+                <h1 className="text-xl font-bold tracking-tight text-[var(--color-text-header,#ffffff)] whitespace-nowrap">
                   {catalogo.nombre}
                 </h1>
               )}
@@ -128,29 +123,33 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
 
           {/* BLOQUE DERECHO (NAVEGACIÓN + ACCIONES) */}
           <div className="flex items-center gap-6 lg:gap-8">
-            {/* 🗺️ NAVEGACIÓN DESKTOP (Evita colisiones) */}
             <nav className="hidden md:flex items-center gap-5 lg:gap-8 max-w-[50vw] overflow-x-auto no-scrollbar py-1">
-              {categorias.slice(0, 7).map((cat) => ( // Expandido a 7 categorías máximas visibles
+              {categorias.slice(0, 7).map((cat) => (
                 <a
                   key={cat.id}
                   href={`#cat-${cat.id}`}
-                  className="text-sm font-medium uppercase tracking-wider whitespace-nowrap transition-all duration-200 hover:opacity-80 text-[var(--color-categoria)] relative after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-[2px] after:bottom-0 after:left-0 after:bg-[var(--color-categoria)] after:origin-bottom-right after:transition-transform after:duration-200 hover:after:scale-x-100 hover:after:origin-bottom-left"
+                  className="text-sm font-medium uppercase tracking-wider whitespace-nowrap transition-all duration-200 hover:opacity-80 text-[var(--color-text-header,#ffffff)] relative after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-[2px] after:bottom-0 after:left-0 after:bg-[var(--color-text-header,#ffffff)] after:origin-bottom-right after:transition-transform after:duration-200 hover:after:scale-x-100 hover:after:origin-bottom-left"
                 >
                   {cat.nombre}
                 </a>
               ))}
             </nav>
 
-            {/* 🔍 LUPA DE BÚSQUEDA */}
             <button
               onClick={() => setSearchOpen(!searchOpen)}
               className="p-2 rounded-full transition-transform duration-200 hover:scale-105"
               aria-label="Buscar"
             >
               {searchOpen ? (
-                <X size={22} style={{ color: catalogo.color_lupa || "#ffffff" }} />
+                <X
+                  size={22}
+                  style={{ color: catalogo.color_lupa || "#ffffff" }}
+                />
               ) : (
-                <Search size={22} style={{ color: catalogo.color_lupa || "#ffffff" }} />
+                <Search
+                  size={22}
+                  style={{ color: catalogo.color_lupa || "#ffffff" }}
+                />
               )}
             </button>
           </div>
@@ -164,13 +163,20 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
                 className="flex items-center gap-3 rounded-2xl px-4 py-3.5 border bg-white/10 backdrop-blur-md shadow-lg"
                 style={{ borderColor: `${catalogo.color_lupa || "#ffffff"}30` }}
               >
-                <Search size={18} style={{ color: catalogo.color_lupa || "#ffffff" }} />
+                <Search
+                  size={18}
+                  style={{ color: catalogo.color_lupa || "#ffffff" }}
+                />
                 <input
                   type="text"
                   placeholder="Buscar productos o categorías..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="bg-transparent outline-none w-full text-sm text-[var(--color-text)] placeholder:text-white/50"
+                  /* 🚀 CAMBIADO AQUÍ: Añadido inline style para heredar la opacidad al 60% en el placeholder con el color variable */
+                  style={{
+                    color: "var(--color-text-header, #ffffff)",
+                  }}
+                  className="bg-transparent outline-none w-full text-sm placeholder:text-[var(--color-text-header)] placeholder:opacity-60"
                   autoFocus
                 />
               </div>
@@ -179,7 +185,9 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
               {search.trim() && (
                 <div
                   className="absolute top-full left-0 right-0 mt-2 rounded-2xl overflow-hidden border backdrop-blur-xl bg-black/85 shadow-2xl z-50 divide-y divide-white/5"
-                  style={{ borderColor: `${catalogo.color_lupa || "#ffffff"}20` }}
+                  style={{
+                    borderColor: `${catalogo.color_lupa || "#ffffff"}20`,
+                  }}
                 >
                   {resultados.length > 0 ? (
                     resultados.map((item, index) => (
@@ -188,7 +196,7 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
                         onClick={() => irAResultado(item.categoriaId)}
                         className="w-full text-left px-5 py-3.5 flex items-center justify-between hover:bg-white/10 transition-colors"
                       >
-                        <span className="text-[var(--color-text)] text-sm font-medium">
+                        <span className="text-[var(--color-text-header,#ffffff)] text-sm font-medium">
                           {item.nombre}
                         </span>
                         <span
@@ -200,8 +208,14 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
                       </button>
                     ))
                   ) : (
-                    <div className="px-5 py-6 text-sm text-center text-[var(--color-text)] opacity-80">
-                      No encontramos resultados para <span className="font-semibold" style={{ color: catalogo.color_lupa || "#ffffff" }}>"{search}"</span>
+                    <div className="px-5 py-6 text-sm text-center text-[var(--color-text-header,#ffffff)] opacity-80">
+                      No encontramos resultados para{" "}
+                      <span
+                        className="font-semibold"
+                        style={{ color: catalogo.color_lupa || "#ffffff" }}
+                      >
+                        "{search}"
+                      </span>
                     </div>
                   )}
                 </div>
@@ -225,11 +239,13 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
           open ? "translate-x-0" : "-translate-x-full"
         } bg-[var(--color-header)]`}
       >
-        <div className="p-6 flex items-center justify-between border-b border-white/10">
-          <h2 className="text-xl font-bold text-[var(--color-text)]">Categorías</h2>
+        <div className="p-6 flex items-center justify-between border-b border-[var(--color-border-header,rgba(255,255,255,0.1))]">
+          <h2 className="text-xl font-bold text-[var(--color-text-header,#ffffff)]">
+            Categorías
+          </h2>
           <button
             onClick={() => setOpen(false)}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 text-[var(--color-text)] transition-colors text-lg"
+            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 text-[var(--color-text-header,#ffffff)] transition-colors text-lg"
           >
             ✕
           </button>
@@ -241,7 +257,7 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
               key={cat.id}
               href={`#cat-${cat.id}`}
               onClick={() => setOpen(false)}
-              className="block px-6 py-4 text-base font-medium border-b border-white/5 transition-colors hover:bg-white/5 text-[var(--color-categoria)]"
+              className="block px-6 py-4 text-base font-medium border-b border-white/5 transition-colors hover:bg-white/5 text-[var(--color-text-header,#ffffff)]"
             >
               {cat.nombre}
             </a>

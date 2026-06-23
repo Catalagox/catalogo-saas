@@ -25,6 +25,8 @@ interface Props {
 
   // 🎨 COLORES
   colorHeader: string;
+  colorTextHeader?: string;     // 🔥 NUEVO
+  colorBorderHeader?: string;   // 🔥 NUEVO
   colorFooter: string;
   colorTexto: string;
   colorPrecio: string;
@@ -41,6 +43,8 @@ export default function PhonePreview({
   logo,
   categorias,
   colorHeader,
+  colorTextHeader = "#ffffff",     // 🔥 Valor por defecto si llega undefined
+  colorBorderHeader = "#ffffff10", // 🔥 Valor por defecto si llega undefined
   colorFooter,
   colorTexto,
   colorPrecio,
@@ -71,13 +75,15 @@ export default function PhonePreview({
 
       {/* 🔥 HEADER */}
       <div
-        style={{ backgroundColor: colorHeader }}
+        style={{ 
+          backgroundColor: colorHeader,
+          borderColor: colorBorderHeader // 🔥 Usando el color de borde dinámico
+        }}
         className="
           px-4
           pt-3
           pb-4
           border-b
-          border-white/10
         "
       >
         {/* TOP */}
@@ -107,7 +113,7 @@ export default function PhonePreview({
 
               <div>
                 <p
-                  style={{ color: colorTexto }}
+                  style={{ color: colorTextHeader }} // 🔥 Usando el color de texto del header dinámico
                   className="
                     text-sm
                     font-bold
@@ -124,7 +130,7 @@ export default function PhonePreview({
                     mt-1
                   "
                   style={{
-                    color: colorTexto,
+                    color: colorTextHeader, // 🔥 Usando el color de texto del header dinámico
                   }}
                 >
                   Menú digital
@@ -172,7 +178,7 @@ export default function PhonePreview({
             "
             style={{
               borderColor: `${colorLupa}25`,
-              color: colorTexto,
+              color: colorTextHeader, // 🔥 Combinando texto del buscador con el header
               backgroundColor: "rgba(255,255,255,0.06)",
             }}
           >

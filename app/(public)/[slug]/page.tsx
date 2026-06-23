@@ -25,6 +25,8 @@ async function getCatalogo(slug: string) {
       color_primario,
       color_fondo,
       color_header,
+      color_text_header,   
+      color_border_header, 
       color_footer,
       color_texto,
       color_precio,
@@ -177,6 +179,8 @@ export default async function MenuPage({
     color_primario: catalogoDB.color_primario ?? "#f97316",
     color_fondo: catalogoDB.color_fondo ?? "#111827",
     color_header: catalogoDB.color_header ?? "#f97316",
+    color_text_header: catalogoDB.color_text_header ?? "#ffffff",       // 🔥 NUEVO: Valor por defecto
+    color_border_header: catalogoDB.color_border_header ?? "rgba(255,255,255,0.1)", // 🔥 NUEVO: Valor por defecto
     color_footer: catalogoDB.color_footer ?? "#111827",
     color_texto: catalogoDB.color_texto ?? "#ffffff",
     color_precio: catalogoDB.color_precio ?? "#22c55e",
@@ -240,10 +244,6 @@ export default async function MenuPage({
     >
       <PelotaMundial />
       
-      {/* Quitamos el contenedor limitador "max-w-2xl". 
-        Ahora el contenido fluye al 100% del ancho de la pantalla, permitiendo que MenuClient
-        controle la expansión total del Header/Footer y organice los productos en 4 columnas.
-      */}
       <MenuClient
         catalogo={catalogo}
         categorias={categorias ?? []}

@@ -36,6 +36,8 @@ interface Catalogo {
   color_primario?: string;
   color_fondo?: string;
   color_header?: string;
+  color_text_header?: string;   // 🔥 NUEVO: Agregado en el tipo Catalogo
+  color_border_header?: string; // 🔥 NUEVO: Agregado en el tipo Catalogo
   color_footer?: string;
   color_texto?: string;
   color_precio?: string;
@@ -81,7 +83,9 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
   const viewMode = catalogo.estilo_menu ?? "lista";
 
   const colorFondo = catalogo.color_fondo ?? "#111827";
-  const colorHeader = catalogo.color_header ?? "#1680f9";
+  const colorHeader = catalogo.color_header ?? "#f97316";
+  const colorTextHeader = catalogo.color_text_header ?? "#ffffff";       // 🔥 NUEVO
+  const colorBorderHeader = catalogo.color_border_header ?? "rgba(255,255,255,0.1)"; // 🔥 NUEVO
   const colorFooter = catalogo.color_footer ?? "#111827";
   const colorTexto = catalogo.color_texto ?? "#ffffff";
   const colorPrecio = catalogo.color_precio ?? "#22c55e";
@@ -94,6 +98,8 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
   const theme = {
     "--color-bg": colorFondo,
     "--color-header": colorHeader,
+    "--color-text-header": colorTextHeader,       // 🔥 NUEVO: Pasado al CSS global
+    "--color-border-header": colorBorderHeader,   // 🔥 NUEVO: Pasado al CSS global
     "--color-footer": colorFooter,
     "--color-text": colorTexto,
     "--color-price": colorPrecio,

@@ -19,6 +19,12 @@ interface Props {
   colorHeader: string;
   setColorHeader: (v: string) => void;
 
+  colorTextHeader: string;         // 🔥 NUEVO
+  setColorTextHeader: (v: string) => void;    // 🔥 NUEVO
+
+  colorBorderHeader: string;       // 🔥 NUEVO
+  setColorBorderHeader: (v: string) => void;  // 🔥 NUEVO
+
   colorFooter: string;
   setColorFooter: (v: string) => void;
 
@@ -37,7 +43,6 @@ interface Props {
   colorCategoria: string;
   setColorCategoria: (v: string) => void;
 
-  // 🔥 NUEVO
   colorLupa: string;
   setColorLupa: (v: string) => void;
 
@@ -56,6 +61,10 @@ export default function AparienciaForm({
 
   colorHeader,
   setColorHeader,
+  colorTextHeader,       // 🔥 NUEVO
+  setColorTextHeader,    // 🔥 NUEVO
+  colorBorderHeader,     // 🔥 NUEVO
+  setColorBorderHeader,  // 🔥 NUEVO
   colorFooter,
   setColorFooter,
   colorTexto,
@@ -69,135 +78,87 @@ export default function AparienciaForm({
   colorCategoria,
   setColorCategoria,
 
-  // 🔥 NUEVO
   colorLupa,
   setColorLupa,
 
   guardar,
 }: Props) {
   return (
-    <div className="space-y-6">
-      {/* SWITCH */}
-      <div className="flex items-center justify-between bg-[var(--bg-card)] border border-[var(--border-card)] rounded-xl p-4">
-        <div>
-          <p className="text-sm text-[var(--text-secondary)]">
-            Estilo del catálogo
-          </p>
-
-          <h2 className="text-lg font-bold text-[var(--text-primary)]">
-            Visualización
-          </h2>
-        </div>
-
-        <MenuStyleSwitch
-          value={estiloMenu}
-          onChange={setEstiloMenu}
-        />
-      </div>
-
-      {/* FORM */}
-      <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 space-y-6">
+    <div className="space-y-4 sm:space-y-6 w-full">
+      
+      {/* 🟢 CONFIGURACIÓN GENERAL */}
+      <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-xl sm:rounded-2xl p-4 sm:p-6 space-y-4">
+        <h3 className="text-xs sm:text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider">
+          Configuración General
+        </h3>
         
-        {/* NOMBRE */}
         <input
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
           placeholder="Nombre del menú"
-          className="
-            w-full
-            bg-[var(--bg-tertiary)]
-            border
-            border-[var(--border-card)]
-            text-[var(--text-primary)]
-            rounded-lg
-            px-4
-            py-2
-            outline-none
-            focus:ring-2
-            focus:ring-[var(--color-primary)]
-            placeholder:text-[var(--text-secondary)]
-          "
+          className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-card)] text-[var(--text-primary)] rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-[var(--color-primary)] placeholder:text-[var(--text-secondary)] text-sm sm:text-base"
         />
 
-        {/* 🎨 COLORES */}
-        <ColorPicker
-          label="Color principal"
-          value={colorPrimario}
-          onChange={setColorPrimario}
-        />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-[var(--border-card)]/50">
+          <div>
+            <h4 className="text-sm font-bold text-[var(--text-primary)]">Estilo del catálogo</h4>
+            <p className="text-xs text-[var(--text-secondary)]">Elige el formato visual para los productos</p>
+          </div>
+          <div className="self-end sm:self-auto">
+            <MenuStyleSwitch value={estiloMenu} onChange={setEstiloMenu} />
+          </div>
+        </div>
+      </div>
 
-        <ColorPicker
-          label="Color fondo"
-          value={colorFondo}
-          onChange={setColorFondo}
-        />
+      {/* 🔹 SECCIÓN: HEADER */}
+      <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-xl sm:rounded-2xl p-4 sm:p-6 space-y-4">
+        <h3 className="text-xs sm:text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider border-b border-[var(--border-card)]/50 pb-2">
+          Parte Superior (Header)
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <ColorPicker label="Color header" value={colorHeader} onChange={setColorHeader} />
+          <ColorPicker label="Color texto de marca" value={colorTextHeader} onChange={setColorTextHeader} />
+          <ColorPicker label="Color borde inferior" value={colorBorderHeader} onChange={setColorBorderHeader} />
+          <ColorPicker label="Color icono hamburguesa" value={colorHamburguesa} onChange={setColorHamburguesa} />
+          <ColorPicker label="Color lupa búsqueda" value={colorLupa} onChange={setColorLupa} />
+        </div>
+      </div>
 
-        <ColorPicker
-          label="Color header"
-          value={colorHeader}
-          onChange={setColorHeader}
-        />
+      {/* 🔹 SECCIÓN: MAIN / CUERPO */}
+      <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-xl sm:rounded-2xl p-4 sm:p-6 space-y-4">
+        <h3 className="text-xs sm:text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider border-b border-[var(--border-card)]/50 pb-2">
+          Cuerpo del Catálogo (Main)
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <ColorPicker label="Color de fondo global" value={colorFondo} onChange={setColorFondo} />
+          <ColorPicker label="Color principal (Botones)" value={colorPrimario} onChange={setColorPrimario} />
+          <ColorPicker label="Color de tarjetas" value={colorTarjeta} onChange={setColorTarjeta} />
+          <ColorPicker label="Color de categorías" value={colorCategoria} onChange={setColorCategoria} />
+          <ColorPicker label="Color de texto base" value={colorTexto} onChange={setColorTexto} />
+          <ColorPicker label="Color de precios" value={colorPrecio} onChange={setColorPrecio} />
+        </div>
+      </div>
 
-        <ColorPicker
-          label="Color icono hamburguesa"
-          value={colorHamburguesa}
-          onChange={setColorHamburguesa}
-        />
+      {/* 🔹 SECCIÓN: FOOTER */}
+      <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-xl sm:rounded-2xl p-4 sm:p-6 space-y-4">
+        <h3 className="text-xs sm:text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider border-b border-[var(--border-card)]/50 pb-2">
+          Parte Inferior (Footer)
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <ColorPicker label="Color footer" value={colorFooter} onChange={setColorFooter} />
+        </div>
+      </div>
 
-        {/* 🔥 NUEVO */}
-        <ColorPicker
-          label="Color lupa búsqueda"
-          value={colorLupa}
-          onChange={setColorLupa}
-        />
-
-        <ColorPicker
-          label="Color tarjetas"
-          value={colorTarjeta}
-          onChange={setColorTarjeta}
-        />
-
-        <ColorPicker
-          label="Color categorías"
-          value={colorCategoria}
-          onChange={setColorCategoria}
-        />
-
-        <ColorPicker
-          label="Color texto"
-          value={colorTexto}
-          onChange={setColorTexto}
-        />
-
-        <ColorPicker
-          label="Color precio"
-          value={colorPrecio}
-          onChange={setColorPrecio}
-        />
-
-        <ColorPicker
-          label="Color footer"
-          value={colorFooter}
-          onChange={setColorFooter}
-        />
-
-        {/* BOTÓN */}
+      {/* BOTÓN ACCIÓN GLOBAL */}
+      <div className="px-1 sm:px-0 pt-2">
         <button
           onClick={guardar}
-          className="
-            w-full
-            bg-[var(--color-primary)]
-            hover:bg-[var(--color-primary-hover)]
-            text-[var(--color-text-inverse)]
-            py-3
-            rounded-lg
-            font-semibold
-            transition
-          "
+          className="w-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-text-inverse)] py-3.5 rounded-xl font-semibold transition shadow-md active:scale-[0.99]"
         >
-          Guardar
+          Guardar Cambios
         </button>
       </div>
+
     </div>
   );
 }
