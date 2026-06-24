@@ -33,10 +33,8 @@ export default function CategoriaSection({ categoria }: Props) {
   if (productosValidos.length === 0) return null;
 
   return (
-    <section
-      id={`cat-${categoria.id}`}
-      className="scroll-mt-28 py-6"
-    >
+    /* 🚀 SE QUITA EL ID DE AQUÍ porque ya lo maneja el contenedor padre 'MenuLista' */
+    <section className="py-6">
 
       {/* 🏷️ HEADER CATEGORÍA */}
       <div className="flex items-center gap-4 mb-6">
@@ -65,10 +63,16 @@ export default function CategoriaSection({ categoria }: Props) {
       {/* 📦 PRODUCTOS */}
       <div className="grid grid-cols-1 gap-4">
         {productosValidos.map((producto) => (
-          <ProductoCard
-            key={producto.id}
-            producto={producto}
-          />
+          /* 🚀 SOLUCIÓN: Envolvemos cada tarjeta en un div con el ID esperado por el buscador y scroll-mt */
+          <div 
+            key={producto.id} 
+            id={`prod-${producto.id}`} 
+            className="scroll-mt-24"
+          >
+            <ProductoCard
+              producto={producto}
+            />
+          </div>
         ))}
       </div>
 

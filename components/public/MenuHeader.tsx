@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, FormEvent } from "react";
 import { Search, X, Menu } from "lucide-react";
 
 type Producto = {
@@ -47,7 +47,7 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
     const encontrados: {
       tipo: "categoria" | "producto";
       nombre: string;
-      categoriaId: string;
+      idDestino: string; // ID HTML específico al que se moverá el scroll
     }[] = [];
 
     categorias.forEach((cat) => {
@@ -55,7 +55,7 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
         encontrados.push({
           tipo: "categoria",
           nombre: cat.nombre,
-          categoriaId: cat.id,
+          idDestino: `cat-${cat.id}`,
         });
       }
 
@@ -64,7 +64,7 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
           encontrados.push({
             tipo: "producto",
             nombre: producto.nombre,
-            categoriaId: cat.id,
+            idDestino: `prod-${producto.id}`, // Apunta directamente al ID del producto
           });
         }
       });
@@ -73,22 +73,36 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
     return encontrados.slice(0, 8);
   }, [search, categorias]);
 
-  const irAResultado = (categoriaId: string) => {
-    const element = document.getElementById(`cat-${categoriaId}`);
+  // 🚀 FUNCIÓN DE SCROLL MEJORADA
+  const irAResultado = (idDestino: string) => {
+    const element = document.getElementById(idDestino);
+    
     if (element) {
       element.scrollIntoView({
         behavior: "smooth",
         block: "start",
       });
+    } else {
+      // Si buscas un producto y no tiene ID propio asignado, intenta caer en su categoría padre
+      console.warn(`No se encontró el elemento con ID: ${idDestino}`);
     }
+    
     setSearchOpen(false);
-    setSearch(""); // ✅ Limpieza corregida sin errores
+    setSearch(""); 
+  };
+
+  // 🚀 MANEJADOR PARA EL ENTER (SUBMIT DEL FORMULARIO)
+  const handleSearchSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (resultados.length > 0) {
+      // Si el usuario presiona Enter, viaja automáticamente al primer resultado encontrado
+      irAResultado(resultados[0].idDestino);
+    }
   };
 
   return (
     <>
       {/* HEADER PRINCIPAL */}
-
       <header
         className="sticky top-0 z-50 w-full transition-all duration-300 bg-[var(--color-header)] border-b border-[var(--color-border-header,rgba(255,255,255,0.1))]"
         style={{
@@ -141,15 +155,9 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
               aria-label="Buscar"
             >
               {searchOpen ? (
-                <X
-                  size={22}
-                  style={{ color: catalogo.color_lupa || "#ffffff" }}
-                />
+                <X size={22} style={{ color: catalogo.color_lupa || "#ffffff" }} />
               ) : (
-                <Search
-                  size={22}
-                  style={{ color: catalogo.color_lupa || "#ffffff" }}
-                />
+                <Search size={22} style={{ color: catalogo.color_lupa || "#ffffff" }} />
               )}
             </button>
           </div>
@@ -159,7 +167,9 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
         {searchOpen && (
           <div className="max-w-3xl mx-auto px-4 pb-4 animate-in fade-in slide-in-from-top-2 duration-200">
             <div className="relative">
-              <div
+              {/* 🛠️ CAMBIO: Ahora es un contenedor <form> para capturar el envío con la tecla Enter */}
+              <form
+                onSubmit={handleSearchSubmit}
                 className="flex items-center gap-3 rounded-2xl px-4 py-3.5 border bg-white/10 backdrop-blur-md shadow-lg"
                 style={{ borderColor: `${catalogo.color_lupa || "#ffffff"}30` }}
               >
@@ -172,19 +182,18 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
                   placeholder="Buscar productos o categorías..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  /* 🚀 CAMBIADO AQUÍ: Añadido inline style para heredar la opacidad al 60% en el placeholder con el color variable */
                   style={{
                     color: "var(--color-text-header, #ffffff)",
                   }}
                   className="bg-transparent outline-none w-full text-sm placeholder:text-[var(--color-text-header)] placeholder:opacity-60"
                   autoFocus
                 />
-              </div>
+              </form>
 
               {/* RESULTADOS DE BÚSQUEDA */}
               {search.trim() && (
                 <div
-                  className="absolute top-full left-0 right-0 mt-2 rounded-2xl overflow-hidden border backdrop-blur-xl bg-black/85 shadow-2xl z-50 divide-y divide-white/5"
+                  className="absolute top-full left-0 right-0 mt-2 rounded-2xl overflow-hidden border backdrop-blur-xl bg-[var(--color-header)]/95 shadow-2xl z-50 divide-y divide-white/5"
                   style={{
                     borderColor: `${catalogo.color_lupa || "#ffffff"}20`,
                   }}
@@ -193,7 +202,7 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
                     resultados.map((item, index) => (
                       <button
                         key={index}
-                        onClick={() => irAResultado(item.categoriaId)}
+                        onClick={() => irAResultado(item.idDestino)}
                         className="w-full text-left px-5 py-3.5 flex items-center justify-between hover:bg-white/10 transition-colors"
                       >
                         <span className="text-[var(--color-text-header,#ffffff)] text-sm font-medium">

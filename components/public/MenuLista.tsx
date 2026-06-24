@@ -87,11 +87,13 @@ export default function MenuLista({ categorias }: MenuListaProps) {
       "
     >
       {safeCategorias.map((categoria) => (
-        /* 🔥 IMPORTANTE PARA EL MENU HORIZONTAL */
+        /* 🔥 IMPORTANTE PARA EL MENU HORIZONTAL Y EL BUSCADOR */
         <section
           key={categoria.id}
-          id={`categoria-${categoria.id}`}
-          className="scroll-mt-36"
+          /* 🚀 CORREGIDO: Cambiado 'categoria-${categoria.id}' a 'cat-${categoria.id}' para que coincida con el Navbar */
+          id={`cat-${categoria.id}`}
+          /* 🚀 AJUSTADO: Bajado de scroll-mt-36 a scroll-mt-24 para que no quede tanto aire arriba al scrollear con el header fixed */
+          className="scroll-mt-24"
         >
           <CategoriaSection categoria={categoria} />
         </section>

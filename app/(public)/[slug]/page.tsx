@@ -177,8 +177,8 @@ export default async function MenuPage({
     ...catalogoDB,
     logo: catalogoDB.logoUrl,
     color_primario: catalogoDB.color_primario ?? "#f97316",
-    color_fondo: catalogoDB.color_fondo ?? "#111827",
-    color_header: catalogoDB.color_header ?? "#f97316",
+    color_fondo: catalogoDB.color_fondo ?? "#ffffff",
+    color_header: catalogoDB.color_header ?? "#1e1f1e",
     color_text_header: catalogoDB.color_text_header ?? "#ffffff",       // 🔥 NUEVO: Valor por defecto
     color_border_header: catalogoDB.color_border_header ?? "rgba(255,255,255,0.1)", // 🔥 NUEVO: Valor por defecto
     color_footer: catalogoDB.color_footer ?? "#111827",

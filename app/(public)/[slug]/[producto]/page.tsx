@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import BackButton from "@/components/public/BackButton";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
+// 1. IMPORTAMOS TU NUEVO COMPONENTE CLIENTE
+import BotonAgregarDetalle from "@/components/public/BotonAgregarDetalle";
 
 interface PageProps {
   params: Promise<{ slug: string; producto: string }>;
@@ -106,18 +108,6 @@ export default async function ProductoPage({ params }: PageProps) {
     "--color-card": catalogo.color_tarjeta ?? "rgba(255,255,255,0.05)",
   } as React.CSSProperties;
 
-  const urlProducto = `https://catalagox.com/${slug}/${productoSlug}`;
-
-  const mensaje = `🛒 *Nuevo pedido*
-📦 *Producto:* ${producto.nombre}
-💰 *Precio:* $${Number(producto.precio || 0).toLocaleString()}
-
-🔗 *Ver producto:* ${urlProducto}`;
-
-  const whatsappUrl = catalogo.whatsapp
-    ? `https://wa.me/${catalogo.whatsapp}?text=${encodeURIComponent(mensaje)}`
-    : "#";
-
   return (
     <div className="block min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] pb-32" style={theme}>
       
@@ -130,7 +120,6 @@ export default async function ProductoPage({ params }: PageProps) {
         </div>
 
         {producto.imagen_url ? (
-          /* Usamos la etiqueta <img> nativa para evitar restricciones de Next.js en producción */
           <img
             src={producto.imagen_url}
             alt={producto.nombre}
@@ -201,24 +190,20 @@ export default async function ProductoPage({ params }: PageProps) {
       {/* --- BOTÓN FIJO EN LA PARTE INFERIOR --- */}
       <div className="fixed bottom-0 left-0 w-full p-6 z-50 bg-gradient-to-t from-[var(--color-bg)] via-[var(--color-bg)] to-transparent">
         <div className="max-w-2xl mx-auto">
-          <a
-            href={producto.disponible ? whatsappUrl : "#"}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`w-full h-16 rounded-2xl font-black text-sm tracking-widest uppercase transition-all shadow-2xl flex items-center justify-center ${
-              producto.disponible
-                ? "hover:brightness-110 active:scale-[0.98]"
-                : "opacity-50 grayscale pointer-events-none"
-            }`}
-            style={{
-              backgroundColor: producto.disponible
-                ? "var(--color-primary)"
-                : "#222",
-              color: "#fff",
+          
+          {/* ✅ AQUÍ CAMBIAMOS EL ENLACE DIRECTO POR TU NUEVO BOTÓN CLIENTE */}
+          <BotonAgregarDetalle 
+            producto={{
+              id: producto.id,
+              nombre: producto.nombre,
+              precio: producto.precio,
+              imagen_url: producto.imagen_url,
+              disponible: producto.disponible
             }}
-          >
-            {producto.disponible ? "Pedir por WhatsApp" : "No disponible"}
-          </a>
+            colorPrimario={catalogo.color_primario ?? "#f97316"}
+            whatsappNumero={catalogo.whatsapp}
+          />
+
         </div>
       </div>
     </div>

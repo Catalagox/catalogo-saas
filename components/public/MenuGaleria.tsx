@@ -44,8 +44,9 @@ export default function MenuGaleria({ categorias, slug }: MenuGaleriaProps) {
         return (
           <section
             key={cat.id}
-            id={`categoria-${cat.id}`}
-            className="scroll-mt-40 overflow-x-hidden"
+            /* 🚀 CORREGIDO: cambiado de 'categoria-${cat.id}' a 'cat-${cat.id}' para coincidir con el buscador */
+            id={`cat-${cat.id}`}
+            className="scroll-mt-24 overflow-x-hidden"
           >
             {/* HEADER */}
             <div className="flex items-center gap-4 mb-6 px-1 md:px-0">
@@ -83,6 +84,8 @@ export default function MenuGaleria({ categorias, slug }: MenuGaleriaProps) {
               {productosValidos.map((p) => (
                 <Link
                   key={p.id}
+                  /* 🚀 AÑADIDO: ID único para el producto y scroll-mt para que el header sticky no lo tape al bajar */
+                  id={`prod-${p.id}`}
                   href={`/${slug}/${p.slug}`}
                   className="
                     group
@@ -96,6 +99,7 @@ export default function MenuGaleria({ categorias, slug }: MenuGaleriaProps) {
                     hover:bg-white/[0.03]
                     transition-all
                     duration-200
+                    scroll-mt-24
                   "
                 >
                   {/* IMAGEN */}

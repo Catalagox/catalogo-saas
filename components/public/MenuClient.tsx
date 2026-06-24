@@ -6,6 +6,7 @@ import MenuHeader from "@/components/public/MenuHeader";
 import MenuFooter from "@/components/public/MenuFooter";
 import MenuLista from "@/components/public/MenuLista";
 import MenuGaleria from "@/components/public/MenuGaleria";
+import { useCart } from "@/context/CartContext"; 
 
 // TIPOS
 interface Producto {
@@ -36,8 +37,8 @@ interface Catalogo {
   color_primario?: string;
   color_fondo?: string;
   color_header?: string;
-  color_text_header?: string;   // 🔥 NUEVO: Agregado en el tipo Catalogo
-  color_border_header?: string; // 🔥 NUEVO: Agregado en el tipo Catalogo
+  color_text_header?: string;   
+  color_border_header?: string; 
   color_footer?: string;
   color_texto?: string;
   color_precio?: string;
@@ -71,6 +72,16 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
   // Evitar tracking duplicado
   const categoriasVisitadas = useRef<Set<string>>(new Set());
 
+  // 🛍️ EXTRAEMOS LAS FUNCIONES INCLUYENDO CLEARCART
+  const { items, increaseQuantity, decreaseQuantity, total, cantidadTotal, clearCart } = useCart();
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // EVITAR ERRORES DE HIDRATACIÓN CON LOCALSTORAGE
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   if (!catalogo) {
     return (
       <div className="flex items-center justify-center min-h-screen text-gray-400">
@@ -82,24 +93,24 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
   const safeCategorias = categorias ?? [];
   const viewMode = catalogo.estilo_menu ?? "lista";
 
-  const colorFondo = catalogo.color_fondo ?? "#111827";
-  const colorHeader = catalogo.color_header ?? "#f97316";
-  const colorTextHeader = catalogo.color_text_header ?? "#ffffff";       // 🔥 NUEVO
-  const colorBorderHeader = catalogo.color_border_header ?? "rgba(255,255,255,0.1)"; // 🔥 NUEVO
+  const colorFondo = catalogo.color_fondo ?? "#fefefe";
+  const colorHeader = catalogo.color_header ?? "#2c2c2c";
+  const colorTextHeader = catalogo.color_text_header ?? "#ffffff";       
+  const colorBorderHeader = catalogo.color_border_header ?? "rgba(255,255,255,0.1)"; 
   const colorFooter = catalogo.color_footer ?? "#111827";
   const colorTexto = catalogo.color_texto ?? "#ffffff";
   const colorPrecio = catalogo.color_precio ?? "#22c55e";
   const colorHamburguesa = catalogo.color_hamburguesa ?? "#ffffff";
   const colorTarjeta = catalogo.color_tarjeta ?? "#ffffff10";
-  const colorCategoria = catalogo.color_categoria ?? "#ffffff";
+  const colorCategoria = catalogo.color_categoria ?? "#eae9e9";
   const colorPrimario = catalogo.color_primario ?? "#f97316";
   const colorLupa = catalogo.color_lupa ?? "#ffffff";
 
   const theme = {
     "--color-bg": colorFondo,
     "--color-header": colorHeader,
-    "--color-text-header": colorTextHeader,       // 🔥 NUEVO: Pasado al CSS global
-    "--color-border-header": colorBorderHeader,   // 🔥 NUEVO: Pasado al CSS global
+    "--color-text-header": colorTextHeader,       
+    "--color-border-header": colorBorderHeader,   
     "--color-footer": colorFooter,
     "--color-text": colorTexto,
     "--color-price": colorPrecio,
@@ -124,12 +135,35 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
     }
   };
 
-  // 🔥 DETECTAR SCROLL: CAMBIO DE CATEGORÍA ACTIVA + EFECTO OCULTAR/MOSTRAR
+  // 🔥 FUNCIÓN ACTUALIZADA: ENVÍA EL PEDIDO, LIMPIA EL CARRITO Y CIERRA EL INTERFAZ
+  const enviarPedidoWhatsApp = () => {
+    if (items.length === 0 || !catalogo.whatsapp) return;
+
+    let mensaje = `*¡Hola! Me gustaría realizar el siguiente pedido en ${catalogo.nombre}:*\n\n`;
+    
+    items.forEach((item) => {
+      const subtotal = item.precio * item.cantidad;
+      mensaje += `• ${item.cantidad}x *${item.nombre}* - $${item.precio.toLocaleString()} (Subtotal: $${subtotal.toLocaleString()})\n`;
+    });
+
+    mensaje += `\n*Total a pagar: $${total.toLocaleString()}*`;
+    mensaje += `\n\n_Pedido enviado desde el catálogo web._`;
+
+    const numeroFormateado = catalogo.whatsapp.replace(/[^0-9]/g, "");
+    const whatsappUrl = `https://wa.me/${numeroFormateado}?text=${encodeURIComponent(mensaje)}`;
+
+    window.open(whatsappUrl, "_blank");
+
+    // ✨ Acción de reinicio post-compra
+    clearCart();
+    setIsCartOpen(false);
+  };
+
+  // DETECTAR SCROLL: CAMBIO DE CATEGORÍA ACTIVA + EFECTO OCULTAR/MOSTRAR
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
 
-      // 1. LÓGICA MOSTRAR/OCULTAR (Estilo Mercado Libre)
       if (currentScrollY > lastScrollY.current && currentScrollY > 150) {
         setShowCategories(false);
       } else {
@@ -137,7 +171,6 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
       }
       lastScrollY.current = currentScrollY;
 
-      // 2. LÓGICA DETECTAR CATEGORÍA ACTIVA
       let current: string | null = null;
       safeCategorias.forEach((categoria) => {
         const element = document.getElementById(`categoria-${categoria.id}`);
@@ -162,13 +195,13 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
 
   return (
     <div
-      className="min-h-screen w-full flex flex-col bg-[var(--color-bg)] transition-colors duration-300"
+      className="min-h-screen w-full flex flex-col bg-[var(--color-bg)] transition-colors duration-300 relative"
       style={theme}
     >
       {/* HEADER PRINCIPAL */}
       <MenuHeader catalogo={catalogo} categorias={safeCategorias} />
 
-      {/* 🔥 SUB-BARRA DE CATEGORÍAS (Mismo fondo sólido y sin blur transparente) */}
+      {/* SUB-BARRA DE CATEGORÍAS */}
       {safeCategorias.length > 0 && (
         <div
           className={`sticky z-40 w-full border-b border-white/10 bg-[var(--color-bg)] transition-all duration-300 ease-in-out ${
@@ -214,7 +247,7 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
         </div>
       )}
 
-      {/* 🛍️ MAIN (Sin paddings laterales en móvil y pegado al footer sin márgenes inferiores) */}
+      {/* 🛍️ MAIN */}
       <main className="max-w-7xl mx-auto w-full px-0 sm:px-6 lg:px-8 pt-8 pb-0 mb-0 flex-grow">
         {viewMode === "lista" ? (
           <MenuLista categorias={safeCategorias} />
@@ -234,6 +267,74 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
         tiktok={catalogo.tiktok}
         youtube={catalogo.youtube}
       />
+
+      {/* ========================================================= */}
+      {/* 🛒 RENDERIZADO VISUAL DEL CARRITO FLOTANTE Y MODAL        */}
+      {/* ========================================================= */}
+      {isMounted && cantidadTotal > 0 && (
+        <button
+          onClick={() => setIsCartOpen(true)}
+          className="fixed bottom-6 right-6 p-4 rounded-full text-white shadow-2xl flex items-center justify-center gap-2 z-50 transition-transform active:scale-95"
+          style={{ backgroundColor: "var(--color-primary)" }}
+        >
+          <span className="text-2xl">🛒</span>
+          <span className="font-bold bg-white text-black text-xs px-2 py-0.5 rounded-full absolute -top-1 -right-1 shadow">
+            {cantidadTotal}
+          </span>
+        </button>
+      )}
+
+      {isMounted && isCartOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-end z-[9999]">
+          <div 
+            className="w-full max-w-md h-full p-6 flex flex-col justify-between shadow-2xl overflow-hidden"
+            style={{ backgroundColor: "var(--color-bg)", color: "var(--color-text)" }}
+          >
+            <div>
+              <div className="flex justify-between items-center mb-6 border-b pb-4 border-white/10">
+                <h2 className="text-xl font-black uppercase tracking-wider">Tu Pedido</h2>
+                <button onClick={() => setIsCartOpen(false)} className="text-xl opacity-70 hover:opacity-100">✕</button>
+              </div>
+
+              <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 scrollbar-hide">
+                {items.map((item) => (
+                  <div key={item.id} className="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/5">
+                    <div>
+                      <p className="font-bold text-sm sm:text-base">{item.nombre}</p>
+                      <p className="text-xs font-black text-[var(--color-price)]">
+                        ${item.precio.toLocaleString()}
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-center gap-3 bg-black/20 rounded-lg p-1 border border-white/10">
+                      <button onClick={() => decreaseQuantity(item.id)} className="w-8 h-8 flex items-center justify-center font-bold hover:bg-white/10 rounded">-</button>
+                      <span className="font-bold text-sm w-4 text-center">{item.cantidad}</span>
+                      <button onClick={() => increaseQuantity(item.id)} className="w-8 h-8 flex items-center justify-center font-bold hover:bg-white/10 rounded">+</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="border-t pt-4 border-white/10">
+              <div className="flex justify-between items-center mb-4 px-1">
+                <span className="text-sm font-bold uppercase opacity-60 tracking-wider">Total estimado:</span>
+                <span className="text-2xl font-black text-[var(--color-price)]">
+                  ${total.toLocaleString()}
+                </span>
+              </div>
+              
+              <button
+                onClick={enviarPedidoWhatsApp}
+                className="w-full h-14 rounded-xl font-black text-sm uppercase tracking-widest text-white flex justify-center items-center gap-2 transition-all hover:brightness-110 active:scale-[0.99]"
+                style={{ backgroundColor: "#25D366" }}
+              >
+                💬 Enviar a WhatsApp
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
