@@ -113,7 +113,7 @@ export default function AjustesPage() {
     alert("Nombre y URL actualizados");
   };
 
-  // 🔥 SUBIR LOGO
+  // 🔥 SUBIR LOGO REFACTORIZADO (CREA CARPETA INDEPENDIENTE Y ELIMINA EL VIEJO)
   const subirLogo = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
       setSubiendoLogo(true);
@@ -128,11 +128,25 @@ export default function AjustesPage() {
 
       if (!user) return;
 
+      // 1. 🗑️ LIMPIAR EL LOGO VIEJO SI EXISTE
+      if (logo) {
+        try {
+          const urlParts = logo.split("/logos/");
+          if (urlParts.length > 1) {
+            const oldFilePath = urlParts[1];
+            await supabase.storage.from("logos").remove([oldFilePath]);
+            console.log("Logo anterior eliminado con éxito.");
+          }
+        } catch (cleanError) {
+          console.error("Error al remover el logo anterior:", cleanError);
+        }
+      }
+
       const fileExt = file.name.split(".").pop();
+      const fileName = `${Date.now()}.${fileExt}`;
 
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-
-      const filePath = `logos/${fileName}`;
+      // 2. 📂 ORGANIZAR EN CARPETA SEPARADA MEDIANTE EL USER_ID
+      const filePath = `${user.id}/${fileName}`;
 
       // 🔥 SUBIR STORAGE
       const { error: uploadError } = await supabase.storage
