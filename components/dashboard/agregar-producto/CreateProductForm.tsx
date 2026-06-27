@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import ButtonPrimary from "@/components/dashboard/agregar-producto/ButtonPrimary";
 import { Upload, X, Plus } from "lucide-react";
-import imageCompression from "browser-image-compression";
 
 type Categoria = {
   id: string;
@@ -36,15 +35,6 @@ export default function CreateProductForm({
     categoria_id: "",
   });
 
-  // 🧹 Limpieza de memoria profesional para evitar fugas de recursos (URLs de previsualización)
-  useEffect(() => {
-    return () => {
-      if (preview) {
-        URL.revokeObjectURL(preview);
-      }
-    };
-  }, [preview]);
-
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -60,16 +50,6 @@ export default function CreateProductForm({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validación comercial: Bloquear archivos excesivamente masivos o no soportados antes de procesar
-    if (!file.type.startsWith("image/")) {
-      return alert("El archivo seleccionado no es una imagen válida.");
-    }
-
-    // Si ya existía una previsualización previa, liberamos su memoria antes de crear la nueva
-    if (preview) {
-      URL.revokeObjectURL(preview);
-    }
-
     setImagen(file);
     setPreview(URL.createObjectURL(file));
   };
@@ -77,10 +57,7 @@ export default function CreateProductForm({
   const eliminarImagen = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     setImagen(null);
-    if (preview) {
-      URL.revokeObjectURL(preview);
-      setPreview(null);
-    }
+    setPreview(null);
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -96,71 +73,97 @@ export default function CreateProductForm({
     });
 
     setImagen(null);
-    if (preview) {
-      URL.revokeObjectURL(preview);
-      setPreview(null);
-    }
+    setPreview(null);
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   };
 
-  // ⚡ FUNCIÓN DE COMPRESIÓN PROFESIONAL (NIVEL PRODUCCIÓN)
-  const procesarYComprimirImagen = async (archivo: File): Promise<File> => {
-    const opciones = {
-      maxSizeMB: 0.4, // Límite estricto comercial para el archivo final (~400KB)
-      maxWidthOrHeight: 1200, // Redimensionado inteligente a un estándar web óptimo
-      useWebWorker: true, // No bloquea la UI o hilos del teléfono del usuario
-      fileType: "image/webp", // Conversión automática a formato WebP eficiente
-      initialQuality: 0.8, // Calidad balanceada óptima
-    };
+  // ⚡ FUNCIÓN NATIVA PARA COMPRIMIR IMÁGENES A WEBP
+  const comprimirImagen = (archivo: File): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(archivo);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          let width = img.width;
+          let height = img.height;
 
-    // Imprimir métricas iniciales en consola
-    const pesoOriginalMB = (archivo.size / (1024 * 1024)).toFixed(2);
-    console.log(`%c📸 [Imagen Original]: ${archivo.name} | Peso: ${pesoOriginalMB} MB`, "color: #3b82f6; font-weight: bold;");
+          // Redimensionar si la imagen es excesivamente grande
+          const MAX_WIDTH = 1000;
+          const MAX_HEIGHT = 1000;
 
-    try {
-      const archivoComprimido = await imageCompression(archivo, opciones);
-      
-      // Renombrar el archivo de salida para garantizar la extensión .webp válida en producción
-      const nombreBase = archivo.name.substring(0, archivo.name.lastIndexOf(".")) || archivo.name;
-      const archivoFinalWebp = new File([archivoComprimido], `${nombreBase}.webp`, {
-        type: "image/webp",
-      });
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
 
-      // Imprimir métricas de compresión finales
-      const pesoComprimidoKB = (archivoFinalWebp.size / 1024).toFixed(2);
-      const ahorro = (100 - (archivoFinalWebp.size / archivo.size) * 100).toFixed(0);
-      console.log(
-        `%c⚡ [Compresión Comercial Exitosa]: Nuevo Peso: ${pesoComprimidoKB} KB | Ahorro de Cuota: ${ahorro}%`, 
-        "color: #10b981; font-weight: bold;"
-      );
+          canvas.width = width;
+          canvas.height = height;
 
-      return archivoFinalWebp;
-    } catch (error) {
-      console.error("❌ Error durante el proceso de compresión de imagen:", error);
-      throw new Error("No se pudo optimizar la imagen para la subida.");
-    }
+          const ctx = canvas.getContext("2d");
+          if (!ctx) return reject(new Error("No se pudo obtener el contexto Canvas"));
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Convertir a WebP con calidad del 75%
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                resolve(blob);
+              } else {
+                reject(new Error("Error al comprimir la imagen"));
+              }
+            },
+            "image/webp",
+            0.75
+          );
+        };
+      };
+      reader.onerror = (error) => reject(error);
+    });
   };
 
   const subirImagen = async (): Promise<string> => {
     if (!imagen) throw new Error("Debes seleccionar una imagen");
     if (!userId) throw new Error("Usuario no autenticado");
 
-    // Ejecutar el motor de compresión avanzado
-    const imagenOptimizada = await procesarYComprimirImagen(imagen);
+    // 📊 Métrica 1: Obtener y mostrar el peso original de la foto elegida
+    const pesoOriginalMB = (imagen.size / (1024 * 1024)).toFixed(2);
+    console.log(`📸 [Original] Archivo: ${imagen.name} | Peso: ${pesoOriginalMB} MB`);
 
+    // 1. Comprimir la imagen antes de iniciar la carga
+    const imagenComprimidaBlob = await comprimirImagen(imagen);
+
+    // 📊 Métrica 2: Calcular el peso comprimido y el porcentaje exacto de ahorro de datos
+    const pesoComprimidoKB = (imagenComprimidaBlob.size / 1024).toFixed(2);
+    const pesoComprimidoMB = (imagenComprimidaBlob.size / (1024 * 1024)).toFixed(2);
+    const ahorroPorcentaje = (100 - (imagenComprimidaBlob.size / imagen.size) * 100).toFixed(0);
+    
+    console.log(`⚡ [Comprimido WebP] Peso: ${pesoComprimidoKB} KB (${pesoComprimidoMB} MB)`);
+    console.log(`🎉 ¡Ahorro del ${ahorroPorcentaje}% en el Cached Egress de tu cuota de Supabase!`);
+
+    // 2. Definir el nombre del archivo siempre con extensión .webp
     const fileName = `${Date.now()}-${Math.random()
       .toString(36)
       .substring(2, 9)}.webp`;
 
     const filePath = `${userId}/${fileName}`;
 
-    // Subida óptima a Supabase con políticas inmutables agresivas de caché para los dispositivos clientes
+    // 3. Subir el archivo optimizado con políticas agresivas de caché para el móvil del cliente
     const { error: uploadError } = await supabase.storage
       .from("productos")
-      .upload(filePath, imagenOptimizada, {
+      .upload(filePath, imagenComprimidaBlob, {
         cacheControl: "public, max-age=31536000, immutable",
         upsert: false,
         contentType: "image/webp",
@@ -180,6 +183,7 @@ export default function CreateProductForm({
   const crearProducto = async () => {
     if (!userId) return alert("Usuario no autenticado");
 
+    // 🔒 Verificar suscripción activa
     const { data: catalogo, error: catalogoError } = await supabase
       .from("catalogos")
       .select("suscripcion_activa")
@@ -384,8 +388,9 @@ export default function CreateProductForm({
   );
 }
 
-/*
-"use client";
+
+
+/*"use client";
 
 import { useState, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
@@ -467,22 +472,81 @@ export default function CreateProductForm({
     }
   };
 
+  // ⚡ FUNCIÓN NATIVA PARA COMPRIMIR IMÁGENES A WEBP
+  const comprimirImagen = (archivo: File): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(archivo);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          let width = img.width;
+          let height = img.height;
+
+          // Redimensionar si la imagen es excesivamente grande
+          const MAX_WIDTH = 1000;
+          const MAX_HEIGHT = 1000;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext("2d");
+          if (!ctx) return reject(new Error("No se pudo obtener el contexto Canvas"));
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Convertir a WebP con calidad del 75%
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                resolve(blob);
+              } else {
+                reject(new Error("Error al comprimir la imagen"));
+              }
+            },
+            "image/webp",
+            0.75
+          );
+        };
+      };
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
   const subirImagen = async (): Promise<string> => {
     if (!imagen) throw new Error("Debes seleccionar una imagen");
     if (!userId) throw new Error("Usuario no autenticado");
 
-    const fileExt = imagen.name.split(".").pop();
+    // 1. Comprimir la imagen antes de iniciar la carga
+    const imagenComprimidaBlob = await comprimirImagen(imagen);
+
+    // 2. Definir el nombre del archivo siempre con extensión .webp
     const fileName = `${Date.now()}-${Math.random()
       .toString(36)
-      .substring(2, 9)}.${fileExt}`;
+      .substring(2, 9)}.webp`;
 
     const filePath = `${userId}/${fileName}`;
 
+    // 3. Subir el archivo optimizado con políticas agresivas de caché para el móvil del cliente
     const { error: uploadError } = await supabase.storage
       .from("productos")
-      .upload(filePath, imagen, {
-        cacheControl: "3600",
+      .upload(filePath, imagenComprimidaBlob, {
+        cacheControl: "public, max-age=31536000, immutable",
         upsert: false,
+        contentType: "image/webp",
       });
 
     if (uploadError) {
@@ -703,3 +767,4 @@ export default function CreateProductForm({
     </div>
   );
 }*/
+
