@@ -61,7 +61,7 @@ export default function Header() {
       } top-0 w-full z-[100] transition-all duration-300 border-b ${
         headerSolid
           ? "bg-white border-gray-300 py-0.5 shadow-md" // RECORTE HACIA ABAJO (Antes py-3)
-          : "bg-transparent border-green-300 py-1"    // RECORTE HACIA ABAJO (Antes py-6)
+          : "bg-transparent border-white/20 py-1"    // RECORTE HACIA ABAJO (Antes py-6)
       }`}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between px-6 relative z-[120]">
