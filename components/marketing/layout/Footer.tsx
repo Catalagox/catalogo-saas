@@ -123,7 +123,7 @@ export default function Footer() {
           <p className="text-gray-500 text-xs tracking-widest uppercase font-bold">
             © {new Date().getFullYear()}{" "}
             <span className="text-white">
-              Catalogo<span className="text-[var(--color-primary)]">X</span>
+              Catalago<span className="text-[var(--color-primary)]">X</span>
             </span>
             . Todos los derechos reservados.
           </p>
