@@ -22,10 +22,7 @@ export default function Home() {
       <RedirectIfLoggedIn />
       <PelotaMundial />
 
-      {/* Agregamos relative y overflow-hidden para que los círculos de colores 
-        que se muevan de fondo no generen scroll horizontal.
-      */}
-      <main className="relative min-h-screen w-full overflow-hidden bg-white">
+      <main className="relative min-h-screen w-full overflow-hidden bg-white pb-0 mb-0">
         <Hero />
       </main>
     </>

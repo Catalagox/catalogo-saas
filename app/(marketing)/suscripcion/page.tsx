@@ -54,13 +54,12 @@ export default function SuscripcionPage() {
 
   return (
     <section className="relative min-h-screen overflow-hidden bg-[#050807] px-6 py-24 md:py-20">
-      {/* BLOBS DE FONDO */}
       <div className="absolute top-0 -left-4 w-72 h-72 bg-emerald-500 rounded-full mix-blend-screen filter blur-3xl opacity-10 animate-blob" />
       <div className="absolute top-0 -right-4 w-72 h-72 bg-blue-500 rounded-full mix-blend-screen filter blur-3xl opacity-10 animate-blob animation-delay-2000" />
       <div className="absolute -bottom-8 left-20 w-72 h-72 bg-emerald-400 rounded-full mix-blend-screen filter blur-3xl opacity-10 animate-blob animation-delay-4000" />
 
       <div className="relative max-w-5xl mx-auto">
-        {/* HEADER */}
+        
         <div className="text-center mb-16">
           <div className="inline-flex items-center rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[#22c55e] px-4 py-1.5 text-xs font-bold uppercase tracking-wider mb-6 shadow-sm">
             Acceso Ilimitado
@@ -77,7 +76,6 @@ export default function SuscripcionPage() {
           </p>
         </div>
 
-        {/* TARJETA PREMIUM */}
         <div className="max-w-[440px] mx-auto group relative">
           <div className="absolute -inset-0.5 rounded-[42px] bg-gradient-to-r from-emerald-500 via-emerald-400 to-green-600 opacity-40 blur-md group-hover:opacity-100 transition-opacity duration-500 animate-tilt"></div>
 
@@ -106,9 +104,9 @@ export default function SuscripcionPage() {
             {/* CARACTERÍSTICAS */}
             <div className="space-y-4 mb-10">
               {[
-                "1 Menú Digital Profesional",
+                "1 Catalógo Digital Profesional",
                 "QR Personalizado de Alta Calidad",
-                "Edición de Platillos Ilimitada",
+                "Edición de Productos",
                 "Soporte Prioritario 24/7",
                 "Panel de Administración Pro",
                 "Sin Comisiones por Venta",

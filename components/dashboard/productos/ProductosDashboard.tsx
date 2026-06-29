@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabaseClient";
 import ProductGrid from "@/components/dashboard/productos/ProductGrid";
 import ProductEditModal from "@/components/dashboard/productos/ProductEditModal";
 import { Loader2, Package, Search, Filter } from "lucide-react";
+import imageCompression from "browser-image-compression"; // 📦 Importamos la librería que ya tienes
 
 // Tipos consistentes
 export type Categoria = { id: string; nombre: string };
@@ -26,8 +27,6 @@ export default function ProductosDashboard() {
   const [editingProduct, setEditingProduct] = useState<Producto | null>(null);
   const [newImageFile, setNewImageFile] = useState<File | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-
-  // Para un buscador (opcional pero pro)
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
@@ -45,7 +44,6 @@ export default function ProductosDashboard() {
   };
 
   const cargarDatos = async (uid: string) => {
-    // CAMBIO: Ordenamos por nombre para que el usuario encuentre todo rápido
     const { data: prod } = await supabase
       .from("productos")
       .select("*")
@@ -62,6 +60,31 @@ export default function ProductosDashboard() {
     setCategorias(cat || []);
   };
 
+  // 🛠️ FUNCIÓN AUXILIAR: Extrae la ruta interna (ej: "id_user/archivo.webp") de una URL pública
+  const obtenerPathDesdeUrl = (url?: string): string | null => {
+    if (!url) return null;
+    const splitKey = "/storage/v1/object/public/productos/";
+    const parts = url.split(splitKey);
+    return parts.length > 1 ? parts[1] : null;
+  };
+
+  // 🛠️ FUNCIÓN AUXILIAR: Elimina un archivo físicamente de Supabase Storage
+  const borrarArchivoStorage = async (urlCompleta?: string) => {
+    const pathArchivo = obtenerPathDesdeUrl(urlCompleta);
+    if (!pathArchivo) return;
+
+    const { error } = await supabase.storage
+      .from("productos")
+      .remove([pathArchivo]);
+
+    if (error) {
+      console.error("Error al eliminar archivo del Storage:", error.message);
+    } else {
+      console.log("✅ Archivo eliminado con éxito de Supabase Storage:", pathArchivo);
+    }
+  };
+
+  // 🔥 MODIFICADO: Ahora elimina también la foto física de la carpeta Supabase
   const eliminarProducto = async (id: string) => {
     if (
       !confirm(
@@ -70,14 +93,31 @@ export default function ProductosDashboard() {
     )
       return;
 
-    const { error } = await supabase.from("productos").delete().eq("id", id);
-    if (!error) {
-      setProductos(productos.filter((p) => p.id !== id));
+    try {
+      // 1. Buscar el producto localmente para conocer su URL actual de imagen
+      const productoAEliminar = productos.find((p) => p.id === id);
+
+      // 2. Si tiene imagen asociada, borrarla de Supabase Storage primero
+      if (productoAEliminar?.imagen_url) {
+        await borrarArchivoStorage(productoAEliminar.imagen_url);
+      }
+
+      // 3. Eliminar el registro en la base de datos PostgreSQL
+      const { error } = await supabase.from("productos").delete().eq("id", id);
+      
+      if (!error) {
+        setProductos(productos.filter((p) => p.id !== id));
+        alert("Producto eliminado correctamente");
+      } else {
+        throw error;
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error al eliminar el producto de la base de datos");
     }
   };
 
   const cambiarDisponibilidad = async (producto: Producto) => {
-    // Optimistic update: cambiamos el estado visual de inmediato para que se sienta rápido
     const nuevoEstado = !producto.disponible;
     setProductos(
       productos.map((p) =>
@@ -91,38 +131,70 @@ export default function ProductosDashboard() {
       .eq("id", producto.id);
 
     if (error) {
-      // Si falla, revertimos
       cargarDatos(userId!);
       alert("Error al actualizar disponibilidad");
     }
   };
 
+  // ⚡ MODIFICADO: Comprime con tu librería y convierte a .webp de manera automática
   const subirImagen = async (): Promise<string | null> => {
     if (!newImageFile) return editingProduct?.imagen_url || null;
 
-    const fileExt = newImageFile.name.split(".").pop();
-    const fileName = `${userId}/${Date.now()}.${fileExt}`;
+    // Configuración de compresión óptima
+    const opciones = {
+      maxSizeMB: 0.8,              // Tamaño máximo ~800KB
+      maxWidthOrHeight: 1000,      // Max 1000px de ancho/alto
+      useWebWorker: true,
+      fileType: "image/webp",      // Fuerza la compresión a formato WebP moderno
+    };
 
-    const { error: uploadError } = await supabase.storage
-      .from("productos")
-      .upload(fileName, newImageFile);
+    try {
+      console.log(`📸 [Original] Peso: ${(newImageFile.size / (1024 * 1024)).toFixed(2)} MB`);
+      
+      // 1. Ejecutar compresión
+      const imagenComprimidaFile = await imageCompression(newImageFile, opciones);
+      console.log(`⚡ [Comprimido WebP] Peso: ${(imagenComprimidaFile.size / 1024).toFixed(2)} KB`);
 
-    if (uploadError) {
-      console.error("Error subiendo:", uploadError);
+      // 2. Generar nombre de archivo único siempre con extensión .webp
+      const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(2, 7)}.webp`;
+
+      // 3. Subir el blob optimizado
+      const { error: uploadError } = await supabase.storage
+        .from("productos")
+        .upload(fileName, imagenComprimidaFile, {
+          cacheControl: "public, max-age=31536000, immutable",
+          contentType: "image/webp",
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from("productos").getPublicUrl(fileName);
+      return data.publicUrl;
+    } catch (error) {
+      console.error("Error al procesar/subir imagen:", error);
+      alert("No se pudo procesar la nueva imagen");
       return editingProduct?.imagen_url || null;
     }
-
-    const { data } = supabase.storage.from("productos").getPublicUrl(fileName);
-    return data.publicUrl;
   };
 
+  // 🔥 MODIFICADO: Controla si hay foto vieja para eliminarla tras subir la nueva
   const guardarEdicion = async () => {
     if (!editingProduct) return;
 
     try {
       setLoading(true);
+      
+      const fotoViejaUrl = productos.find((p) => p.id === editingProduct.id)?.imagen_url;
+      
+      // 1. Subir y comprimir la nueva imagen (si es que se seleccionó una)
       const imagen_url = await subirImagen();
 
+      // 2. Si cambió la foto con éxito (la URL nueva es distinta a la vieja), borrar el archivo viejo
+      if (newImageFile && fotoViejaUrl && imagen_url !== fotoViejaUrl) {
+        await borrarArchivoStorage(fotoViejaUrl);
+      }
+
+      // 3. Guardar cambios en la base de datos
       const { error } = await supabase
         .from("productos")
         .update({
@@ -130,7 +202,7 @@ export default function ProductosDashboard() {
           precio: Number(editingProduct.precio),
           descripcion: editingProduct.descripcion,
           categoria_id: editingProduct.categoria_id,
-          imagen_url,
+          imagen_url: imagen_url || "",
         })
         .eq("id", editingProduct.id);
 
@@ -138,9 +210,11 @@ export default function ProductosDashboard() {
 
       cerrarModal();
       await cargarDatos(userId!);
+      alert("Producto editado exitosamente");
     } catch (err) {
+      console.error(err);
       alert("Error al guardar los cambios");
-    } finally {
+    } {
       setLoading(false);
     }
   };
@@ -158,7 +232,6 @@ export default function ProductosDashboard() {
     setPreviewImage(URL.createObjectURL(file));
   };
 
-  // Filtrado en tiempo real
   const productosFiltrados = productos.filter((p) =>
     p.nombre.toLowerCase().includes(searchTerm.toLowerCase()),
   );
@@ -175,8 +248,7 @@ export default function ProductosDashboard() {
   }
 
   return (
-    <div className="min-h-screen  text-white pb-20">
-      {/* Header moderno */}
+    <div className="min-h-screen text-white pb-20">
       <div className="bg-[var(--bg-card)] border-b border-[var(--border-card)] sticky top-0 z-20 backdrop-blur-md px-6 py-8 md:px-10">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
@@ -189,7 +261,6 @@ export default function ProductosDashboard() {
             </h1>
           </div>
 
-          {/* Buscador Responsive */}
           <div className="relative w-full md:w-80">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
             <input
@@ -225,7 +296,6 @@ export default function ProductosDashboard() {
         )}
       </main>
 
-      {/* El Modal debe ser manejado internamente con cuidado para responsive */}
       {editingProduct && (
         <ProductEditModal
           producto={editingProduct}
