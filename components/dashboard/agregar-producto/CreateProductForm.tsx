@@ -89,17 +89,26 @@ export default function CreateProductForm({
     const pesoOriginalMB = (imagen.size / (1024 * 1024)).toFixed(2);
     console.log(`📸 [Original] Archivo: ${imagen.name} | Peso: ${pesoOriginalMB} MB`);
 
-    // ⚙️ Opciones optimizadas para browser-image-compression
+    // ⚙️ Opciones optimizadas para resolver bloqueos en Android (Archivos masivos/HEIF)
     const opciones = {
       maxSizeMB: 0.8,              // Intenta dejar el archivo en menos de ~800KB
-      maxWidthOrHeight: 1000,      // Redimensiona si pasa los 1000px manteniendo proporción
-      useWebWorker: true,          // Procesa en segundo plano para no congelar la pantalla
+      maxWidthOrHeight: 1200,      // Un rango de 1200px previene errores de desbordamiento en hilos móviles
+      useWebWorker: true,          // Ejecuta el compresor de forma asíncrona sin congelar hilos de UI
       fileType: "image/webp",      // Fuerza la conversión automática a formato WebP moderno
+      alwaysKeepResolution: false, // Permite redimensionar dinámicamente si el hardware del móvil lo requiere
     };
 
     try {
       // 1. Comprimir usando la librería estable (soporta HEIC, PNG, JPG, etc.)
-      const imagenComprimidaFile = await imageCompression(imagen, opciones);
+      let imagenComprimidaFile;
+      
+      try {
+        imagenComprimidaFile = await imageCompression(imagen, opciones);
+      } catch (compressionErr) {
+        console.warn("Fallo el worker asíncrono, reintentando de modo directo...", compressionErr);
+        // Fallback: Si el procesador asíncrono del teléfono falla, reintenta en el hilo principal
+        imagenComprimidaFile = await imageCompression(imagen, { ...opciones, useWebWorker: false });
+      }
 
       // 📊 Métrica 2: Calcular ahorro final
       const pesoComprimidoKB = (imagenComprimidaFile.size / 1024).toFixed(2);
@@ -135,7 +144,7 @@ export default function CreateProductForm({
       return publicUrl;
     } catch (error: any) {
       console.error("Error en compresión/subida:", error);
-      throw new Error("No se pudo procesar esta imagen. Intenta con otra.");
+      throw new Error(error?.message || "No se pudo procesar esta imagen. Intenta con otra.");
     }
   };
 
