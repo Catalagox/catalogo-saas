@@ -4,14 +4,18 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import { Check, Zap } from "lucide-react";
+// 📥 Importamos el componente tipado de forma limpia
+import PricingCard from "@/components/marketing/PricingCard";
 
 export default function SuscripcionPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  
+  // 🎯 Definimos explícitamente que el estado almacena un string
+  const [loadingPlan, setLoadingPlan] = useState<string>(""); 
 
-  const handleSuscribirse = async () => {
-    setLoading(true);
+  // 🎯 Restringimos planType para que solo acepte "monthly" o "annual"
+  const handleSuscribirse = async (planType: "monthly" | "annual") => {
+    setLoadingPlan(planType);
 
     try {
       // 🔥 Verificar sesión SOLO al intentar pagar
@@ -34,6 +38,7 @@ export default function SuscripcionPage() {
         body: JSON.stringify({
           userId: session.user.id,
           email: session.user.email,
+          planType: planType, 
         }),
       });
 
@@ -48,18 +53,20 @@ export default function SuscripcionPage() {
       console.error(error);
       alert("Error iniciando pago");
     } finally {
-      setLoading(false);
+      setLoadingPlan("");
     }
   };
 
   return (
     <section className="relative min-h-screen overflow-hidden bg-[#050807] px-6 py-24 md:py-20">
+      {/* Animaciones de fondo originales */}
       <div className="absolute top-0 -left-4 w-72 h-72 bg-emerald-500 rounded-full mix-blend-screen filter blur-3xl opacity-10 animate-blob" />
       <div className="absolute top-0 -right-4 w-72 h-72 bg-blue-500 rounded-full mix-blend-screen filter blur-3xl opacity-10 animate-blob animation-delay-2000" />
       <div className="absolute -bottom-8 left-20 w-72 h-72 bg-emerald-400 rounded-full mix-blend-screen filter blur-3xl opacity-10 animate-blob animation-delay-4000" />
 
       <div className="relative max-w-5xl mx-auto">
         
+        {/* Encabezado */}
         <div className="text-center mb-16">
           <div className="inline-flex items-center rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[#22c55e] px-4 py-1.5 text-xs font-bold uppercase tracking-wider mb-6 shadow-sm">
             Acceso Ilimitado
@@ -71,94 +78,44 @@ export default function SuscripcionPage() {
           </h1>
 
           <p className="text-[#b4b9b5] text-lg max-w-2xl mx-auto font-medium">
-            Únete a cientos de restaurantes que ya digitalizaron su experiencia
+            Únete a cientos de negocios que ya digitalizaron su experiencia
             con nuestro plan profesional.
           </p>
         </div>
 
-        <div className="max-w-[440px] mx-auto group relative">
-          <div className="absolute -inset-0.5 rounded-[42px] bg-gradient-to-r from-emerald-500 via-emerald-400 to-green-600 opacity-40 blur-md group-hover:opacity-100 transition-opacity duration-500 animate-tilt"></div>
+        {/* 📊 Cuadrícula que renderiza ambas tarjetas de manera independiente */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
+          
+          {/* Formulario 1: Plan Mensual */}
+          <PricingCard
+            title="Plan Pro Mensual"
+            price="5"
+            period="/mes"
+            badgeText="Recomendado"
+            badgeColor="bg-[#1e261b] text-[#22c55e] border border-[#22c55e]/20"
+            isLoading={loadingPlan === "monthly"}
+            isDisabled={loadingPlan !== ""}
+            onSubmit={() => handleSuscribirse("monthly")}
+          />
 
-          <div className="relative bg-[#0e1412] border border-[#1e261b] rounded-[40px] p-8 md:p-10 shadow-2xl transition-all duration-500 group-hover:-translate-y-1">
-            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#22c55e] text-[#050807] text-[10px] font-bold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg">
-              Recomendado
-            </div>
+          {/* Formulario 2: Plan Anual */}
+          <PricingCard
+            title="Plan Pro Anual"
+            price="54"
+            period="/año"
+            badgeText="Ahorra 10% - Mejor Valor"
+            badgeColor="bg-[#22c55e] text-[#050807]"
+            isPopular={true}
+            subPriceText="Equivale a $4.50 al mes"
+            isLoading={loadingPlan === "annual"}
+            isDisabled={loadingPlan !== ""}
+            onSubmit={() => handleSuscribirse("annual")}
+          />
 
-            {/* PRECIO */}
-            <div className="text-center mb-10">
-              <h3 className="text-[#7f8781] font-bold text-sm uppercase tracking-widest mb-2">
-                Plan Pro
-              </h3>
-
-              <div className="flex items-baseline justify-center gap-1">
-                <span className="text-2xl font-bold text-[#7f8781]">$</span>
-
-                <span className="text-8xl font-black text-white tracking-tighter">
-                  5
-                </span>
-
-                <span className="text-[#7f8781] font-semibold">/mes</span>
-              </div>
-            </div>
-
-            {/* CARACTERÍSTICAS */}
-            <div className="space-y-4 mb-10">
-              {[
-                "1 Catalógo Digital Profesional",
-                "QR Personalizado de Alta Calidad",
-                "Edición de Productos",
-                "Soporte Prioritario 24/7",
-                "Panel de Administración Pro",
-                "Sin Comisiones por Venta",
-                "Sin Contratos ni Permanencia",
-              ].map((item, idx) => (
-                <div key={idx} className="flex items-center gap-4 group/item">
-                  <div className="flex items-center justify-center w-6 h-6 rounded-full bg-[#22c55e]/10 text-[#22c55e] border border-[#22c55e]/20 transition-transform group-hover/item:scale-110">
-                    <Check size={14} strokeWidth={3} />
-                  </div>
-
-                  <span className="text-[#c4c7c4] font-medium text-[15px]">
-                    {item}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {/* BOTÓN */}
-            <button
-              onClick={handleSuscribirse}
-              disabled={loading}
-              className="relative overflow-hidden w-full py-5 rounded-2xl bg-[#22c55e] hover:bg-[#16a34a] text-[#050807] font-bold text-lg shadow-xl transition-all hover:scale-[1.01] active:scale-[0.98] disabled:opacity-70 cursor-pointer"
-            >
-              <span className="relative z-10 flex items-center justify-center gap-2">
-                {loading ? (
-                  "Procesando..."
-                ) : (
-                  <>
-                    ¡Empezar ahora!
-                    <Zap size={18} className="fill-current" />
-                  </>
-                )}
-              </span>
-
-              {!loading && (
-                <div className="absolute top-0 -inset-full h-full w-1/2 z-5 block transform -skew-x-12 bg-gradient-to-r from-transparent via-white/30 to-transparent group-hover:animate-shine" />
-              )}
-            </button>
-
-            {/* FOOTER */}
-            <div className="mt-6 flex items-center justify-center gap-2 text-[#7f8781]">
-              <div className="w-1.5 h-1.5 rounded-full bg-[#22c55e] animate-pulse" />
-
-              <p className="text-xs font-medium uppercase tracking-tight">
-                Garantía de satisfacción
-              </p>
-            </div>
-          </div>
         </div>
 
-        {/* CONTACTO */}
-        <p className="text-center text-[#7f8781] mt-10 text-sm">
+        {/* Contacto */}
+        <p className="text-center text-[#7f8781] mt-16 text-sm">
           ¿Tienes dudas?{" "}
           <Link
             href="/contacto"
@@ -169,66 +126,25 @@ export default function SuscripcionPage() {
         </p>
       </div>
 
+      {/* Estilos CSS Globales */}
       <style jsx>{`
-        @keyframes shine {
-          100% {
-            left: 125%;
-          }
-        }
-
-        .animate-shine {
-          animation: shine 1.5s infinite;
-        }
-
+        @keyframes shine { 100% { left: 125%; } }
+        .animate-shine { animation: shine 1.5s infinite; }
         @keyframes blob {
-          0% {
-            transform: translate(0px, 0px) scale(1);
-          }
-
-          33% {
-            transform: translate(30px, -50px) scale(1.1);
-          }
-
-          66% {
-            transform: translate(-20px, 20px) scale(0.9);
-          }
-
-          100% {
-            transform: translate(0px, 0px) scale(1);
-          }
+          0% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(30px, -50px) scale(1.1); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+          100% { transform: translate(0px, 0px) scale(1); }
         }
-
-        .animate-blob {
-          animation: blob 7s infinite;
-        }
-
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-
-        .animation-delay-4000 {
-          animation-delay: 4s;
-        }
-
+        .animate-blob { animation: blob 7s infinite; }
+        .animation-delay-2000 { animation-delay: 2s; }
+        .animation-delay-4000 { animation-delay: 4s; }
         @keyframes tilt {
-          0%,
-          50%,
-          100% {
-            transform: rotate(0deg);
-          }
-
-          25% {
-            transform: rotate(0.5deg);
-          }
-
-          75% {
-            transform: rotate(-0.5deg);
-          }
+          0%, 50%, 100% { transform: rotate(0deg); }
+          25% { transform: rotate(0.5deg); }
+          75% { transform: rotate(-0.5deg); }
         }
-
-        .animate-tilt {
-          animation: tilt 10s infinite linear;
-        }
+        .animate-tilt { animation: tilt 10s infinite linear; }
       `}</style>
     </section>
   );
