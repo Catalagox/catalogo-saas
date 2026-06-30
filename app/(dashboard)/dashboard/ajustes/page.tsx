@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import imageCompression from "browser-image-compression"; // 🔥 IMPORTAMOS EL COMPRESOR
 
-import PhoneInput from "react-phone-input-2";
-import "react-phone-input-2/lib/style.css";
-
-// 🔥 IMPORTAMOS TU NUEVO COMPONENTE
+// Importación de subcomponentes visuales
+import FormNombreMenu from "@/components/dashboard/ajustes/FormNombreMenu";
+import FormLogo from "@/components/dashboard/ajustes/FormLogo";
+import FormContacto from "@/components/dashboard/ajustes/FormContacto";
+import FormPassword from "@/components/dashboard/ajustes/FormPassword";
 import BotonSuscripcionPortal from "@/components/dashboard/ajustes/BotonSuscripcionPortal";
 
 export default function AjustesPage() {
@@ -14,7 +16,7 @@ export default function AjustesPage() {
   const [nombreMenu, setNombreMenu] = useState("");
   const [password, setPassword] = useState("");
 
-  // 🔥 LOGO
+  // LOGO
   const [logo, setLogo] = useState("");
   const [subiendoLogo, setSubiendoLogo] = useState(false);
 
@@ -106,21 +108,32 @@ export default function AjustesPage() {
       } else {
         alert("Error al actualizar");
       }
-
       return;
     }
 
     alert("Nombre y URL actualizados");
   };
 
-  // 🔥 SUBIR LOGO REFACTORIZADO (CREA CARPETA INDEPENDIENTE Y ELIMINA EL VIEJO)
+  // SUBIR LOGO (CON COMPRESIÓN INTEGRADAS)
   const subirLogo = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
       setSubiendoLogo(true);
-
-      const file = e.target.files?.[0];
-
+      let file = e.target.files?.[0];
       if (!file) return;
+
+      // ─── CONFIGURACIÓN Y PROCESO DE COMPRESIÓN ───
+      const opciones = {
+        maxSizeMB: 0.2,            // Máximo 200KB de peso objetivo
+        maxWidthOrHeight: 500,     // Redimensionar si mide más de 500px de ancho o alto
+        useWebWorker: true,
+      };
+
+      try {
+        file = await imageCompression(file, opciones);
+      } catch (compressionError) {
+        console.error("Error al comprimir, se intentará subir original:", compressionError);
+      }
+      // ─────────────────────────────────────────────
 
       const {
         data: { user },
@@ -128,7 +141,6 @@ export default function AjustesPage() {
 
       if (!user) return;
 
-      // 1. 🗑️ LIMPIAR EL LOGO VIEJO SI EXISTE
       if (logo) {
         try {
           const urlParts = logo.split("/logos/");
@@ -142,13 +154,10 @@ export default function AjustesPage() {
         }
       }
 
-      const fileExt = file.name.split(".").pop();
+      const fileExt = file.name.split(".").pop() || "jpg";
       const fileName = `${Date.now()}.${fileExt}`;
-
-      // 2. 📂 ORGANIZAR EN CARPETA SEPARADA MEDIANTE EL USER_ID
       const filePath = `${user.id}/${fileName}`;
 
-      // 🔥 SUBIR STORAGE
       const { error: uploadError } = await supabase.storage
         .from("logos")
         .upload(filePath, file, {
@@ -157,18 +166,13 @@ export default function AjustesPage() {
 
       if (uploadError) {
         console.error(uploadError);
-
         alert("Error subiendo logo");
-
         return;
       }
 
-      // 🔥 URL PÚBLICA
       const { data } = supabase.storage.from("logos").getPublicUrl(filePath);
-
       const publicUrl = data.publicUrl;
 
-      // 🔥 GUARDAR EN DB
       const { error } = await supabase
         .from("catalogos")
         .update({
@@ -178,18 +182,14 @@ export default function AjustesPage() {
 
       if (error) {
         console.error(error);
-
         alert("Error guardando logo");
-
         return;
       }
 
       setLogo(publicUrl);
-
-      alert("Logo actualizado");
+      alert("Logo optimizado y actualizado correctamente");
     } catch (err) {
       console.error(err);
-
       alert("Ocurrió un error");
     } finally {
       setSubiendoLogo(false);
@@ -204,7 +204,6 @@ export default function AjustesPage() {
 
     if (!user) return;
 
-    // LIMPIAR "+"
     const whatsappLimpio = whatsapp.replace("+", "");
 
     const { error } = await supabase
@@ -257,228 +256,41 @@ export default function AjustesPage() {
         </h1>
 
         {/* NOMBRE DEL MENÚ */}
-        <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 space-y-4">
-          <h2 className="text-xl font-semibold text-[var(--text-primary)]">
-            Nombre del restaurante
-          </h2>
+        <FormNombreMenu
+          nombreMenu={nombreMenu}
+          setNombreMenu={setNombreMenu}
+          generarSlug={generarSlug}
+          guardarNombreMenu={guardarNombreMenu}
+        />
 
-          <input
-            value={nombreMenu}
-            onChange={(e) => setNombreMenu(e.target.value)}
-            placeholder="Ej: Burger House"
-            className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-card)] text-[var(--text-primary)] rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-[var(--color-primary)] placeholder:text-[var(--text-secondary)]"
-          />
-
-          {/* URL AUTOMÁTICA */}
-          <div className="space-y-1">
-            <p className="text-sm text-[var(--text-secondary)]">
-              URL de tu catálogo
-            </p>
-
-            <div className="bg-[var(--bg-tertiary)] border border-[var(--border-card)] rounded-lg p-3 text-sm break-all text-[var(--text-primary)]">
-              catalagox.com/{generarSlug(nombreMenu)}
-            </div>
-          </div>
-
-          <button
-            onClick={guardarNombreMenu}
-            className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-text-inverse)] px-5 py-2 rounded-lg font-semibold transition"
-          >
-            Guardar cambios
-          </button>
-        </div>
-
-        {/* 🔥 LOGO */}
-        <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 space-y-5">
-          <h2 className="text-xl font-semibold text-[var(--text-primary)]">
-            Logo del restaurante
-          </h2>
-
-          {logo ? (
-            <div className="flex justify-center">
-              <img
-                src={logo}
-                alt="Logo"
-                className="
-                  w-28
-                  h-28
-                  rounded-full
-                  object-cover
-                  border
-                  border-white/10
-                "
-              />
-            </div>
-          ) : (
-            <div
-              className="
-                w-28
-                h-28
-                mx-auto
-                rounded-full
-                border
-                border-dashed
-                border-[var(--border-card)]
-                flex
-                items-center
-                justify-center
-                text-sm
-                text-[var(--text-secondary)]
-              "
-            >
-              Sin logo
-            </div>
-          )}
-
-          <label
-            className="
-              flex
-              items-center
-              justify-center
-              w-full
-              h-12
-              rounded-xl
-              cursor-pointer
-              font-semibold
-              transition
-              bg-[var(--color-primary)]
-              hover:bg-[var(--color-primary-hover)]
-              text-white
-            "
-          >
-            {subiendoLogo ? "Subiendo..." : "Subir logo"}
-
-            <input
-              type="file"
-              accept="image/*"
-              onChange={subirLogo}
-              className="hidden"
-            />
-          </label>
-        </div>
+        {/* LOGO */}
+        <FormLogo
+          logo={logo}
+          subiendoLogo={subiendoLogo}
+          subirLogo={subirLogo}
+        />
 
         {/* CONTACTO Y REDES */}
-        <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 space-y-5">
-          <h2 className="text-xl font-semibold text-[var(--text-primary)]">
-            Contacto y redes
-          </h2>
-
-          {/* WHATSAPP */}
-          <div className="space-y-2">
-            <p className="text-sm text-[var(--text-secondary)]">WhatsApp</p>
-
-            <PhoneInput
-              country={"ar"}
-              value={whatsapp}
-              onChange={(phone) => setWhatsapp(phone)}
-              enableSearch
-              disableSearchIcon
-              inputStyle={{
-                width: "100%",
-                height: "44px",
-                background: "var(--bg-tertiary)",
-                border: "1px solid var(--border-card)",
-                color: "var(--text-primary)",
-                borderRadius: "10px",
-                fontSize: "14px",
-              }}
-              buttonStyle={{
-                background: "var(--bg-tertiary)",
-                border: "1px solid var(--border-card)",
-                borderRadius: "10px 0 0 10px",
-              }}
-              dropdownStyle={{
-                background: "var(--bg-card)",
-                color: "#000",
-              }}
-            />
-
-            <p className="text-xs text-[var(--text-secondary)]">
-              Selecciona tu país y escribe tu número.
-            </p>
-          </div>
-
-          {/* INSTAGRAM */}
-          <div className="space-y-2">
-            <p className="text-sm text-[var(--text-secondary)]">Instagram</p>
-
-            <input
-              type="text"
-              placeholder="https://instagram.com/tu-negocio"
-              value={instagram}
-              onChange={(e) => setInstagram(e.target.value)}
-              className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-card)] text-[var(--text-primary)] rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-[var(--color-primary)] placeholder:text-[var(--text-secondary)]"
-            />
-          </div>
-
-          {/* FACEBOOK */}
-          <div className="space-y-2">
-            <p className="text-sm text-[var(--text-secondary)]">Facebook</p>
-
-            <input
-              type="text"
-              placeholder="https://facebook.com/tu-negocio"
-              value={facebook}
-              onChange={(e) => setFacebook(e.target.value)}
-              className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-card)] text-[var(--text-primary)] rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-[var(--color-primary)] placeholder:text-[var(--text-secondary)]"
-            />
-          </div>
-
-          {/* TIKTOK */}
-          <div className="space-y-2">
-            <p className="text-sm text-[var(--text-secondary)]">TikTok</p>
-
-            <input
-              type="text"
-              placeholder="https://tiktok.com/@tu-negocio"
-              value={tiktok}
-              onChange={(e) => setTiktok(e.target.value)}
-              className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-card)] text-[var(--text-primary)] rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-[var(--color-primary)] placeholder:text-[var(--text-secondary)]"
-            />
-          </div>
-
-          {/* YOUTUBE */}
-          <div className="space-y-2">
-            <p className="text-sm text-[var(--text-secondary)]">YouTube</p>
-
-            <input
-              type="text"
-              placeholder="https://youtube.com/@tu-negocio"
-              value={youtube}
-              onChange={(e) => setYoutube(e.target.value)}
-              className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-card)] text-[var(--text-primary)] rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-[var(--color-primary)] placeholder:text-[var(--text-secondary)]"
-            />
-          </div>
-
-          <button
-            onClick={guardarContacto}
-            className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-text-inverse)] px-5 py-2 rounded-lg font-semibold transition"
-          >
-            Guardar contacto
-          </button>
-        </div>
+        <FormContacto
+          whatsapp={whatsapp}
+          setWhatsapp={setWhatsapp}
+          instagram={instagram}
+          setInstagram={setInstagram}
+          facebook={facebook}
+          setFacebook={setFacebook}
+          tiktok={tiktok}
+          setTiktok={setTiktok}
+          youtube={youtube}
+          setYoutube={setYoutube}
+          guardarContacto={guardarContacto}
+        />
 
         {/* PASSWORD */}
-        <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 space-y-4">
-          <h2 className="text-xl font-semibold text-[var(--text-primary)]">
-            Cambiar contraseña
-          </h2>
-
-          <input
-            type="password"
-            placeholder="Nueva contraseña"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-card)] text-[var(--text-primary)] rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-[var(--color-primary)] placeholder:text-[var(--text-secondary)]"
-          />
-
-          <button
-            onClick={cambiarPassword}
-            className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-text-inverse)] px-5 py-2 rounded-lg font-semibold transition"
-          >
-            Actualizar contraseña
-          </button>
-        </div>
+        <FormPassword
+          password={password}
+          setPassword={setPassword}
+          cambiarPassword={cambiarPassword}
+        />
 
         {/* CUENTA */}
         <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 space-y-6">
@@ -491,13 +303,11 @@ export default function AjustesPage() {
               <p className="text-sm text-[var(--text-secondary)] mb-1">
                 Correo electrónico
               </p>
-
               <div className="bg-[var(--bg-tertiary)] border border-[var(--border-card)] rounded-lg p-3 text-sm text-[var(--text-primary)]">
                 {email}
               </div>
             </div>
 
-            {/* 🔥 AQUÍ QUEDA ACOMODADO EL COMPONENTE DE STRIPE */}
             <div className="border-t border-[var(--border-card)] pt-4">
               <p className="text-sm font-medium text-[var(--text-primary)] mb-2">
                 Suscripción y Facturación
