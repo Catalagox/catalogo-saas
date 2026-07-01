@@ -19,7 +19,7 @@ export default function InteractiveProductImage({ src, alt }: InteractiveProduct
     <>
       {/* Imagen normal (Hero) */}
       <div 
-        className="w-full h-full cursor-zoom-in relative" 
+        className="w-full h-full cursor-zoom-in relative outline-none touch-manipulation" 
         onClick={toggleMaximize}
       >
         <Image
@@ -27,10 +27,11 @@ export default function InteractiveProductImage({ src, alt }: InteractiveProduct
           alt={alt}
           fill
           priority
-          className="object-cover opacity-90 transition-opacity hover:opacity-100"
+         
+          className="object-cover opacity-90 transition-opacity md:hover:opacity-100"
         />
-        {/* Un pequeño indicador visual opcional */}
-        <div className="absolute bottom-4 right-4 bg-black/50 p-2 rounded-full text-white/70">
+       
+        <div className="absolute bottom-4 right-4 bg-black/50 p-2 rounded-full text-white/70 pointer-events-none">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6" />
             </svg>
@@ -40,12 +41,13 @@ export default function InteractiveProductImage({ src, alt }: InteractiveProduct
       {/* Imagen Maximizada (Overlay) */}
       {isMaximized && (
         <div 
-          className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 cursor-zoom-out animate-fade-in"
+          className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 cursor-zoom-out animate-fade-in touch-manipulation"
           onClick={toggleMaximize}
         >
-          {/* Botón de cerrar */}
+          
           <button 
-            className="absolute top-6 right-6 text-white/70 hover:text-white p-2 rounded-full bg-black/50"
+           
+            className="absolute top-6 right-6 text-white/70 md:hover:text-white active:text-white p-3 rounded-full bg-black/50 active:scale-95 transition-transform outline-none"
             onClick={(e) => {
                 e.stopPropagation(); // Evita que el clic en el botón cierre también por el div padre
                 toggleMaximize();

@@ -2,14 +2,15 @@ import { createClient } from "@/lib/supabase/server";
 import BackButton from "@/components/public/BackButton";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
-// 1. IMPORTAMOS TU NUEVO COMPONENTE CLIENTE
 import BotonAgregarDetalle from "@/components/public/BotonAgregarDetalle";
 
 interface PageProps {
   params: Promise<{ slug: string; producto: string }>;
 }
 
-// 1. FUNCIÓN AUXILIAR PARA OBTENER LOS DATOS
+export const fetchCache = "force-cache";
+export const revalidate = 60;
+
 async function getProductoData(slug: string, productoSlug: string) {
   const supabase = await createClient();
 
@@ -46,7 +47,6 @@ async function getProductoData(slug: string, productoSlug: string) {
   return { catalogo, producto };
 }
 
-// 2. METADATOS DINÁMICOS
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug, producto: productoSlug } = await params;
   const data = await getProductoData(slug, productoSlug);
@@ -81,7 +81,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-// 3. COMPONENTE PRINCIPAL
 export default async function ProductoPage({ params }: PageProps) {
   const { slug, producto: productoSlug } = await params;
   const supabase = await createClient();
@@ -111,10 +110,8 @@ export default async function ProductoPage({ params }: PageProps) {
   return (
     <div className="block min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] pb-32" style={theme}>
       
-      {/* --- 1. SECCIÓN DE LA IMAGEN (ARRIBA) --- */}
       <div className="relative w-full block h-[45vh] min-h-[300px] max-h-[500px] bg-black overflow-hidden">
         
-        {/* Botón de volver */}
         <div className="absolute top-6 left-6 z-30">
           <BackButton />
         </div>
@@ -123,6 +120,8 @@ export default async function ProductoPage({ params }: PageProps) {
           <img
             src={producto.imagen_url}
             alt={producto.nombre}
+            loading="eager"
+            decoding="async"
             className="w-full h-full object-cover z-10"
           />
         ) : (
@@ -131,14 +130,11 @@ export default async function ProductoPage({ params }: PageProps) {
           </div>
         )}
         
-        {/* Gradiente decorativo */}
         <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-bg)]/50 via-transparent to-transparent z-20" />
       </div>
 
-      {/* --- CUERPO DE LA INFORMACIÓN --- */}
       <main className="max-w-2xl mx-auto px-6 pt-8 space-y-8">
         
-        {/* --- 2. CATEGORÍA Y TÍTULO --- */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-[var(--color-primary)] animate-pulse" />
@@ -151,7 +147,6 @@ export default async function ProductoPage({ params }: PageProps) {
           </h1>
         </div>
 
-        {/* --- 3. PRECIO --- */}
         <div className="flex justify-between items-center p-6 rounded-2xl bg-[var(--color-card)] border border-white/5">
           <div>
             <p className="text-[10px] font-black uppercase mb-1 tracking-widest opacity-60">
@@ -173,7 +168,6 @@ export default async function ProductoPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* --- 4. DESCRIPCIÓN --- */}
         <div className="space-y-3">
           <h3 className="text-xs font-black uppercase tracking-[0.2em] opacity-60">
             Descripción
@@ -187,11 +181,9 @@ export default async function ProductoPage({ params }: PageProps) {
 
       </main>
 
-      {/* --- BOTÓN FIJO EN LA PARTE INFERIOR --- */}
       <div className="fixed bottom-0 left-0 w-full p-6 z-50 bg-gradient-to-t from-[var(--color-bg)] via-[var(--color-bg)] to-transparent">
         <div className="max-w-2xl mx-auto">
           
-          {/* ✅ AQUÍ CAMBIAMOS EL ENLACE DIRECTO POR TU NUEVO BOTÓN CLIENTE */}
           <BotonAgregarDetalle 
             producto={{
               id: producto.id,

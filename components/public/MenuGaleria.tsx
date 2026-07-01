@@ -84,9 +84,10 @@ export default function MenuGaleria({ categorias, slug }: MenuGaleriaProps) {
               {productosValidos.map((p) => (
                 <Link
                   key={p.id}
-                  /* 🚀 AÑADIDO: ID único para el producto y scroll-mt para que el header sticky no lo tape al bajar */
+                  
                   id={`prod-${p.id}`}
                   href={`/${slug}/${p.slug}`}
+               
                   className="
                     group
                     flex
@@ -96,10 +97,13 @@ export default function MenuGaleria({ categorias, slug }: MenuGaleriaProps) {
                     border-b
                     border-r
                     border-white/10
-                    hover:bg-white/[0.03]
+                    md:hover:bg-white/[0.03]
+                    active:bg-white/[0.02]
                     transition-all
                     duration-200
                     scroll-mt-24
+                    outline-none
+                    touch-manipulation
                   "
                 >
                   {/* IMAGEN */}
@@ -110,6 +114,9 @@ export default function MenuGaleria({ categorias, slug }: MenuGaleriaProps) {
                           src={p.imagen_url}
                           alt={p.nombre}
                           loading="lazy"
+                        
+                          decoding="async"
+                         
                           className="
                             absolute
                             inset-0
@@ -118,7 +125,7 @@ export default function MenuGaleria({ categorias, slug }: MenuGaleriaProps) {
                             object-cover
                             transition-transform
                             duration-500
-                            group-hover:scale-105
+                            md:group-hover:scale-105
                           "
                         />
                       ) : (
@@ -131,6 +138,7 @@ export default function MenuGaleria({ categorias, slug }: MenuGaleriaProps) {
 
                   {/* INFO */}
                   <div className="p-3.5 pt-2 flex flex-col flex-1 bg-[var(--color-bg)]/20">
+                    {/* 🔧 OPTIMIZACIÓN IPHONE: Cambiado a md:group-hover para evitar el cambio permanente de color en pantallas táctiles */}
                     <h3
                       className="
                         text-xs
@@ -140,8 +148,9 @@ export default function MenuGaleria({ categorias, slug }: MenuGaleriaProps) {
                         line-clamp-2
                         min-h-[2.7rem]
                         text-[var(--color-text)]/90
-                        group-hover:text-[var(--color-primary)]
+                        md:group-hover:text-[var(--color-primary)]
                         transition-colors
+                        duration-200
                       "
                     >
                       {p.nombre}

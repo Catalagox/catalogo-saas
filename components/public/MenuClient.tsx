@@ -98,7 +98,7 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
   const colorTextHeader = catalogo.color_text_header ?? "#ffffff";       
   const colorBorderHeader = catalogo.color_border_header ?? "rgba(255,255,255,0.1)"; 
   const colorFooter = catalogo.color_footer ?? "#111827";
-  const colorTexto = catalogo.color_texto ?? "#ffffff";
+  const colorTexto = catalogo.color_texto ?? "#4f4d4d";
   const colorPrecio = catalogo.color_precio ?? "#22c55e";
   const colorHamburguesa = catalogo.color_hamburguesa ?? "#ffffff";
   const colorTarjeta = catalogo.color_tarjeta ?? "#ffffff10";
@@ -232,10 +232,11 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
                         window.scrollTo({ top: y, behavior: "smooth" });
                       }
                     }}
-                    className={`px-5 py-2.5 rounded-2xl text-sm font-bold tracking-wide transition-all duration-300 border flex-shrink-0 shadow-sm ${
+                    
+                    className={`px-5 py-2.5 rounded-2xl text-sm font-bold tracking-wide transition-all duration-300 border flex-shrink-0 shadow-sm outline-none touch-manipulation ${
                       isActive
                         ? `bg-[var(--color-primary)] text-white border-[var(--color-primary)] scale-105 shadow-lg`
-                        : `bg-[var(--color-card)] hover:bg-white/10 text-[var(--color-categoria)] border-[var(--color-categoria)]/20`
+                        : `bg-[var(--color-card)] md:hover:bg-white/10 active:bg-white/10 text-[var(--color-categoria)] border-[var(--color-categoria)]/20`
                     }`}
                   >
                     {categoria.nombre}
@@ -274,7 +275,7 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
       {isMounted && cantidadTotal > 0 && (
         <button
           onClick={() => setIsCartOpen(true)}
-          className="fixed bottom-6 right-6 p-4 rounded-full text-white shadow-2xl flex items-center justify-center gap-2 z-50 transition-transform active:scale-95"
+          className="fixed bottom-6 right-6 p-4 rounded-full text-white shadow-2xl flex items-center justify-center gap-2 z-50 transition-transform active:scale-95 touch-manipulation"
           style={{ backgroundColor: "var(--color-primary)" }}
         >
           <span className="text-2xl">🛒</span>
@@ -293,7 +294,7 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
             <div>
               <div className="flex justify-between items-center mb-6 border-b pb-4 border-white/10">
                 <h2 className="text-xl font-black uppercase tracking-wider">Tu Pedido</h2>
-                <button onClick={() => setIsCartOpen(false)} className="text-xl opacity-70 hover:opacity-100">✕</button>
+                <button onClick={() => setIsCartOpen(false)} className="text-xl opacity-70 hover:opacity-100 p-2">✕</button>
               </div>
 
               <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 scrollbar-hide">
@@ -307,9 +308,9 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
                     </div>
                     
                     <div className="flex items-center gap-3 bg-black/20 rounded-lg p-1 border border-white/10">
-                      <button onClick={() => decreaseQuantity(item.id)} className="w-8 h-8 flex items-center justify-center font-bold hover:bg-white/10 rounded">-</button>
+                      <button onClick={() => decreaseQuantity(item.id)} className="w-8 h-8 flex items-center justify-center font-bold md:hover:bg-white/10 active:bg-white/20 rounded">-</button>
                       <span className="font-bold text-sm w-4 text-center">{item.cantidad}</span>
-                      <button onClick={() => increaseQuantity(item.id)} className="w-8 h-8 flex items-center justify-center font-bold hover:bg-white/10 rounded">+</button>
+                      <button onClick={() => increaseQuantity(item.id)} className="w-8 h-8 flex items-center justify-center font-bold md:hover:bg-white/10 active:bg-white/20 rounded">+</button>
                     </div>
                   </div>
                 ))}
@@ -326,7 +327,7 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
               
               <button
                 onClick={enviarPedidoWhatsApp}
-                className="w-full h-14 rounded-xl font-black text-sm uppercase tracking-widest text-white flex justify-center items-center gap-2 transition-all hover:brightness-110 active:scale-[0.99]"
+                className="w-full h-14 rounded-xl font-black text-sm uppercase tracking-widest text-white flex justify-center items-center gap-2 transition-all md:hover:brightness-110 active:scale-[0.98] touch-manipulation"
                 style={{ backgroundColor: "#25D366" }}
               >
                 💬 Enviar a WhatsApp
