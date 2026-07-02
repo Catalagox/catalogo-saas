@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Price from "@/components/ui/Price"; // 🚀 Importación del componente de precios
 
 interface Producto {
   id: string;
@@ -19,9 +20,10 @@ interface Categoria {
 interface MenuGaleriaProps {
   categorias: Categoria[];
   slug: string;
+  countryCode?: string; // 👈 NUEVO: Recibimos el código de país
 }
 
-export default function MenuGaleria({ categorias, slug }: MenuGaleriaProps) {
+export default function MenuGaleria({ categorias, slug, countryCode = "PE" }: MenuGaleriaProps) {
   if (!categorias || categorias.length === 0) {
     return (
       <div className="text-center py-20 border border-dashed rounded-xl border-white/10 bg-white/[0.02] backdrop-blur-sm">
@@ -116,7 +118,7 @@ export default function MenuGaleria({ categorias, slug }: MenuGaleriaProps) {
                           loading="lazy"
                         
                           decoding="async"
-                         
+                          
                           className="
                             absolute
                             inset-0
@@ -157,9 +159,10 @@ export default function MenuGaleria({ categorias, slug }: MenuGaleriaProps) {
                     </h3>
 
                     <div className="mt-auto pt-2">
-                      <span className="text-sm sm:text-base font-bold tracking-tight text-[var(--color-price)]">
-                        ${Number(p.precio ?? 0).toLocaleString()}
-                      </span>
+                      <div className="text-sm sm:text-base font-bold tracking-tight text-[var(--color-price)]">
+                        {/* 🚀 Reemplazado por el componente Price */}
+                        <Price amount={p.precio} countryCode={countryCode} />
+                      </div>
                     </div>
                   </div>
                 </Link>

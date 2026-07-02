@@ -23,6 +23,7 @@ export default function ProductosDashboard() {
   const [userId, setUserId] = useState<string | null>(null);
   const [productos, setProductos] = useState<Producto[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [paisCode, setPaisCode] = useState("PE"); // 👈 NUEVO: Estado maestro para el país del catálogo
   const [loading, setLoading] = useState(true);
   const [editingProduct, setEditingProduct] = useState<Producto | null>(null);
   const [newImageFile, setNewImageFile] = useState<File | null>(null);
@@ -44,6 +45,18 @@ export default function ProductosDashboard() {
   };
 
   const cargarDatos = async (uid: string) => {
+    // 1. Consultamos el código de país guardado en el catálogo de este usuario
+    const { data: catData } = await supabase
+      .from("catalogos")
+      .select("pais_code")
+      .eq("user_id", uid)
+      .single();
+
+    if (catData?.pais_code) {
+      setPaisCode(catData.pais_code); // 👈 Seteamos el código encontrado (ej: "MX", "AR")
+    }
+
+    // 2. Traer productos y categorías (Tu lógica original intacta)
     const { data: prod } = await supabase
       .from("productos")
       .select("*")
@@ -194,7 +207,7 @@ export default function ProductosDashboard() {
         await borrarArchivoStorage(fotoViejaUrl);
       }
 
-      // 3. Guardar cambios en la base de datos
+      
       const { error } = await supabase
         .from("productos")
         .update({
@@ -214,7 +227,7 @@ export default function ProductosDashboard() {
     } catch (err) {
       console.error(err);
       alert("Error al guardar los cambios");
-    } {
+    } finally {
       setLoading(false);
     }
   };
@@ -276,9 +289,11 @@ export default function ProductosDashboard() {
 
       <main className="max-w-7xl mx-auto p-6 md:p-10">
         {productosFiltrados.length > 0 ? (
+          
           <ProductGrid
             productos={productosFiltrados}
             categorias={categorias}
+            paisCode={paisCode} 
             onToggle={cambiarDisponibilidad}
             onEdit={(p) => setEditingProduct(p)}
             onDelete={eliminarProducto}
@@ -297,9 +312,11 @@ export default function ProductosDashboard() {
       </main>
 
       {editingProduct && (
+        
         <ProductEditModal
           producto={editingProduct}
           categorias={categorias}
+          paisCode={paisCode}
           previewImage={previewImage}
           onFileChange={handleFileChange}
           setProducto={setEditingProduct}

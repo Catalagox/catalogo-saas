@@ -1,6 +1,7 @@
 "use client";
 
 import ProductImage from "@/components/dashboard/productos/ProductImage";
+import Price from "@/components/ui/Price";
 import { Edit3, Trash2, Eye, EyeOff } from "lucide-react";
 
 type Producto = {
@@ -15,6 +16,7 @@ type Producto = {
 type Props = {
   producto: Producto;
   categoria?: string;
+  paisCode: string; 
   onToggle: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -23,6 +25,7 @@ type Props = {
 export default function ProductCard({
   producto,
   categoria,
+  paisCode, // 👈 NUEVO: Desestructuramos la prop
   onToggle,
   onEdit,
   onDelete,
@@ -39,7 +42,6 @@ export default function ProductCard({
       <div className="relative">
         <ProductImage src={producto.imagen_url} alt={producto.nombre} />
 
-        {/* Estado */}
         <div
           className={`absolute top-4 left-4 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest backdrop-blur-md border ${
             producto.disponible
@@ -57,8 +59,9 @@ export default function ProductCard({
             <h3 className="text-lg font-bold text-[var(--text-primary)] leading-tight group-hover:text-[var(--color-primary)] transition-colors">
               {producto.nombre}
             </h3>
+           
             <span className="text-[var(--color-primary)] font-black text-lg">
-              ${producto.precio}
+              <Price amount={producto.precio} countryCode={paisCode} />
             </span>
           </div>
 
@@ -73,9 +76,9 @@ export default function ProductCard({
           )}
         </div>
 
-        {/* Footer */}
+      
         <div className="mt-auto pt-4 border-t border-[var(--border-card)] flex items-center justify-between gap-2">
-          {/* Switch */}
+          
           <div className="flex items-center gap-2">
             <button
               onClick={onToggle}
@@ -101,7 +104,7 @@ export default function ProductCard({
             </span>
           </div>
 
-          {/* Acciones */}
+          
           <div className="flex gap-1">
             <button
               onClick={onEdit}

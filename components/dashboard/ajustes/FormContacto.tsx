@@ -2,8 +2,12 @@
 
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
+// Importamos tanto el Selector como el registro para sacar los prefijos telefónicos
+import SelectorPaises, { countriesRegistry } from "@/lib/Countries";
 
 interface FormContactoProps {
+  paisCode: string;
+  setPaisCode: (val: string) => void;
   whatsapp: string;
   setWhatsapp: (val: string) => void;
   instagram: string;
@@ -18,6 +22,8 @@ interface FormContactoProps {
 }
 
 export default function FormContacto({
+  paisCode,
+  setPaisCode,
   whatsapp,
   setWhatsapp,
   instagram,
@@ -30,17 +36,52 @@ export default function FormContacto({
   setYoutube,
   guardarContacto,
 }: FormContactoProps) {
+  // Si paisCode no existe por alguna razón, usamos "PE" por defecto antes de aplicar toUpperCase()
+  const currentCountryData =
+    countriesRegistry[(paisCode || "PE").toUpperCase()] ||
+    countriesRegistry["PE"];
+
+  // Manejador cuando el usuario cambia el país desde el SELECT grande
+  const handlePaisChange = (nuevoCodigo: string) => {
+    setPaisCode(nuevoCodigo);
+
+    // Buscamos el prefijo telefónico del nuevo país (ej: "52" para México)
+    const datosNuevoPais = countriesRegistry[nuevoCodigo.toUpperCase()];
+    if (datosNuevoPais) {
+      // Le pre-configuramos el prefijo al input de WhatsApp de forma automática
+      setWhatsapp(datosNuevoPais.phoneCode);
+    }
+  };
+
   return (
     <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 space-y-5">
       <h2 className="text-xl font-semibold text-[var(--text-primary)]">
         Contacto y redes
       </h2>
 
+      {/* SELECCIÓN DE PAÍS (CONTROLADOR PRINCIPAL) */}
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-[var(--text-primary)]">
+          País de tu Negocio
+        </p>
+        <SelectorPaises value={paisCode} onChange={handlePaisChange} />
+        <p className="text-xs text-[var(--text-secondary)]">
+          Esto define la moneda oficial de tu catalógo digital:{" "}
+          <span className="font-semibold text-[var(--text-primary)]">
+            {currentCountryData.currency} ({currentCountryData.symbol})
+          </span>
+          .
+        </p>
+      </div>
+
+      <hr className="border-[var(--border-card)] my-2" />
+
       {/* WHATSAPP */}
       <div className="space-y-2">
         <p className="text-sm text-[var(--text-secondary)]">WhatsApp</p>
         <PhoneInput
-          country={"ar"}
+          // Usamos "pe" por defecto si paisCode es undefined o nulo
+          country={(paisCode || "pe").toLowerCase()}
           value={whatsapp}
           onChange={(phone) => setWhatsapp(phone)}
           enableSearch
@@ -65,7 +106,7 @@ export default function FormContacto({
           }}
         />
         <p className="text-xs text-[var(--text-secondary)]">
-          Selecciona tu país y escribe tu número.
+          El código de área se ajusta solo al cambiar el país arriba.
         </p>
       </div>
 

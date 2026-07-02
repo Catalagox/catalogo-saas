@@ -21,6 +21,7 @@ type Producto = {
 type Props = {
   productos: Producto[];
   categorias: Categoria[];
+  paisCode: string; // 👈 NUEVO: Recibimos el código del país desde el Dashboard
   onToggle: (p: Producto) => void;
   onEdit: (p: Producto) => void;
   onDelete: (id: string) => void;
@@ -29,6 +30,7 @@ type Props = {
 export default function ProductGrid({
   productos,
   categorias,
+  paisCode, // 👈 NUEVO: Desestructuramos la prop
   onToggle,
   onEdit,
   onDelete,
@@ -68,6 +70,7 @@ export default function ProductGrid({
                 key={producto.id}
                 producto={producto}
                 categoria={cat.nombre}
+                paisCode={paisCode} // 👈 NUEVO: Se lo inyectamos a la tarjeta
                 onToggle={() => onToggle(producto)}
                 onEdit={() => onEdit(producto)}
                 onDelete={() => onDelete(producto.id)}
@@ -96,6 +99,7 @@ export default function ProductGrid({
                 key={producto.id}
                 producto={producto}
                 categoria="General"
+                paisCode={paisCode} // 👈 NUEVO: Se lo inyectamos también aquí
                 onToggle={() => onToggle(producto)}
                 onEdit={() => onEdit(producto)}
                 onDelete={() => onDelete(producto.id)}

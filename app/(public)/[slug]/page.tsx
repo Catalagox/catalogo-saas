@@ -2,14 +2,19 @@ import { createClient } from "@/lib/supabase/server";
 import MenuClient from "@/components/public/MenuClient";
 import { Metadata } from "next";
 import PelotaMundial from "@/components/PelotaMundial";
+import { unstable_noStore as noStore } from "next/cache"; // 🚀 Forzar lectura directa sin caché de datos
 
 interface PageProps {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ qr?: string }>;
 }
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 // 1. FUNCIÓN AUXILIAR PARA OBTENER LOS DATOS DEL CATÁLOGO Y PROCESAR EL LOGO
 async function getCatalogo(slug: string) {
+  noStore(); // 🚀 Rompe cualquier almacenamiento en caché de datos de Supabase
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -41,7 +46,8 @@ async function getCatalogo(slug: string) {
       youtube,
       plan_vence_el,
       suscripcion_activa,
-      subscription_status
+      subscription_status,
+      pais_code          
       `
     )
     .eq("slug", slug)
@@ -76,7 +82,6 @@ async function getCatalogo(slug: string) {
     ) {
       logoUrl = data.logo;
     } else {
-      // ✅ FIX: Solo codificamos el nombre del archivo para no romper los slashes (/) de la estructura de la URL
       const archivoCodificado = encodeURIComponent(data.logo);
       logoUrl = `https://yhlqooguctlzorinsxde.supabase.co/storage/v1/object/public/logos/${archivoCodificado}`;
     }
@@ -154,6 +159,7 @@ export default async function MenuPage({
   params,
   searchParams,
 }: PageProps) {
+  noStore(); // 🚀 Asegura que las categorías se consulten limpias en cada recarga
   const { slug } = await params;
   const { qr } = await searchParams;
 
@@ -176,11 +182,12 @@ export default async function MenuPage({
   const catalogo = {
     ...catalogoDB,
     logo: catalogoDB.logoUrl,
+    pais_code: catalogoDB.pais_code ?? "PE",
     color_primario: catalogoDB.color_primario ?? "#f97316",
     color_fondo: catalogoDB.color_fondo ?? "#ffffff",
     color_header: catalogoDB.color_header ?? "#1e1f1e",
-    color_text_header: catalogoDB.color_text_header ?? "#ffffff",       // 🔥 NUEVO: Valor por defecto
-    color_border_header: catalogoDB.color_border_header ?? "rgba(255,255,255,0.1)", // 🔥 NUEVO: Valor por defecto
+    color_text_header: catalogoDB.color_text_header ?? "#ffffff",      
+    color_border_header: catalogoDB.color_border_header ?? "rgba(255,255,255,0.1)", 
     color_footer: catalogoDB.color_footer ?? "#111827",
     color_texto: catalogoDB.color_texto ?? "#ffffff",
     color_precio: catalogoDB.color_precio ?? "#22c55e",
@@ -244,9 +251,11 @@ export default async function MenuPage({
     >
       <PelotaMundial />
       
+      
       <MenuClient
         catalogo={catalogo}
         categorias={categorias ?? []}
+        countryCode={catalogo.pais_code}
       />
     </div>
   );

@@ -1,3 +1,4 @@
+
 "use client";
 
 import CategoriaSection from "@/components/public/CategoriaSection";
@@ -21,9 +22,10 @@ interface Categoria {
 
 interface MenuListaProps {
   categorias: Categoria[];
+  countryCode?: string; // 👈 NUEVO: Recibimos el código de país
 }
 
-export default function MenuLista({ categorias }: MenuListaProps) {
+export default function MenuLista({ categorias, countryCode = "PE" }: MenuListaProps) {
   // 🛡️ SEGURIDAD
   const safeCategorias = categorias ?? [];
 
@@ -95,7 +97,8 @@ export default function MenuLista({ categorias }: MenuListaProps) {
           /* 🚀 AJUSTADO: Bajado de scroll-mt-36 a scroll-mt-24 para que no quede tanto aire arriba al scrollear con el header fixed */
           className="scroll-mt-24"
         >
-          <CategoriaSection categoria={categoria} />
+          {/* 🚀 ACTUALIZADO: Pasamos el countryCode al componente hijo sin alterar nada más */}
+          <CategoriaSection categoria={categoria} countryCode={countryCode} />
         </section>
       ))}
     </div>

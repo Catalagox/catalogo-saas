@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { Dispatch, SetStateAction, useRef } from "react";
 import { X, Upload, Save, Camera } from "lucide-react";
+import { countriesRegistry } from "@/lib/Countries"; // 👈 NUEVO: Importamos tu registro centralizado
 
 type Producto = {
   id: string;
@@ -22,6 +23,7 @@ type Categoria = {
 type Props = {
   producto: Producto;
   categorias: Categoria[];
+  paisCode: string; // 👈 NUEVO: Recibimos el código del país desde el contenedor padre
   previewImage: string | null;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   setProducto: Dispatch<SetStateAction<Producto | null>>;
@@ -32,6 +34,7 @@ type Props = {
 export default function ProductEditModal({
   producto,
   categorias,
+  paisCode, // 👈 NUEVO: Desestructuramos la prop
   previewImage,
   onFileChange,
   setProducto,
@@ -39,6 +42,9 @@ export default function ProductEditModal({
   onSave,
 }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 👈 NUEVO: Buscamos los datos de la moneda para pintar el símbolo dinámico en el input
+  const countryData = countriesRegistry[(paisCode || "PE").toUpperCase()] || countriesRegistry["PE"];
 
   const handleChange = (cambios: Partial<Producto>) => {
     setProducto((prev) => (prev ? { ...prev, ...cambios } : null));
@@ -128,12 +134,13 @@ export default function ProductEditModal({
                   Precio
                 </label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-primary)] font-bold">
-                    $
+                  {/* ⚡ MODIFICADO: Renderiza el símbolo dinámico del país */}
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-primary)] font-bold text-sm">
+                    {countryData.symbol}
                   </span>
                   <input
                     type="number"
-                    className="w-full pl-10 pr-4 py-3 bg-[var(--bg-tertiary)] border border-[var(--border-card)] rounded-2xl text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--color-primary)] outline-none transition-all"
+                    className="w-full pl-12 pr-4 py-3 bg-[var(--bg-tertiary)] border border-[var(--border-card)] rounded-2xl text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--color-primary)] outline-none transition-all"
                     value={producto.precio}
                     onChange={(e) =>
                       handleChange({ precio: Number(e.target.value) })

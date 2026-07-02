@@ -3,13 +3,15 @@ import BackButton from "@/components/public/BackButton";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import BotonAgregarDetalle from "@/components/public/BotonAgregarDetalle";
+import Price from "@/components/ui/Price"; // 🚀 Importación del formateador dinámico
 
 interface PageProps {
   params: Promise<{ slug: string; producto: string }>;
 }
 
-export const fetchCache = "force-cache";
-export const revalidate = 60;
+// 🚀 Forzamos a Next.js a renderizar dinámicamente para actualizar precios y divisas al instante
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 async function getProductoData(slug: string, productoSlug: string) {
   const supabase = await createClient();
@@ -28,8 +30,9 @@ async function getProductoData(slug: string, productoSlug: string) {
       color_precio,
       color_primario,
       color_tarjeta,
-      whatsapp
-    `)
+      whatsapp,
+      pais_code
+    `) // 🚀 Traemos pais_code desde la base de datos
     .eq("slug", slug)
     .maybeSingle();
 
@@ -107,6 +110,9 @@ export default async function ProductoPage({ params }: PageProps) {
     "--color-card": catalogo.color_tarjeta ?? "rgba(255,255,255,0.05)",
   } as React.CSSProperties;
 
+  // Asignamos una moneda por defecto si no viene configurada en base de datos
+  const userCountry = catalogo.pais_code ?? "PE";
+
   return (
     <div className="block min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] pb-32" style={theme}>
       
@@ -152,9 +158,10 @@ export default async function ProductoPage({ params }: PageProps) {
             <p className="text-[10px] font-black uppercase mb-1 tracking-widest opacity-60">
               Precio
             </p>
-            <p className="text-3xl font-black text-[var(--color-price)]">
-              ${Number(producto.precio || 0).toLocaleString()}
-            </p>
+            <div className="text-3xl font-black text-[var(--color-price)]">
+              {/* 🚀 Renderizado dinámico de la divisa con Price */}
+              <Price amount={producto.precio} countryCode={userCountry} />
+            </div>
           </div>
 
           <div
@@ -194,6 +201,7 @@ export default async function ProductoPage({ params }: PageProps) {
             }}
             colorPrimario={catalogo.color_primario ?? "#f97316"}
             whatsappNumero={catalogo.whatsapp}
+            countryCode={userCountry} // 🚀 Transferimos el país para sincronizar el formato interno
           />
 
         </div>

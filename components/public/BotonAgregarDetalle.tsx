@@ -13,9 +13,15 @@ interface BotonProps {
   };
   colorPrimario: string;
   whatsappNumero: string;
+  countryCode?: string; // 🚀 NUEVO: Aceptamos el código del país en las propiedades
 }
 
-export default function BotonAgregarDetalle({ producto, colorPrimario, whatsappNumero }: BotonProps) {
+export default function BotonAgregarDetalle({ 
+  producto, 
+  colorPrimario, 
+  whatsappNumero,
+  countryCode = "PE" // Valor por defecto en caso de no ser provisto
+}: BotonProps) {
   const { addToCart } = useCart();
   const [agregado, setAgregado] = useState(false);
 

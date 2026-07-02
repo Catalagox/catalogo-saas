@@ -20,9 +20,10 @@ interface Categoria {
 
 interface Props {
   categoria: Categoria;
+  countryCode?: string; // 👈 NUEVO: Recibimos el código de país
 }
 
-export default function CategoriaSection({ categoria }: Props) {
+export default function CategoriaSection({ categoria, countryCode = "PE" }: Props) {
 
   // 🛡️ Seguridad
   const productosValidos =
@@ -69,8 +70,10 @@ export default function CategoriaSection({ categoria }: Props) {
             id={`prod-${producto.id}`} 
             className="scroll-mt-24"
           >
+            {/* 🚀 Pasamos el countryCode directamente a la tarjeta final */}
             <ProductoCard
               producto={producto}
+              countryCode={countryCode}
             />
           </div>
         ))}

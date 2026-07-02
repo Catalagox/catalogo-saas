@@ -7,6 +7,7 @@ import MenuFooter from "@/components/public/MenuFooter";
 import MenuLista from "@/components/public/MenuLista";
 import MenuGaleria from "@/components/public/MenuGaleria";
 import { useCart } from "@/context/CartContext"; 
+import Price from "@/components/ui/Price"; // 🚀 Importación del componente de precios
 
 // TIPOS
 interface Producto {
@@ -32,6 +33,7 @@ interface Catalogo {
   user_id: string;
   estilo_menu?: "lista" | "galeria";
   slug?: string;
+  pais_code?: string; // 👈 NUEVO: Añadido a la interfaz
 
   // 🎨 COLORES
   color_primario?: string;
@@ -60,9 +62,10 @@ interface Catalogo {
 interface MenuClientProps {
   catalogo: Catalogo | null;
   categorias: Categoria[];
+  countryCode?: string; // 🚀 CORRECCIÓN: Evita el error de tipado en el componente de servidor
 }
 
-export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
+export default function MenuClient({ catalogo, categorias, countryCode }: MenuClientProps) {
   const [categoriaActiva, setCategoriaActiva] = useState<string | null>(null);
   
   // 🔥 ESTADOS PARA EL EFECTO AUTOMÁTICO TIPO MERCADO LIBRE
@@ -92,6 +95,8 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
 
   const safeCategorias = categorias ?? [];
   const viewMode = catalogo.estilo_menu ?? "lista";
+  // 🚀 Priorizamos el countryCode externo si viene del servidor, sino tomamos el de la base de datos o el fallback
+  const userCountry = countryCode ?? catalogo.pais_code ?? "PE"; 
 
   const colorFondo = catalogo.color_fondo ?? "#fefefe";
   const colorHeader = catalogo.color_header ?? "#2c2c2c";
@@ -109,7 +114,7 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
   const theme = {
     "--color-bg": colorFondo,
     "--color-header": colorHeader,
-    "--color-text-header": colorTextHeader,       
+    "--color-text-header": colorTextHeader,      
     "--color-border-header": colorBorderHeader,   
     "--color-footer": colorFooter,
     "--color-text": colorTexto,
@@ -135,6 +140,16 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
     }
   };
 
+  // 🛠️ Función auxiliar para dar formato de texto con la moneda correcta en el mensaje de WhatsApp
+  const formatPriceWithCurrency = (amount: number) => {
+    if (userCountry === "PE") return `S/. ${amount.toLocaleString()}`;
+    if (userCountry === "CL") return `$CLP ${amount.toLocaleString()}`;
+    if (userCountry === "CO") return `$COP ${amount.toLocaleString()}`;
+    if (userCountry === "MX") return `$MXN ${amount.toLocaleString()}`;
+    if (userCountry === "AR") return `$ARS ${amount.toLocaleString()}`;
+    return `$${amount.toLocaleString()}`; // Fallback general
+  };
+
   // 🔥 FUNCIÓN ACTUALIZADA: ENVÍA EL PEDIDO, LIMPIA EL CARRITO Y CIERRA EL INTERFAZ
   const enviarPedidoWhatsApp = () => {
     if (items.length === 0 || !catalogo.whatsapp) return;
@@ -143,10 +158,10 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
     
     items.forEach((item) => {
       const subtotal = item.precio * item.cantidad;
-      mensaje += `• ${item.cantidad}x *${item.nombre}* - $${item.precio.toLocaleString()} (Subtotal: $${subtotal.toLocaleString()})\n`;
+      mensaje += `• ${item.cantidad}x *${item.nombre}* - ${formatPriceWithCurrency(item.precio)} (Subtotal: ${formatPriceWithCurrency(subtotal)})\n`;
     });
 
-    mensaje += `\n*Total a pagar: $${total.toLocaleString()}*`;
+    mensaje += `\n*Total a pagar: ${formatPriceWithCurrency(total)}*`;
     mensaje += `\n\n_Pedido enviado desde el catálogo web._`;
 
     const numeroFormateado = catalogo.whatsapp.replace(/[^0-9]/g, "");
@@ -251,9 +266,11 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
       {/* 🛍️ MAIN */}
       <main className="max-w-7xl mx-auto w-full px-0 sm:px-6 lg:px-8 pt-8 pb-0 mb-0 flex-grow">
         {viewMode === "lista" ? (
-          <MenuLista categorias={safeCategorias} />
+          /* 🚀 ACTUALIZADO: Pasamos el countryCode a la lista de productos */
+          <MenuLista categorias={safeCategorias} countryCode={userCountry} />
         ) : catalogo.slug ? (
-          <MenuGaleria categorias={safeCategorias} slug={catalogo.slug} />
+          /* 🚀 ACTUALIZADO: Pasamos el countryCode a la galería de productos */
+          <MenuGaleria categorias={safeCategorias} slug={catalogo.slug} countryCode={userCountry} />
         ) : (
           <div className="text-center text-red-400 py-10">
             Error: slug no disponible
@@ -302,9 +319,10 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
                   <div key={item.id} className="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/5">
                     <div>
                       <p className="font-bold text-sm sm:text-base">{item.nombre}</p>
-                      <p className="text-xs font-black text-[var(--color-price)]">
-                        ${item.precio.toLocaleString()}
-                      </p>
+                      <div className="text-xs font-black text-[var(--color-price)]">
+                        {/* 🚀 Cambiado por el componente Price */}
+                        <Price amount={item.precio} countryCode={userCountry} />
+                      </div>
                     </div>
                     
                     <div className="flex items-center gap-3 bg-black/20 rounded-lg p-1 border border-white/10">
@@ -320,9 +338,10 @@ export default function MenuClient({ catalogo, categorias }: MenuClientProps) {
             <div className="border-t pt-4 border-white/10">
               <div className="flex justify-between items-center mb-4 px-1">
                 <span className="text-sm font-bold uppercase opacity-60 tracking-wider">Total estimado:</span>
-                <span className="text-2xl font-black text-[var(--color-price)]">
-                  ${total.toLocaleString()}
-                </span>
+                <div className="text-2xl font-black text-[var(--color-price)]">
+                  {/* 🚀 Cambiado por el componente Price */}
+                  <Price amount={total} countryCode={userCountry} />
+                </div>
               </div>
               
               <button

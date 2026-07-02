@@ -16,6 +16,9 @@ export default function AjustesPage() {
   const [nombreMenu, setNombreMenu] = useState("");
   const [password, setPassword] = useState("");
 
+  // PAÍS DE REGISTRO
+  const [paisCode, setPaisCode] = useState("PE"); // 👈 NUEVO: Estado maestro inicializado por defecto
+
   // LOGO
   const [logo, setLogo] = useState("");
   const [subiendoLogo, setSubiendoLogo] = useState(false);
@@ -53,7 +56,8 @@ export default function AjustesPage() {
         instagram,
         facebook,
         tiktok,
-        youtube
+        youtube,
+        pais_code   
       `,
       )
       .eq("user_id", user.id)
@@ -67,6 +71,7 @@ export default function AjustesPage() {
       setFacebook(data.facebook || "");
       setTiktok(data.tiktok || "");
       setYoutube(data.youtube || "");
+      setPaisCode(data.pais_code || "PE"); 
     }
 
     setLoading(false);
@@ -196,7 +201,7 @@ export default function AjustesPage() {
     }
   };
 
-  // GUARDAR CONTACTO
+  // GUARDAR CONTACTO Y PAÍS
   const guardarContacto = async () => {
     const {
       data: { user },
@@ -214,13 +219,14 @@ export default function AjustesPage() {
         facebook,
         tiktok,
         youtube,
+        pais_code: paisCode, // 👈 NUEVO: Guardamos el código de país en Supabase
       })
       .eq("user_id", user.id);
 
     if (error) {
       alert("Error al guardar contacto");
     } else {
-      alert("Contacto actualizado");
+      alert("Contacto y configuración de moneda actualizados correctamente");
     }
   };
 
@@ -272,6 +278,8 @@ export default function AjustesPage() {
 
         {/* CONTACTO Y REDES */}
         <FormContacto
+          paisCode={paisCode}       
+          setPaisCode={setPaisCode} 
           whatsapp={whatsapp}
           setWhatsapp={setWhatsapp}
           instagram={instagram}
