@@ -299,7 +299,7 @@ export default function DashboardPage() {
             <div className="flex flex-col sm:flex-row gap-3">
               <input
                 type="text"
-                placeholder="Nombre del menú"
+                placeholder="Nombre del catalógo"
                 value={nuevoNombre}
                 onChange={(e) => setNuevoNombre(e.target.value)}
                 disabled={isCreating}
@@ -332,7 +332,7 @@ export default function DashboardPage() {
                   cursor-pointer
                 "
               >
-                {isCreating ? "Creando..." : "Crear menú"}
+                {isCreating ? "Creando..." : "Crear Catalógo"}
               </button>
             </div>
           </div>
