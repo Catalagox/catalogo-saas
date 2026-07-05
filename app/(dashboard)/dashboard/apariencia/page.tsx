@@ -15,10 +15,9 @@ export default function AparienciaPage() {
   const [categorias, setCategorias] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 🎨 COLORES
   const [colorHeader, setColorHeader] = useState("#f97316");
-  const [colorTextHeader, setColorTextHeader] = useState("#ffffff");     // 🔥 NUEVO
-  const [colorBorderHeader, setColorBorderHeader] = useState("#ffffff10"); // 🔥 NUEVO
+  const [colorTextHeader, setColorTextHeader] = useState("#ffffff");     
+  const [colorBorderHeader, setColorBorderHeader] = useState("#ffffff10"); 
   const [colorFooter, setColorFooter] = useState("#111827");
   const [colorTexto, setColorTexto] = useState("#ffffff");
   const [colorPrecio, setColorPrecio] = useState("#22c55e");
@@ -58,8 +57,8 @@ export default function AparienciaPage() {
         setColorPrimario(data.color_primario || "#f97316");
         setColorFondo(data.color_fondo || "#111827");
         setColorHeader(data.color_header || "#f97316");
-        setColorTextHeader(data.color_text_header || "#ffffff");       // 🔥 NUEVO
-        setColorBorderHeader(data.color_border_header || "#ffffff10"); // 🔥 NUEVO
+        setColorTextHeader(data.color_text_header || "#ffffff");       
+        setColorBorderHeader(data.color_border_header || "#ffffff10"); 
         setColorFooter(data.color_footer || "#111827");
         setColorTexto(data.color_texto || "#ffffff");
         setColorPrecio(data.color_precio || "#22c55e");
@@ -116,8 +115,8 @@ export default function AparienciaPage() {
         color_primario: colorPrimario,
         color_fondo: colorFondo,
         color_header: colorHeader,
-        color_text_header: colorTextHeader,     // 🔥 NUEVO
-        color_border_header: colorBorderHeader, // 🔥 NUEVO
+        color_text_header: colorTextHeader,     
+        color_border_header: colorBorderHeader, 
         color_footer: colorFooter,
         color_texto: colorTexto,
         color_precio: colorPrecio,
@@ -134,7 +133,7 @@ export default function AparienciaPage() {
       return;
     }
 
-    alert("Guardado 🔥");
+    alert("Guardado ");
   };
 
   if (loading) {
@@ -148,7 +147,6 @@ export default function AparienciaPage() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start relative max-w-full">
       
-      {/* COLUMNA IZQUIERDA: FORMULARIO */}
       <div className="w-full">
         <AparienciaForm
           nombre={nombre}
@@ -161,10 +159,10 @@ export default function AparienciaPage() {
           setEstiloMenu={setEstiloMenu}
           colorHeader={colorHeader}
           setColorHeader={setColorHeader}
-          colorTextHeader={colorTextHeader}             // 🔥 NUEVO
-          setColorTextHeader={setColorTextHeader}       // 🔥 NUEVO
-          colorBorderHeader={colorBorderHeader}         // 🔥 NUEVO
-          setColorBorderHeader={setColorBorderHeader}   // 🔥 NUEVO
+          colorTextHeader={colorTextHeader}             
+          setColorTextHeader={setColorTextHeader}       
+          colorBorderHeader={colorBorderHeader}        
+          setColorBorderHeader={setColorBorderHeader}   
           colorFooter={colorFooter}
           setColorFooter={setColorFooter}
           colorTexto={colorTexto}
@@ -183,7 +181,6 @@ export default function AparienciaPage() {
         />
       </div>
 
-      {/* COLUMNA DERECHA: PREVIEW FIJO (STICKY) */}
       <div className="hidden lg:block lg:sticky lg:top-6 h-fit w-full">
         <div className="flex justify-center lg:justify-end">
           <PhonePreview
@@ -193,8 +190,8 @@ export default function AparienciaPage() {
             logo={logo}
             categorias={categorias}
             colorHeader={colorHeader}
-            colorTextHeader={colorTextHeader}           // 🔥 NUEVO (Opcional si lo usas en PhonePreview)
-            colorBorderHeader={colorBorderHeader}       // 🔥 NUEVO (Opcional si lo usas en PhonePreview)
+            colorTextHeader={colorTextHeader}           
+            colorBorderHeader={colorBorderHeader}       
             colorFooter={colorFooter}
             colorTexto={colorTexto}
             colorPrecio={colorPrecio}

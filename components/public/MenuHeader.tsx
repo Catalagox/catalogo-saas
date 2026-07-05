@@ -114,18 +114,18 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
           <div className="flex items-center gap-4 md:w-auto">
             <button
               onClick={() => setOpen(true)}
-              className="p-2 md:hidden flex items-center justify-center transition-opacity hover:opacity-80"
+              className="p-2 lg:hidden flex items-center justify-center transition-opacity hover:opacity-80"
               aria-label="Abrir menú"
             >
               <Menu size={26} className="text-[var(--color-hamburguesa)]" />
             </button>
 
-            <div className="absolute left-1/2 -translate-x-1/2 md:relative md:left-0 md:translate-x-0 flex items-center z-10">
+            <div className="absolute left-1/2 -translate-x-1/2 lg:relative lg:left-0 lg:translate-x-0 flex items-center z-10">
               {catalogo.logo ? (
                 <img
                   src={catalogo.logo}
                   alt={catalogo.nombre}
-                  className="h-12 w-auto object-contain max-w-[150px] md:max-w-[180px]"
+                  className="h-16 w-auto object-contain max-w-[200px] md:max-w-[250px]"
                 />
               ) : (
                 <h1 className="text-xl font-bold tracking-tight text-[var(--color-text-header,#ffffff)] whitespace-nowrap">
@@ -137,7 +137,7 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
 
           {/* BLOQUE DERECHO (NAVEGACIÓN + ACCIONES) */}
           <div className="flex items-center gap-6 lg:gap-8">
-            <nav className="hidden md:flex items-center gap-5 lg:gap-8 max-w-[50vw] overflow-x-auto no-scrollbar py-1">
+            <nav className="hidden lg:flex items-center gap-5 lg:gap-8 max-w-[50vw] overflow-x-auto no-scrollbar py-1">
               {categorias.slice(0, 7).map((cat) => (
                 <a
                   key={cat.id}

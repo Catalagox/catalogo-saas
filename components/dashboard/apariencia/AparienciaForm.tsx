@@ -124,8 +124,8 @@ export default function AparienciaForm({
           </h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ColorPicker label="Color header" value={colorHeader} onChange={setColorHeader} />
-          <ColorPicker label="Color texto de marca" value={colorTextHeader} onChange={setColorTextHeader} />
+          <ColorPicker label="Color de fondo header" value={colorHeader} onChange={setColorHeader} />
+          <ColorPicker label="Color de texto herder" value={colorTextHeader} onChange={setColorTextHeader} />
           <ColorPicker label="Color borde inferior" value={colorBorderHeader} onChange={setColorBorderHeader} />
           <ColorPicker label="Color icono hamburguesa" value={colorHamburguesa} onChange={setColorHamburguesa} />
           <ColorPicker label="Color lupa búsqueda" value={colorLupa} onChange={setColorLupa} />
@@ -141,11 +141,11 @@ export default function AparienciaForm({
           </h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ColorPicker label="Color de fondo global" value={colorFondo} onChange={setColorFondo} />
+          <ColorPicker label="Color de fondo main" value={colorFondo} onChange={setColorFondo} />
           <ColorPicker label="Color principal (Botones)" value={colorPrimario} onChange={setColorPrimario} />
-          <ColorPicker label="Color de tarjetas" value={colorTarjeta} onChange={setColorTarjeta} />
-          <ColorPicker label="Color de categorías" value={colorCategoria} onChange={setColorCategoria} />
-          <ColorPicker label="Color de texto base" value={colorTexto} onChange={setColorTexto} />
+          <ColorPicker label="Color de fondo tarjetas" value={colorTarjeta} onChange={setColorTarjeta} />
+          <ColorPicker label="Color de fondo categorías" value={colorCategoria} onChange={setColorCategoria} />
+          <ColorPicker label="Color de texto main" value={colorTexto} onChange={setColorTexto} />
           <ColorPicker label="Color de precios" value={colorPrecio} onChange={setColorPrecio} />
         </div>
       </div>
@@ -169,7 +169,7 @@ export default function AparienciaForm({
           onClick={guardar}
           className="w-full bg-[var(--color-primary)] hover:brightness-105 active:scale-[0.99] text-[var(--color-text-inverse)] py-3.5 rounded-xl font-bold transition shadow-lg sm:shadow-md tracking-wide text-sm sm:text-base"
         >
-          Guardar Cambios Estéticos 🔥
+          Guardar Cambios Estéticos
         </button>
       </div>
 
