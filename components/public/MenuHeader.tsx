@@ -192,7 +192,7 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
                   style={{
                     color: "var(--color-text-header, #ffffff)",
                   }}
-                  className="bg-transparent outline-none w-full text-sm placeholder:text-[var(--color-text-header)] placeholder:opacity-60"
+                  className="bg-transparent outline-none w-full text-base placeholder:text-[var(--color-text-header)] placeholder:opacity-60"
                   autoFocus
                 />
               </form>
