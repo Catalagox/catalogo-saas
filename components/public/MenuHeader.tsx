@@ -76,7 +76,7 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
   // 🚀 FUNCIÓN DE SCROLL MEJORADA
   const irAResultado = (idDestino: string) => {
     const element = document.getElementById(idDestino);
-    
+
     if (element) {
       element.scrollIntoView({
         behavior: "smooth",
@@ -86,9 +86,9 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
       // Si buscas un producto y no tiene ID propio asignado, intenta caer en su categoría padre
       console.warn(`No se encontró el elemento con ID: ${idDestino}`);
     }
-    
+
     setSearchOpen(false);
-    setSearch(""); 
+    setSearch("");
   };
 
   // 🚀 MANEJADOR PARA EL ENTER (SUBMIT DEL FORMULARIO)
@@ -120,12 +120,12 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
               <Menu size={26} className="text-[var(--color-hamburguesa)]" />
             </button>
 
-            <div className="absolute left-1/2 -translate-x-1/2 lg:relative lg:left-0 lg:translate-x-0 flex items-center z-10">
+            <div className="absolute left-1/2 -translate-x-1/2 lg:relative lg:left-0 lg:translate-x-0 flex items-center justify-center h-full z-10">
               {catalogo.logo ? (
                 <img
                   src={catalogo.logo}
                   alt={catalogo.nombre}
-                  className="h-16 w-auto object-contain max-w-[200px] md:max-w-[250px]"
+                  className="h-16 w-auto object-contain max-w-[240px] md:max-w-[300px]"
                 />
               ) : (
                 <h1 className="text-xl font-bold tracking-tight text-[var(--color-text-header,#ffffff)] whitespace-nowrap">
@@ -137,12 +137,13 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
 
           {/* BLOQUE DERECHO (NAVEGACIÓN + ACCIONES) */}
           <div className="flex items-center gap-6 lg:gap-8">
-            <nav className="hidden lg:flex items-center gap-5 lg:gap-8 max-w-[50vw] overflow-x-auto no-scrollbar py-1">
-              {categorias.slice(0, 7).map((cat) => (
+            <nav className="hidden lg:flex items-center gap-5 lg:gap-8 py-1">
+              {categorias.slice(0, 4).map((cat) => (
                 <a
                   key={cat.id}
                   href={`#cat-${cat.id}`}
-                  className="text-sm font-medium uppercase tracking-wider whitespace-nowrap transition-all duration-200 hover:opacity-80 text-[var(--color-text-header,#ffffff)] relative after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-[2px] after:bottom-0 after:left-0 after:bg-[var(--color-text-header,#ffffff)] after:origin-bottom-right after:transition-transform after:duration-200 hover:after:scale-x-100 hover:after:origin-bottom-left"
+                  title={cat.nombre}
+                  className="max-w-[180px] truncate text-sm font-medium uppercase tracking-wider whitespace-nowrap transition-all duration-200 hover:opacity-80 text-[var(--color-text-header,#ffffff)] relative after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-[2px] after:bottom-0 after:left-0 after:bg-[var(--color-text-header,#ffffff)] after:origin-bottom-right after:transition-transform after:duration-200 hover:after:scale-x-100 hover:after:origin-bottom-left"
                 >
                   {cat.nombre}
                 </a>
@@ -155,9 +156,15 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
               aria-label="Buscar"
             >
               {searchOpen ? (
-                <X size={22} style={{ color: catalogo.color_lupa || "#ffffff" }} />
+                <X
+                  size={22}
+                  style={{ color: catalogo.color_lupa || "#ffffff" }}
+                />
               ) : (
-                <Search size={22} style={{ color: catalogo.color_lupa || "#ffffff" }} />
+                <Search
+                  size={22}
+                  style={{ color: catalogo.color_lupa || "#ffffff" }}
+                />
               )}
             </button>
           </div>
