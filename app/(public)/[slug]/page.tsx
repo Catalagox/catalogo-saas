@@ -39,6 +39,9 @@ async function getCatalogo(slug: string) {
       color_tarjeta,
       color_categoria,
       color_lupa,
+      color_fondo_categoria,
+      color_texto_categoria,
+      color_border_categoria,
       whatsapp,
       instagram,
       facebook,
@@ -179,23 +182,31 @@ export default async function MenuPage({
     );
   }
 
-  const catalogo = {
-    ...catalogoDB,
-    logo: catalogoDB.logoUrl,
-    pais_code: catalogoDB.pais_code ?? "PE",
-    color_primario: catalogoDB.color_primario ?? "#f97316",
-    color_fondo: catalogoDB.color_fondo ?? "#ffffff",
-    color_header: catalogoDB.color_header ?? "#1e1f1e",
-    color_text_header: catalogoDB.color_text_header ?? "#ffffff",      
-    color_border_header: catalogoDB.color_border_header ?? "rgba(255,255,255,0.1)", 
-    color_footer: catalogoDB.color_footer ?? "#111827",
-    color_texto: catalogoDB.color_texto ?? "#ffffff",
-    color_precio: catalogoDB.color_precio ?? "#22c55e",
-    color_hamburguesa: catalogoDB.color_hamburguesa ?? "#ffffff",
-    color_tarjeta: catalogoDB.color_tarjeta ?? "#ffffff10",
-    color_categoria: catalogoDB.color_categoria ?? "#ffffff",
-    color_lupa: catalogoDB.color_lupa ?? "#ffffff",
-  };
+ const catalogo = {
+  ...catalogoDB,
+  logo: catalogoDB.logoUrl,
+  pais_code: catalogoDB.pais_code ?? "PE",
+  color_primario: catalogoDB.color_primario ?? "#f97316",
+  color_fondo: catalogoDB.color_fondo ?? "#ffffff",
+  color_header: catalogoDB.color_header ?? "#1e1f1e",
+  color_text_header: catalogoDB.color_text_header ?? "#ffffff",
+  color_border_header: catalogoDB.color_border_header ?? "rgba(255,255,255,0.1)",
+  color_footer: catalogoDB.color_footer ?? "#111827",
+  color_texto: catalogoDB.color_texto ?? "#ffffff",
+  color_precio: catalogoDB.color_precio ?? "#22c55e",
+  color_hamburguesa: catalogoDB.color_hamburguesa ?? "#ffffff",
+  color_tarjeta: catalogoDB.color_tarjeta ?? "#ffffff10",
+  color_categoria: catalogoDB.color_categoria ?? "#ffffff",
+  color_lupa: catalogoDB.color_lupa ?? "#ffffff",
+
+  // ✅ Nuevos colores
+  color_fondo_categoria:
+    catalogoDB.color_fondo_categoria ?? "#ffffff",
+  color_texto_categoria:
+    catalogoDB.color_texto_categoria ?? "#111827",
+  color_border_categoria:
+    catalogoDB.color_border_categoria ?? "#e5e7eb",
+};
 
   // 🔥 TRACKING ESTADÍSTICAS
   try {

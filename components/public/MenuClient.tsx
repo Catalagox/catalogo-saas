@@ -48,6 +48,10 @@ interface Catalogo {
   color_tarjeta?: string;
   color_categoria?: string;
   color_lupa?: string;
+  color_fondo_categoria?: string;
+  color_texto_categoria?: string;
+  color_border_categoria?: string;
+  
 
   // 📱 CONTACTO
   whatsapp?: string;
@@ -110,6 +114,9 @@ export default function MenuClient({ catalogo, categorias, countryCode }: MenuCl
   const colorCategoria = catalogo.color_categoria ?? "#eae9e9";
   const colorPrimario = catalogo.color_primario ?? "#f97316";
   const colorLupa = catalogo.color_lupa ?? "#ffffff";
+  const colorFondoCategoria = catalogo.color_fondo_categoria ?? "#ffffff";
+  const colorTextoCategoria = catalogo.color_texto_categoria ?? "#111827";
+  const colorBorderCategoria = catalogo.color_border_categoria ?? "#e5e7eb";
 
   const theme = {
     "--color-bg": colorFondo,
@@ -124,6 +131,10 @@ export default function MenuClient({ catalogo, categorias, countryCode }: MenuCl
     "--color-categoria": colorCategoria,
     "--color-primary": colorPrimario,
     "--color-lupa": colorLupa,
+"--color-fondo-categoria": colorFondoCategoria,
+"--color-texto-categoria": colorTextoCategoria,
+"--color-border-categoria": colorBorderCategoria,
+
   } as React.CSSProperties;
 
   const trackCategoria = async (categoriaId: string) => {
@@ -188,7 +199,8 @@ export default function MenuClient({ catalogo, categorias, countryCode }: MenuCl
 
       let current: string | null = null;
       safeCategorias.forEach((categoria) => {
-        const element = document.getElementById(`categoria-${categoria.id}`);
+        // 🚀 CORRECCIÓN AQUÍ: Cambiado 'categoria-' por 'cat-' para que coincida con tus secciones
+        const element = document.getElementById(`cat-${categoria.id}`);
         if (element) {
           const rect = element.getBoundingClientRect();
           const offsetCheck = showCategories ? 160 : 90;
@@ -237,9 +249,8 @@ export default function MenuClient({ catalogo, categorias, countryCode }: MenuCl
                       setCategoriaActiva(categoria.id);
                       trackCategoria(categoria.id);
 
-                      const element = document.getElementById(
-                        `categoria-${categoria.id}`,
-                      );
+                      // 🚀 CORRECCIÓN AQUÍ TAMBIÉN: Cambiado 'categoria-' por 'cat-'
+                      const element = document.getElementById(`cat-${categoria.id}`);
 
                       if (element) {
                         const yOffset = showCategories ? -150 : -90;
@@ -264,19 +275,30 @@ export default function MenuClient({ catalogo, categorias, countryCode }: MenuCl
       )}
 
       {/* 🛍️ MAIN */}
-      <main className="max-w-7xl mx-auto w-full px-0 sm:px-6 lg:px-8 pt-8 pb-0 mb-0 flex-grow">
-        {viewMode === "lista" ? (
-          /* 🚀 ACTUALIZADO: Pasamos el countryCode a la lista de productos */
-          <MenuLista categorias={safeCategorias} countryCode={userCountry} />
-        ) : catalogo.slug ? (
-          /* 🚀 ACTUALIZADO: Pasamos el countryCode a la galería de productos */
-          <MenuGaleria categorias={safeCategorias} slug={catalogo.slug} countryCode={userCountry} />
-        ) : (
-          <div className="text-center text-red-400 py-10">
-            Error: slug no disponible
-          </div>
-        )}
-      </main>
+<main className="max-w-7xl mx-auto w-full px-0 sm:px-6 lg:px-8 pt-8 pb-0 mb-0 flex-grow">
+  {viewMode === "lista" ? (
+    <MenuLista
+      categorias={safeCategorias}
+      countryCode={userCountry}
+      colorFondoCategoria={colorFondoCategoria}
+      colorTextoCategoria={colorTextoCategoria}
+      colorBorderCategoria={colorBorderCategoria}
+    />
+) : catalogo.slug ? (
+    <MenuGaleria
+      categorias={safeCategorias}
+      slug={catalogo.slug}
+      countryCode={userCountry}
+      colorFondoCategoria={colorFondoCategoria}
+      colorTextoCategoria={colorTextoCategoria}
+      colorBorderCategoria={colorBorderCategoria}
+    />
+  ) : (
+    <div className="text-center text-red-400 py-10">
+      Error: slug no disponible
+    </div>
+  )}
+</main>
 
       {/* FOOTER */}
       <MenuFooter

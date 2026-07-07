@@ -23,8 +23,11 @@ export default function AparienciaPage() {
   const [colorPrecio, setColorPrecio] = useState("#22c55e");
   const [colorHamburguesa, setColorHamburguesa] = useState("#ffffff");
   const [colorTarjeta, setColorTarjeta] = useState("#ffffff10");
-  const [colorCategoria, setColorCategoria] = useState("#ffffff");
+
   const [colorLupa, setColorLupa] = useState("#ffffff");
+  const [colorFondoCategoria, setColorFondoCategoria] = useState("#ffffff");
+  const [colorTextoCategoria, setColorTextoCategoria] = useState("#111827");
+  const [colorBorderCategoria, setColorBorderCategoria] = useState("#e5e7eb");
 
   useEffect(() => {
     cargarDatos();
@@ -64,8 +67,11 @@ export default function AparienciaPage() {
         setColorPrecio(data.color_precio || "#22c55e");
         setColorHamburguesa(data.color_hamburguesa || "#ffffff");
         setColorTarjeta(data.color_tarjeta || "#ffffff10");
-        setColorCategoria(data.color_categoria || "#ffffff");
+        
         setColorLupa(data.color_lupa || "#ffffff");
+        setColorFondoCategoria(data.color_fondo_categoria || "#ffffff");
+        setColorTextoCategoria(data.color_texto_categoria || "#111827");
+        setColorBorderCategoria(data.color_border_categoria || "#e5e7eb");
 
         await cargarMenu(data.id);
       }
@@ -122,8 +128,11 @@ export default function AparienciaPage() {
         color_precio: colorPrecio,
         color_hamburguesa: colorHamburguesa,
         color_tarjeta: colorTarjeta,
-        color_categoria: colorCategoria,
+        
         color_lupa: colorLupa,
+        color_fondo_categoria: colorFondoCategoria,
+        color_texto_categoria: colorTextoCategoria,
+        color_border_categoria: colorBorderCategoria,
       })
       .eq("id", catalogoId);
 
@@ -173,10 +182,17 @@ export default function AparienciaPage() {
           setColorHamburguesa={setColorHamburguesa}
           colorTarjeta={colorTarjeta}
           setColorTarjeta={setColorTarjeta}
-          colorCategoria={colorCategoria}
-          setColorCategoria={setColorCategoria}
+          
           colorLupa={colorLupa}
           setColorLupa={setColorLupa}
+          colorFondoCategoria={colorFondoCategoria}
+          setColorFondoCategoria={setColorFondoCategoria}
+
+          colorTextoCategoria={colorTextoCategoria}
+          setColorTextoCategoria={setColorTextoCategoria}
+
+          colorBorderCategoria={colorBorderCategoria}
+          setColorBorderCategoria={setColorBorderCategoria}
           guardar={guardar}
         />
       </div>
@@ -197,8 +213,11 @@ export default function AparienciaPage() {
             colorPrecio={colorPrecio}
             colorHamburguesa={colorHamburguesa}
             colorTarjeta={colorTarjeta}
-            colorCategoria={colorCategoria}
+            
             colorLupa={colorLupa}
+            colorFondoCategoria={colorFondoCategoria}
+            colorTextoCategoria={colorTextoCategoria}
+            colorBorderCategoria={colorBorderCategoria}
           />
         </div>
       </div>

@@ -25,15 +25,17 @@ interface Props {
 
   // 🎨 COLORES
   colorHeader: string;
-  colorTextHeader?: string;     // 🔥 NUEVO
-  colorBorderHeader?: string;   // 🔥 NUEVO
+  colorTextHeader?: string;
+  colorBorderHeader?: string;
   colorFooter: string;
   colorTexto: string;
   colorPrecio: string;
   colorHamburguesa: string;
   colorTarjeta: string;
-  colorCategoria: string;
   colorLupa: string;
+  colorFondoCategoria: string;
+  colorTextoCategoria: string;
+  colorBorderCategoria: string;
 }
 
 export default function PhonePreview({
@@ -43,15 +45,17 @@ export default function PhonePreview({
   logo,
   categorias,
   colorHeader,
-  colorTextHeader = "#ffffff",     // 🔥 Valor por defecto si llega undefined
-  colorBorderHeader = "#ffffff10", // 🔥 Valor por defecto si llega undefined
+  colorTextHeader = "#ffffff",
+  colorBorderHeader = "#ffffff10",
   colorFooter,
   colorTexto,
   colorPrecio,
   colorHamburguesa,
   colorTarjeta,
-  colorCategoria,
   colorLupa,
+  colorFondoCategoria,
+  colorTextoCategoria,
+  colorBorderCategoria,
 }: Props) {
   return (
     <div
@@ -77,7 +81,7 @@ export default function PhonePreview({
       <div
         style={{ 
           backgroundColor: colorHeader,
-          borderColor: colorBorderHeader // 🔥 Usando el color de borde dinámico
+          borderColor: colorBorderHeader
         }}
         className="
           px-4
@@ -108,12 +112,13 @@ export default function PhonePreview({
                     border
                     border-white/20
                   "
+                  alt="Logo"
                 />
               )}
 
               <div>
                 <p
-                  style={{ color: colorTextHeader }} // 🔥 Usando el color de texto del header dinámico
+                  style={{ color: colorTextHeader }}
                   className="
                     text-sm
                     font-bold
@@ -130,7 +135,7 @@ export default function PhonePreview({
                     mt-1
                   "
                   style={{
-                    color: colorTextHeader, // 🔥 Usando el color de texto del header dinámico
+                    color: colorTextHeader,
                   }}
                 >
                   Menú digital
@@ -178,17 +183,16 @@ export default function PhonePreview({
             "
             style={{
               borderColor: `${colorLupa}25`,
-              color: colorTextHeader, // 🔥 Combinando texto del buscador con el header
+              color: colorTextHeader,
               backgroundColor: "rgba(255,255,255,0.06)",
             }}
           >
             <Search size={14} className="mr-2 opacity-70" />
-
             <span className="opacity-70">Buscar productos...</span>
           </div>
         </div>
 
-        {/* 🔥 CATEGORÍAS HORIZONTALES */}
+        {/* 🔥 CATEGORÍAS HORIZONTALES (Pestañas superiores) */}
         <div
           className="
             mt-4
@@ -212,16 +216,15 @@ export default function PhonePreview({
                 border
                 shadow-sm
                 flex-shrink-0
-
                 ${index === 0 ? "" : "bg-white/5"}
               `}
               style={{
                 backgroundColor:
-                  index === 0 ? colorCategoria : "rgba(255,255,255,0.05)",
-
-                borderColor: `${colorCategoria}30`,
-
-                color: index === 0 ? "#000" : colorCategoria,
+                  index === 0
+                    ? colorFondoCategoria
+                    : "rgba(255,255,255,0.05)",
+                borderColor: colorBorderCategoria,
+                color: colorTextoCategoria,
               }}
             >
               {cat.nombre}
@@ -242,18 +245,18 @@ export default function PhonePreview({
       >
         {categorias.map((cat) => (
           <div key={cat.id}>
-            {/* 🏷️ HEADER CATEGORÍA */}
+            {/* 🏷️ HEADER CATEGORÍA (Encabezado dentro del menú body) */}
             <div className="flex items-center gap-3 mb-3">
               <div
                 className="w-2 h-2 rounded-full"
                 style={{
-                  backgroundColor: colorCategoria,
+                  backgroundColor: colorTextoCategoria,
                 }}
               />
 
               <h2
                 style={{
-                  color: colorCategoria,
+                  color: colorTextoCategoria,
                 }}
                 className="
                   font-bold
@@ -268,7 +271,7 @@ export default function PhonePreview({
               <div
                 className="flex-1 h-[1px]"
                 style={{
-                  backgroundColor: `${colorCategoria}30`,
+                  backgroundColor: colorBorderCategoria,
                 }}
               />
             </div>
@@ -301,6 +304,7 @@ export default function PhonePreview({
                           rounded-xl
                           object-cover
                         "
+                        alt={p.nombre}
                       />
                     )}
 
@@ -379,6 +383,7 @@ export default function PhonePreview({
                           rounded-xl
                           mb-2
                         "
+                        alt={p.nombre}
                       />
                     )}
 
@@ -428,7 +433,7 @@ export default function PhonePreview({
           border-white/10
         "
       >
-        <p style={{ color: colorTexto }}>© {nombre || "Mi Restaurante"}</p>
+        <p style={{ color: colorTexto }}>© {nombre || "Mi Catalógo"}</p>
       </div>
     </div>
   );

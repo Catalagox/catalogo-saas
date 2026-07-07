@@ -40,11 +40,19 @@ interface Props {
   colorTarjeta: string;
   setColorTarjeta: (v: string) => void;
 
-  colorCategoria: string;
-  setColorCategoria: (v: string) => void;
+ 
 
   colorLupa: string;
   setColorLupa: (v: string) => void;
+
+  colorFondoCategoria: string;
+  setColorFondoCategoria: (v: string) => void;
+
+  colorTextoCategoria: string;
+  setColorTextoCategoria: (v: string) => void;
+
+  colorBorderCategoria: string;
+  setColorBorderCategoria: (v: string) => void;
 
   guardar: () => void;
 }
@@ -74,10 +82,18 @@ export default function AparienciaForm({
   setColorHamburguesa,
   colorTarjeta,
   setColorTarjeta,
-  colorCategoria,
-  setColorCategoria,
+  
   colorLupa,
   setColorLupa,
+
+  colorFondoCategoria,
+setColorFondoCategoria,
+
+colorTextoCategoria,
+setColorTextoCategoria,
+
+colorBorderCategoria,
+setColorBorderCategoria,
   guardar,
 }: Props) {
   return (
@@ -141,12 +157,31 @@ export default function AparienciaForm({
           </h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+<ColorPicker
+  label="Color de fondo categorías"
+  value={colorFondoCategoria}
+  onChange={setColorFondoCategoria}
+/>
+
+<ColorPicker
+  label="Color de texto categorías"
+  value={colorTextoCategoria}
+  onChange={setColorTextoCategoria}
+/>
+
+<ColorPicker
+  label="Color del borde categorías"
+  value={colorBorderCategoria}
+  onChange={setColorBorderCategoria}
+/>
           <ColorPicker label="Color de fondo main" value={colorFondo} onChange={setColorFondo} />
           <ColorPicker label="Color principal (Botones)" value={colorPrimario} onChange={setColorPrimario} />
           <ColorPicker label="Color de fondo tarjetas" value={colorTarjeta} onChange={setColorTarjeta} />
-          <ColorPicker label="Color de fondo categorías" value={colorCategoria} onChange={setColorCategoria} />
+      
           <ColorPicker label="Color de texto main" value={colorTexto} onChange={setColorTexto} />
           <ColorPicker label="Color de precios" value={colorPrecio} onChange={setColorPrecio} />
+          
         </div>
       </div>
 

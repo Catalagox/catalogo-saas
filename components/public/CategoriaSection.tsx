@@ -20,10 +20,19 @@ interface Categoria {
 
 interface Props {
   categoria: Categoria;
-  countryCode?: string; // 👈 NUEVO: Recibimos el código de país
+  countryCode?: string; 
+  colorFondoCategoria?: string;  // 👈 Añadir
+  colorTextoCategoria?: string;  // 👈 Añadir
+  colorBorderCategoria?: string; // 👈 Añadir
 }
 
-export default function CategoriaSection({ categoria, countryCode = "PE" }: Props) {
+export default function CategoriaSection({ 
+  categoria, 
+  countryCode = "PE",
+  colorFondoCategoria,  // 👈 Añadir
+  colorTextoCategoria,  // 👈 Añadir
+  colorBorderCategoria, // 👈 Añadir
+}: Props) {
 
   // 🛡️ Seguridad
   const productosValidos =
@@ -36,30 +45,6 @@ export default function CategoriaSection({ categoria, countryCode = "PE" }: Prop
   return (
     /* 🚀 SE QUITA EL ID DE AQUÍ porque ya lo maneja el contenedor padre 'MenuLista' */
     <section className="py-6">
-
-      {/* 🏷️ HEADER CATEGORÍA */}
-      <div className="flex items-center gap-4 mb-6">
-
-        <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-[var(--color-card)]">
-
-          {/* 🔥 PUNTO */}
-          <span className="w-2 h-2 rounded-full bg-[var(--color-categoria)]" />
-
-          {/* NOMBRE */}
-          <h2 className="text-lg font-bold uppercase text-[var(--color-categoria)]">
-            {categoria.nombre}
-          </h2>
-
-          {/* CANTIDAD */}
-          <span className="text-xs px-2 py-1 rounded-full bg-[var(--color-categoria)]/20 text-[var(--color-categoria)]">
-            {productosValidos.length}
-          </span>
-        </div>
-
-        {/* LINEA */}
-        <div className="flex-1 h-[1px] bg-[var(--color-categoria)]/30" />
-
-      </div>
 
       {/* 📦 PRODUCTOS */}
       <div className="grid grid-cols-1 gap-4">

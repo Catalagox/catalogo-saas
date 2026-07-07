@@ -1,13 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import Price from "@/components/ui/Price"; // 🚀 Importación del componente de precios
+import Price from "@/components/ui/Price"; 
+import HeaderCategoria from "@/components/public/HeaderCategoria"; // 🚀 Importamos el nuevo encabezado
 
 interface Producto {
   id: string;
   nombre: string;
+  descripcion?: string;
   precio: number;
   imagen_url?: string;
+  disponible?: boolean;
   slug: string;
 }
 
@@ -20,10 +23,21 @@ interface Categoria {
 interface MenuGaleriaProps {
   categorias: Categoria[];
   slug: string;
-  countryCode?: string; // 👈 NUEVO: Recibimos el código de país
+  countryCode?: string;
+  colorFondoCategoria?: string;
+  colorTextoCategoria?: string;
+  colorBorderCategoria?: string;
 }
 
-export default function MenuGaleria({ categorias, slug, countryCode = "PE" }: MenuGaleriaProps) {
+export default function MenuGaleria({
+  categorias,
+  slug,
+  countryCode = "PE",
+  colorFondoCategoria = "#ffffff",
+  colorTextoCategoria = "#111827",
+  colorBorderCategoria = "#e5e7eb",
+}: MenuGaleriaProps) {
+  
   if (!categorias || categorias.length === 0) {
     return (
       <div className="text-center py-20 border border-dashed rounded-xl border-white/10 bg-white/[0.02] backdrop-blur-sm">
@@ -46,28 +60,18 @@ export default function MenuGaleria({ categorias, slug, countryCode = "PE" }: Me
         return (
           <section
             key={cat.id}
-            /* 🚀 CORREGIDO: cambiado de 'categoria-${cat.id}' a 'cat-${cat.id}' para coincidir con el buscador */
             id={`cat-${cat.id}`}
             className="scroll-mt-24 overflow-x-hidden"
           >
-            {/* HEADER */}
-            <div className="flex items-center gap-4 mb-6 px-1 md:px-0">
-              <div className="flex items-center gap-3 px-4 py-2 rounded-full border border-white/10 bg-[var(--color-card)] backdrop-blur-md shadow-sm">
-                <span className="w-2 h-2 rounded-full bg-[var(--color-primary)] shadow-[0_0_10px_var(--color-primary)]" />
+            {/* 🚀 CORRECCIÓN: Nombres de propiedades ajustados a la interfaz de HeaderCategoria */}
+            <HeaderCategoria
+              nombre={cat.nombre}
+              totalProductos={productosValidos.length}
+              colorFondoCategoria={colorFondoCategoria}
+              colorTextoCategoria={colorTextoCategoria}
+              colorBorderCategoria={colorBorderCategoria}
+            />
 
-                <h2 className="text-xs font-black uppercase tracking-wider text-[var(--color-categoria)]">
-                  {cat.nombre}
-                </h2>
-
-                <span className="text-[10px] px-2 py-0.5 rounded-full font-black bg-[var(--color-primary)]/15 text-[var(--color-primary)]">
-                  {productosValidos.length}
-                </span>
-              </div>
-
-              <div className="flex-1 h-px bg-gradient-to-r from-[var(--color-primary)]/30 to-transparent" />
-            </div>
-
-            {/* GRID */}
             <div
               className="
                 grid
@@ -86,10 +90,8 @@ export default function MenuGaleria({ categorias, slug, countryCode = "PE" }: Me
               {productosValidos.map((p) => (
                 <Link
                   key={p.id}
-                  
                   id={`prod-${p.id}`}
                   href={`/${slug}/${p.slug}`}
-               
                   className="
                     group
                     flex
@@ -116,9 +118,7 @@ export default function MenuGaleria({ categorias, slug, countryCode = "PE" }: Me
                           src={p.imagen_url}
                           alt={p.nombre}
                           loading="lazy"
-                        
                           decoding="async"
-                          
                           className="
                             absolute
                             inset-0
@@ -128,6 +128,7 @@ export default function MenuGaleria({ categorias, slug, countryCode = "PE" }: Me
                             transition-transform
                             duration-500
                             md:group-hover:scale-105
+                            bg-[var(--color-card)]
                           "
                         />
                       ) : (
@@ -138,9 +139,7 @@ export default function MenuGaleria({ categorias, slug, countryCode = "PE" }: Me
                     </div>
                   </div>
 
-                  {/* INFO */}
                   <div className="p-3.5 pt-2 flex flex-col flex-1 bg-[var(--color-bg)]/20">
-                    {/* 🔧 OPTIMIZACIÓN IPHONE: Cambiado a md:group-hover para evitar el cambio permanente de color en pantallas táctiles */}
                     <h3
                       className="
                         text-xs
@@ -149,8 +148,7 @@ export default function MenuGaleria({ categorias, slug, countryCode = "PE" }: Me
                         leading-snug
                         line-clamp-2
                         min-h-[2.7rem]
-                        text-[var(--color-text)]/90
-                        md:group-hover:text-[var(--color-primary)]
+                        text-[var(--color-text)]
                         transition-colors
                         duration-200
                       "
@@ -160,7 +158,6 @@ export default function MenuGaleria({ categorias, slug, countryCode = "PE" }: Me
 
                     <div className="mt-auto pt-2">
                       <div className="text-sm sm:text-base font-bold tracking-tight text-[var(--color-price)]">
-                        {/* 🚀 Reemplazado por el componente Price */}
                         <Price amount={p.precio} countryCode={countryCode} />
                       </div>
                     </div>
