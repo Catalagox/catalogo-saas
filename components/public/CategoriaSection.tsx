@@ -2,7 +2,6 @@
 
 import ProductoCard from "@/components/public/ProductoCard";
 
-// 🔥 Tipado real (NO any)
 interface Producto {
   id: string;
   nombre: string;
@@ -34,7 +33,6 @@ export default function CategoriaSection({
   colorBorderCategoria, // 👈 Añadir
 }: Props) {
 
-  // 🛡️ Seguridad
   const productosValidos =
     (categoria.productos ?? []).filter(
       (p) => p && p.id && p.nombre
@@ -43,19 +41,15 @@ export default function CategoriaSection({
   if (productosValidos.length === 0) return null;
 
   return (
-    /* 🚀 SE QUITA EL ID DE AQUÍ porque ya lo maneja el contenedor padre 'MenuLista' */
     <section className="py-6">
 
-      {/* 📦 PRODUCTOS */}
       <div className="grid grid-cols-1 gap-4">
         {productosValidos.map((producto) => (
-          /* 🚀 SOLUCIÓN: Envolvemos cada tarjeta en un div con el ID esperado por el buscador y scroll-mt */
           <div 
             key={producto.id} 
             id={`prod-${producto.id}`} 
             className="scroll-mt-24"
           >
-            {/* 🚀 Pasamos el countryCode directamente a la tarjeta final */}
             <ProductoCard
               producto={producto}
               countryCode={countryCode}

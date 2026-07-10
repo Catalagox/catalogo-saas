@@ -6,8 +6,9 @@ import MenuHeader from "@/components/public/MenuHeader";
 import MenuFooter from "@/components/public/MenuFooter";
 import MenuLista from "@/components/public/MenuLista";
 import MenuGaleria from "@/components/public/MenuGaleria";
-import { useCart } from "@/context/CartContext"; 
-import Price from "@/components/ui/Price"; // 🚀 Importación del componente de precios
+import CategoriasSlider from "@/components/public/CategoriasSlider";
+import { useCart } from "@/context/CartContext";
+import Price from "@/components/ui/Price";
 
 // TIPOS
 interface Producto {
@@ -33,14 +34,14 @@ interface Catalogo {
   user_id: string;
   estilo_menu?: "lista" | "galeria";
   slug?: string;
-  pais_code?: string; // 👈 NUEVO: Añadido a la interfaz
+  pais_code?: string;
 
-  // 🎨 COLORES
+  // COLORES
   color_primario?: string;
   color_fondo?: string;
   color_header?: string;
-  color_text_header?: string;   
-  color_border_header?: string; 
+  color_text_header?: string;
+  color_border_header?: string;
   color_footer?: string;
   color_texto?: string;
   color_precio?: string;
@@ -51,12 +52,11 @@ interface Catalogo {
   color_fondo_categoria?: string;
   color_texto_categoria?: string;
   color_border_categoria?: string;
-  
 
-  // 📱 CONTACTO
+  // CONTACTO
   whatsapp?: string;
 
-  // 🌎 REDES
+  // REDES
   instagram?: string;
   facebook?: string;
   tiktok?: string;
@@ -66,25 +66,31 @@ interface Catalogo {
 interface MenuClientProps {
   catalogo: Catalogo | null;
   categorias: Categoria[];
-  countryCode?: string; // 🚀 CORRECCIÓN: Evita el error de tipado en el componente de servidor
+  countryCode?: string;
 }
 
-export default function MenuClient({ catalogo, categorias, countryCode }: MenuClientProps) {
-  const [categoriaActiva, setCategoriaActiva] = useState<string | null>(null);
-  
-  // 🔥 ESTADOS PARA EL EFECTO AUTOMÁTICO TIPO MERCADO LIBRE
-  const [showCategories, setShowCategories] = useState(true);
-  const lastScrollY = useRef(0);
-
+export default function MenuClient({
+  catalogo,
+  categorias,
+  countryCode,
+}: MenuClientProps) {
   // Evitar tracking duplicado
   const categoriasVisitadas = useRef<Set<string>>(new Set());
 
-  // 🛍️ EXTRAEMOS LAS FUNCIONES INCLUYENDO CLEARCART
-  const { items, increaseQuantity, decreaseQuantity, total, cantidadTotal, clearCart } = useCart();
+  // Carrito
+  const {
+    items,
+    increaseQuantity,
+    decreaseQuantity,
+    total,
+    cantidadTotal,
+    clearCart,
+  } = useCart();
+
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
-  // EVITAR ERRORES DE HIDRATACIÓN CON LOCALSTORAGE
+  // Evitar errores de hidratacion con localStorage
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -92,20 +98,20 @@ export default function MenuClient({ catalogo, categorias, countryCode }: MenuCl
   if (!catalogo) {
     return (
       <div className="flex items-center justify-center min-h-screen text-gray-400">
-        Cargando menú...
+        Cargando menu...
       </div>
     );
   }
 
   const safeCategorias = categorias ?? [];
   const viewMode = catalogo.estilo_menu ?? "lista";
-  // 🚀 Priorizamos el countryCode externo si viene del servidor, sino tomamos el de la base de datos o el fallback
-  const userCountry = countryCode ?? catalogo.pais_code ?? "PE"; 
+  const userCountry = countryCode ?? catalogo.pais_code ?? "PE";
 
   const colorFondo = catalogo.color_fondo ?? "#fefefe";
   const colorHeader = catalogo.color_header ?? "#2c2c2c";
-  const colorTextHeader = catalogo.color_text_header ?? "#ffffff";       
-  const colorBorderHeader = catalogo.color_border_header ?? "rgba(255,255,255,0.1)"; 
+  const colorTextHeader = catalogo.color_text_header ?? "#ffffff";
+  const colorBorderHeader =
+    catalogo.color_border_header ?? "rgba(255,255,255,0.1)";
   const colorFooter = catalogo.color_footer ?? "#111827";
   const colorTexto = catalogo.color_texto ?? "#4f4d4d";
   const colorPrecio = catalogo.color_precio ?? "#22c55e";
@@ -115,14 +121,14 @@ export default function MenuClient({ catalogo, categorias, countryCode }: MenuCl
   const colorPrimario = catalogo.color_primario ?? "#f97316";
   const colorLupa = catalogo.color_lupa ?? "#ffffff";
   const colorFondoCategoria = catalogo.color_fondo_categoria ?? "#ffffff";
-  const colorTextoCategoria = catalogo.color_texto_categoria ?? "#111827";
+  const colorTextoCategoria = catalogo.color_texto_categoria ?? "#df0c0c";
   const colorBorderCategoria = catalogo.color_border_categoria ?? "#e5e7eb";
 
   const theme = {
     "--color-bg": colorFondo,
     "--color-header": colorHeader,
-    "--color-text-header": colorTextHeader,      
-    "--color-border-header": colorBorderHeader,   
+    "--color-text-header": colorTextHeader,
+    "--color-border-header": colorBorderHeader,
     "--color-footer": colorFooter,
     "--color-text": colorTexto,
     "--color-price": colorPrecio,
@@ -131,10 +137,9 @@ export default function MenuClient({ catalogo, categorias, countryCode }: MenuCl
     "--color-categoria": colorCategoria,
     "--color-primary": colorPrimario,
     "--color-lupa": colorLupa,
-"--color-fondo-categoria": colorFondoCategoria,
-"--color-texto-categoria": colorTextoCategoria,
-"--color-border-categoria": colorBorderCategoria,
-
+    "--color-fondo-categoria": colorFondoCategoria,
+    "--color-texto-categoria": colorTextoCategoria,
+    "--color-border-categoria": colorBorderCategoria,
   } as React.CSSProperties;
 
   const trackCategoria = async (categoriaId: string) => {
@@ -151,74 +156,40 @@ export default function MenuClient({ catalogo, categorias, countryCode }: MenuCl
     }
   };
 
-  // 🛠️ Función auxiliar para dar formato de texto con la moneda correcta en el mensaje de WhatsApp
   const formatPriceWithCurrency = (amount: number) => {
     if (userCountry === "PE") return `S/. ${amount.toLocaleString()}`;
     if (userCountry === "CL") return `$CLP ${amount.toLocaleString()}`;
     if (userCountry === "CO") return `$COP ${amount.toLocaleString()}`;
     if (userCountry === "MX") return `$MXN ${amount.toLocaleString()}`;
     if (userCountry === "AR") return `$ARS ${amount.toLocaleString()}`;
-    return `$${amount.toLocaleString()}`; // Fallback general
+    return `$${amount.toLocaleString()}`;
   };
 
-  // 🔥 FUNCIÓN ACTUALIZADA: ENVÍA EL PEDIDO, LIMPIA EL CARRITO Y CIERRA EL INTERFAZ
   const enviarPedidoWhatsApp = () => {
     if (items.length === 0 || !catalogo.whatsapp) return;
 
-    let mensaje = `*¡Hola! Me gustaría realizar el siguiente pedido en ${catalogo.nombre}:*\n\n`;
-    
+    let mensaje = `*Hola! Me gustaria realizar el siguiente pedido en ${catalogo.nombre}:*\n\n`;
+
     items.forEach((item) => {
       const subtotal = item.precio * item.cantidad;
-      mensaje += `• ${item.cantidad}x *${item.nombre}* - ${formatPriceWithCurrency(item.precio)} (Subtotal: ${formatPriceWithCurrency(subtotal)})\n`;
+      mensaje += `- ${item.cantidad}x *${item.nombre}* - ${formatPriceWithCurrency(
+        item.precio
+      )} (Subtotal: ${formatPriceWithCurrency(subtotal)})\n`;
     });
 
     mensaje += `\n*Total a pagar: ${formatPriceWithCurrency(total)}*`;
-    mensaje += `\n\n_Pedido enviado desde el catálogo web._`;
+    mensaje += `\n\n_Pedido enviado desde el catalogo web._`;
 
     const numeroFormateado = catalogo.whatsapp.replace(/[^0-9]/g, "");
-    const whatsappUrl = `https://wa.me/${numeroFormateado}?text=${encodeURIComponent(mensaje)}`;
+    const whatsappUrl = `https://wa.me/${numeroFormateado}?text=${encodeURIComponent(
+      mensaje
+    )}`;
 
     window.open(whatsappUrl, "_blank");
 
-    // ✨ Acción de reinicio post-compra
     clearCart();
     setIsCartOpen(false);
   };
-
-  // DETECTAR SCROLL: CAMBIO DE CATEGORÍA ACTIVA + EFECTO OCULTAR/MOSTRAR
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-
-      if (currentScrollY > lastScrollY.current && currentScrollY > 150) {
-        setShowCategories(false);
-      } else {
-        setShowCategories(true);
-      }
-      lastScrollY.current = currentScrollY;
-
-      let current: string | null = null;
-      safeCategorias.forEach((categoria) => {
-        // 🚀 CORRECCIÓN AQUÍ: Cambiado 'categoria-' por 'cat-' para que coincida con tus secciones
-        const element = document.getElementById(`cat-${categoria.id}`);
-        if (element) {
-          const rect = element.getBoundingClientRect();
-          const offsetCheck = showCategories ? 160 : 90;
-          if (rect.top <= offsetCheck && rect.bottom >= offsetCheck) {
-            current = categoria.id;
-          }
-        }
-      });
-
-      if (current && current !== categoriaActiva) {
-        setCategoriaActiva(current);
-        trackCategoria(current);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [safeCategorias, categoriaActiva, showCategories]);
 
   return (
     <div
@@ -228,77 +199,43 @@ export default function MenuClient({ catalogo, categorias, countryCode }: MenuCl
       {/* HEADER PRINCIPAL */}
       <MenuHeader catalogo={catalogo} categorias={safeCategorias} />
 
-      {/* SUB-BARRA DE CATEGORÍAS */}
-      {safeCategorias.length > 0 && (
-        <div
-          className={`sticky z-40 w-full border-b border-white/10 bg-[var(--color-bg)] transition-all duration-300 ease-in-out ${
-            showCategories 
-              ? "top-20 opacity-100 translate-y-0" 
-              : "top-0 md:top-20 opacity-0 -translate-y-full pointer-events-none"
-          }`}
-        >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="overflow-x-auto whitespace-nowrap py-3 flex gap-3 scrollbar-hide">
-              {safeCategorias.map((categoria) => {
-                const isActive = categoriaActiva === categoria.id;
+      {/* SUB-BARRA DE CATEGORIAS */}
+<CategoriasSlider
+  categorias={safeCategorias}
+  onTrackCategoria={trackCategoria}
+  colorFondoCategoria={colorFondoCategoria}
+  colorTextoCategoria={colorTextoCategoria}
+  colorBorderCategoria={colorBorderCategoria}
+  colorHeader={colorHeader}
+  colorTextHeader={colorTextHeader}
+  colorBorderHeader={colorBorderHeader}
+/>
 
-                return (
-                  <button
-                    key={categoria.id}
-                    onClick={() => {
-                      setCategoriaActiva(categoria.id);
-                      trackCategoria(categoria.id);
-
-                      // 🚀 CORRECCIÓN AQUÍ TAMBIÉN: Cambiado 'categoria-' por 'cat-'
-                      const element = document.getElementById(`cat-${categoria.id}`);
-
-                      if (element) {
-                        const yOffset = showCategories ? -150 : -90;
-                        const y = element.getBoundingClientRect().top + window.scrollY + yOffset;
-                        window.scrollTo({ top: y, behavior: "smooth" });
-                      }
-                    }}
-                    
-                    className={`px-5 py-2.5 rounded-2xl text-sm font-bold tracking-wide transition-all duration-300 border flex-shrink-0 shadow-sm outline-none touch-manipulation ${
-                      isActive
-                        ? `bg-[var(--color-primary)] text-white border-[var(--color-primary)] scale-105 shadow-lg`
-                        : `bg-[var(--color-card)] md:hover:bg-white/10 active:bg-white/10 text-[var(--color-categoria)] border-[var(--color-categoria)]/20`
-                    }`}
-                  >
-                    {categoria.nombre}
-                  </button>
-                );
-              })}
-            </div>
+      {/* MAIN */}
+      <main className="max-w-7xl mx-auto w-full px-0 sm:px-6 lg:px-8 pt-8 pb-0 mb-0 flex-grow">
+        {viewMode === "lista" ? (
+          <MenuLista
+            categorias={safeCategorias}
+            countryCode={userCountry}
+            colorFondoCategoria={colorFondoCategoria}
+            colorTextoCategoria={colorTextoCategoria}
+            colorBorderCategoria={colorBorderCategoria}
+          />
+        ) : catalogo.slug ? (
+          <MenuGaleria
+            categorias={safeCategorias}
+            slug={catalogo.slug}
+            countryCode={userCountry}
+            colorFondoCategoria={colorFondoCategoria}
+            colorTextoCategoria={colorTextoCategoria}
+            colorBorderCategoria={colorBorderCategoria}
+          />
+        ) : (
+          <div className="text-center text-red-400 py-10">
+            Error: slug no disponible
           </div>
-        </div>
-      )}
-
-      {/* 🛍️ MAIN */}
-<main className="max-w-7xl mx-auto w-full px-0 sm:px-6 lg:px-8 pt-8 pb-0 mb-0 flex-grow">
-  {viewMode === "lista" ? (
-    <MenuLista
-      categorias={safeCategorias}
-      countryCode={userCountry}
-      colorFondoCategoria={colorFondoCategoria}
-      colorTextoCategoria={colorTextoCategoria}
-      colorBorderCategoria={colorBorderCategoria}
-    />
-) : catalogo.slug ? (
-    <MenuGaleria
-      categorias={safeCategorias}
-      slug={catalogo.slug}
-      countryCode={userCountry}
-      colorFondoCategoria={colorFondoCategoria}
-      colorTextoCategoria={colorTextoCategoria}
-      colorBorderCategoria={colorBorderCategoria}
-    />
-  ) : (
-    <div className="text-center text-red-400 py-10">
-      Error: slug no disponible
-    </div>
-  )}
-</main>
+        )}
+      </main>
 
       {/* FOOTER */}
       <MenuFooter
@@ -308,9 +245,7 @@ export default function MenuClient({ catalogo, categorias, countryCode }: MenuCl
         youtube={catalogo.youtube}
       />
 
-      {/* ========================================================= */}
-      {/* 🛒 RENDERIZADO VISUAL DEL CARRITO FLOTANTE Y MODAL        */}
-      {/* ========================================================= */}
+      {/* CARRITO FLOTANTE */}
       {isMounted && cantidadTotal > 0 && (
         <button
           onClick={() => setIsCartOpen(true)}
@@ -326,31 +261,57 @@ export default function MenuClient({ catalogo, categorias, countryCode }: MenuCl
 
       {isMounted && isCartOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-end z-[9999]">
-          <div 
+          <div
             className="w-full max-w-md h-full p-6 flex flex-col justify-between shadow-2xl overflow-hidden"
-            style={{ backgroundColor: "var(--color-bg)", color: "var(--color-text)" }}
+            style={{
+              backgroundColor: "var(--color-bg)",
+              color: "var(--color-text)",
+            }}
           >
             <div>
               <div className="flex justify-between items-center mb-6 border-b pb-4 border-white/10">
-                <h2 className="text-xl font-black uppercase tracking-wider">Tu Pedido</h2>
-                <button onClick={() => setIsCartOpen(false)} className="text-xl opacity-70 hover:opacity-100 p-2">✕</button>
+                <h2 className="text-xl font-black uppercase tracking-wider">
+                  Tu Pedido
+                </h2>
+                <button
+                  onClick={() => setIsCartOpen(false)}
+                  className="text-xl opacity-70 hover:opacity-100 p-2"
+                >
+                  x
+                </button>
               </div>
 
               <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 scrollbar-hide">
                 {items.map((item) => (
-                  <div key={item.id} className="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/5">
+                  <div
+                    key={item.id}
+                    className="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/5"
+                  >
                     <div>
-                      <p className="font-bold text-sm sm:text-base">{item.nombre}</p>
+                      <p className="font-bold text-sm sm:text-base">
+                        {item.nombre}
+                      </p>
                       <div className="text-xs font-black text-[var(--color-price)]">
-                        {/* 🚀 Cambiado por el componente Price */}
                         <Price amount={item.precio} countryCode={userCountry} />
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-3 bg-black/20 rounded-lg p-1 border border-white/10">
-                      <button onClick={() => decreaseQuantity(item.id)} className="w-8 h-8 flex items-center justify-center font-bold md:hover:bg-white/10 active:bg-white/20 rounded">-</button>
-                      <span className="font-bold text-sm w-4 text-center">{item.cantidad}</span>
-                      <button onClick={() => increaseQuantity(item.id)} className="w-8 h-8 flex items-center justify-center font-bold md:hover:bg-white/10 active:bg-white/20 rounded">+</button>
+                      <button
+                        onClick={() => decreaseQuantity(item.id)}
+                        className="w-8 h-8 flex items-center justify-center font-bold md:hover:bg-white/10 active:bg-white/20 rounded"
+                      >
+                        -
+                      </button>
+                      <span className="font-bold text-sm w-4 text-center">
+                        {item.cantidad}
+                      </span>
+                      <button
+                        onClick={() => increaseQuantity(item.id)}
+                        className="w-8 h-8 flex items-center justify-center font-bold md:hover:bg-white/10 active:bg-white/20 rounded"
+                      >
+                        +
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -359,19 +320,20 @@ export default function MenuClient({ catalogo, categorias, countryCode }: MenuCl
 
             <div className="border-t pt-4 border-white/10">
               <div className="flex justify-between items-center mb-4 px-1">
-                <span className="text-sm font-bold uppercase opacity-60 tracking-wider">Total estimado:</span>
+                <span className="text-sm font-bold uppercase opacity-60 tracking-wider">
+                  Total estimado:
+                </span>
                 <div className="text-2xl font-black text-[var(--color-price)]">
-                  {/* 🚀 Cambiado por el componente Price */}
                   <Price amount={total} countryCode={userCountry} />
                 </div>
               </div>
-              
+
               <button
                 onClick={enviarPedidoWhatsApp}
                 className="w-full h-14 rounded-xl font-black text-sm uppercase tracking-widest text-white flex justify-center items-center gap-2 transition-all md:hover:brightness-110 active:scale-[0.98] touch-manipulation"
                 style={{ backgroundColor: "#25D366" }}
               >
-                💬 Enviar a WhatsApp
+                Enviar a WhatsApp
               </button>
             </div>
           </div>

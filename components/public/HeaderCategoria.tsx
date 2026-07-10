@@ -18,7 +18,6 @@ export default function HeaderCategoria({
   return (
     <div className="flex items-center gap-4 mb-6 px-1 md:px-0">
       
-      {/* Contenedor del Badge con tus 3 colores dinámicos */}
       <div 
         className="flex items-center gap-3 px-4 py-2 rounded-full backdrop-blur-md shadow-sm border"
         style={{
@@ -42,7 +41,6 @@ export default function HeaderCategoria({
           {nombre}
         </h2>
 
-        {/* Contador de productos que toma el texto para el fondo y el fondo para el texto */}
         <span 
           className="text-[10px] px-2 py-0.5 rounded-full font-black"
           style={{ 
@@ -54,13 +52,6 @@ export default function HeaderCategoria({
         </span>
       </div>
 
-      {/* Línea decorativa horizontal */}
-      <div 
-        className="flex-1 h-px bg-gradient-to-r to-transparent" 
-        style={{
-          backgroundImage: `linear-gradient(to right, ${colorBorderCategoria || "var(--color-border-categoria)"}, transparent)`
-        }}
-      />
     </div>
   );
 }
