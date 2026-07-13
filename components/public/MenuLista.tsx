@@ -68,9 +68,7 @@ export default function MenuLista({
             <HeaderCategoria 
               nombre={categoria.nombre} 
               totalProductos={productosValidos.length}
-              colorFondoCategoria={colorFondoCategoria}
               colorTextoCategoria={colorTextoCategoria}
-              colorBorderCategoria={colorBorderCategoria} 
             />
 
             <CategoriaSection categoria={categoria} countryCode={countryCode} />
