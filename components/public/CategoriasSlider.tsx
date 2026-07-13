@@ -152,7 +152,9 @@ export default function CategoriasSlider({
             const isActive = categoriaActiva === categoria.id;
 
             const backgroundColor = isScrolled
-              ? colorHeader
+              ? isActive
+                ? `color-mix(in srgb, ${colorHeader} 85%, ${colorTextHeader})`
+                : colorHeader
               : isActive
                 ? colorFondoCategoriaActiva || colorFondoCategoria
                 : colorFondoCategoria;
@@ -178,7 +180,9 @@ export default function CategoriasSlider({
                   setCategoriaActiva(categoria.id);
                   onTrackCategoria?.(categoria.id);
 
-                  const element = document.getElementById(`cat-${categoria.id}`);
+                  const element = document.getElementById(
+                    `cat-${categoria.id}`,
+                  );
                   if (!element) return;
 
                   const yOffset = showCategories ? -150 : -90;
@@ -190,7 +194,9 @@ export default function CategoriasSlider({
                   window.scrollTo({ top: y, behavior: "smooth" });
                 }}
                 className={`relative max-w-[180px] sm:max-w-[220px] px-5 py-2.5 rounded-2xl text-sm font-bold tracking-wide transition-all duration-300 border flex-shrink-0 outline-none touch-manipulation overflow-hidden ${
-                  isActive ? "scale-105" : "md:hover:bg-white/10 active:bg-white/10"
+                  isActive
+                    ? "scale-105"
+                    : "md:hover:bg-white/10 active:bg-white/10"
                 }`}
                 style={{
                   backgroundColor,
@@ -201,17 +207,6 @@ export default function CategoriasSlider({
               >
                 <span className="block truncate">{categoria.nombre}</span>
 
-                <span
-                  className={`absolute left-4 right-4 bottom-1 h-[2px] rounded-full transition-all duration-300 ${
-                    isActive && isScrolled
-                      ? "opacity-100 scale-x-100"
-                      : "opacity-0 scale-x-0"
-                  }`}
-                  style={{
-                    backgroundColor: colorTextHeader,
-                    transformOrigin: "center",
-                  }}
-                />
               </button>
             );
           })}

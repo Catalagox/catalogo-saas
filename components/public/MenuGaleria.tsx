@@ -67,9 +67,7 @@ export default function MenuGaleria({
             <HeaderCategoria
               nombre={cat.nombre}
               totalProductos={productosValidos.length}
-              colorFondoCategoria={colorFondoCategoria}
               colorTextoCategoria={colorTextoCategoria}
-              colorBorderCategoria={colorBorderCategoria}
             />
 
             <div

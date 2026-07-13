@@ -6,6 +6,7 @@ import { Search, X, Menu } from "lucide-react";
 type Producto = {
   id: string;
   nombre: string;
+  imagen_url?: string;
 };
 
 type Categoria = {
@@ -33,8 +34,10 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 10);
+      setScrolled(window.scrollY > 0);
     };
+
+    handleScroll();
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
@@ -43,11 +46,14 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
   // 🔥 BUSCADOR EN TIEMPO REAL
   const resultados = useMemo(() => {
     if (!search.trim()) return [];
+
     const texto = search.toLowerCase();
+
     const encontrados: {
       tipo: "categoria" | "producto";
       nombre: string;
-      idDestino: string; // ID HTML específico al que se moverá el scroll
+      idDestino: string;
+      imagen_url?: string;
     }[] = [];
 
     categorias.forEach((cat) => {
@@ -64,7 +70,8 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
           encontrados.push({
             tipo: "producto",
             nombre: producto.nombre,
-            idDestino: `prod-${producto.id}`, // Apunta directamente al ID del producto
+            idDestino: `prod-${producto.id}`,
+            imagen_url: producto.imagen_url,
           });
         }
       });
@@ -104,9 +111,14 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
     <>
       {/* HEADER PRINCIPAL */}
       <header
-        className="sticky top-0 z-50 w-full transition-all duration-300 bg-[var(--color-header)] border-b border-[var(--color-border-header,rgba(255,255,255,0.1))]"
+        className="sticky top-0 z-50 w-full transition-all duration-300 bg-[var(--color-header)]"
         style={{
           boxShadow: "none",
+          borderBottomWidth: "1px",
+          borderBottomStyle: "solid",
+          borderBottomColor: scrolled
+            ? "transparent"
+            : "var(--color-border-header, rgba(255,255,255,0.1))",
         }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
@@ -170,20 +182,23 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
           </div>
         </div>
 
-        {/* 🔍 PANEL DESPLEGABLE DE BÚSQUEDA */}
+        {/* PANEL DESPLEGABLE DE BÚSQUEDA */}
         {searchOpen && (
           <div className="max-w-3xl mx-auto px-4 pb-4 animate-in fade-in slide-in-from-top-2 duration-200">
             <div className="relative">
-              {/* 🛠️ CAMBIO: Ahora es un contenedor <form> para capturar el envío con la tecla Enter */}
               <form
                 onSubmit={handleSearchSubmit}
-                className="flex items-center gap-3 rounded-2xl px-4 py-3.5 border bg-white/10 backdrop-blur-md shadow-lg"
-                style={{ borderColor: `${catalogo.color_lupa || "#ffffff"}30` }}
+                className="flex items-center gap-3 rounded-2xl px-4 py-3.5 border bg-[var(--color-header)]"
+                style={{
+                  borderColor:
+                    "var(--color-border-header, rgba(255,255,255,0.1))",
+                }}
               >
                 <Search
                   size={18}
-                  style={{ color: catalogo.color_lupa || "#ffffff" }}
+                  style={{ color: "var(--color-text-header, #ffffff)" }}
                 />
+
                 <input
                   type="text"
                   placeholder="Buscar productos o categorías..."
@@ -192,46 +207,52 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
                   style={{
                     color: "var(--color-text-header, #ffffff)",
                   }}
-                  className="bg-transparent outline-none w-full text-base placeholder:text-[var(--color-text-header)] placeholder:opacity-60"
+                  className="w-full bg-transparent outline-none text-base placeholder:text-[var(--color-text-header)] placeholder:opacity-60"
                   autoFocus
                 />
               </form>
 
-              {/* RESULTADOS DE BÚSQUEDA */}
               {search.trim() && (
                 <div
-                  className="absolute top-full left-0 right-0 mt-2 rounded-2xl overflow-hidden border backdrop-blur-xl bg-[var(--color-header)]/95 shadow-2xl z-50 divide-y divide-white/5"
+                  className="absolute top-full left-0 right-0 mt-2 z-50 overflow-hidden rounded-2xl border bg-[var(--color-header)] shadow-2xl"
                   style={{
-                    borderColor: `${catalogo.color_lupa || "#ffffff"}20`,
+                    borderColor:
+                      "var(--color-border-header, rgba(255,255,255,0.1))",
                   }}
                 >
                   {resultados.length > 0 ? (
-                    resultados.map((item, index) => (
+                    resultados.map((item) => (
                       <button
-                        key={index}
+                        key={item.idDestino}
                         onClick={() => irAResultado(item.idDestino)}
-                        className="w-full text-left px-5 py-3.5 flex items-center justify-between hover:bg-white/10 transition-colors"
+                        className="flex w-full items-center gap-3 px-5 py-3.5 text-left transition-colors hover:bg-white/10"
                       >
-                        <span className="text-[var(--color-text-header,#ffffff)] text-sm font-medium">
+                        {item.tipo === "producto" &&
+                          (item.imagen_url ? (
+                            <img
+                              src={item.imagen_url}
+                              alt={item.nombre}
+                              className="h-12 w-12 shrink-0 rounded-lg object-cover bg-white/10"
+                            />
+                          ) : (
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white/10 text-[10px] opacity-60 text-[var(--color-text-header,#ffffff)]">
+                              Sin foto
+                            </div>
+                          ))}
+
+                        <span className="flex-1 text-sm font-medium text-[var(--color-text-header,#ffffff)]">
                           {item.nombre}
                         </span>
-                        <span
-                          className="text-[10px] font-bold tracking-widest uppercase opacity-60 px-2 py-0.5 rounded border border-white/10"
-                          style={{ color: catalogo.color_lupa || "#ffffff" }}
-                        >
+
+                        <span className="rounded border border-white/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-header,#ffffff)] opacity-60">
                           {item.tipo}
                         </span>
                       </button>
                     ))
                   ) : (
-                    <div className="px-5 py-6 text-sm text-center text-[var(--color-text-header,#ffffff)] opacity-80">
+                    <div className="px-5 py-6 text-center text-sm text-[var(--color-text-header,#ffffff)] opacity-80">
                       No encontramos resultados para{" "}
-                      <span
-                        className="font-semibold"
-                        style={{ color: catalogo.color_lupa || "#ffffff" }}
-                      >
-                        "{search}"
-                      </span>
+                      <span className="font-semibold">"{search}"</span>
                     </div>
                   )}
                 </div>
