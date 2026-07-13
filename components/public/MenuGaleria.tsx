@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Price from "@/components/ui/Price"; 
+import Price from "@/components/ui/Price";
 import HeaderCategoria from "@/components/public/HeaderCategoria"; // 🚀 Importamos el nuevo encabezado
 
 interface Producto {
@@ -37,7 +37,6 @@ export default function MenuGaleria({
   colorTextoCategoria = "#111827",
   colorBorderCategoria = "#e5e7eb",
 }: MenuGaleriaProps) {
-  
   if (!categorias || categorias.length === 0) {
     return (
       <div className="text-center py-20 border border-dashed rounded-xl border-white/10 bg-white/[0.02] backdrop-blur-sm">
@@ -52,7 +51,7 @@ export default function MenuGaleria({
     <div className="space-y-14 pb-0 mb-0">
       {categorias.map((cat) => {
         const productosValidos = (cat.productos ?? []).filter(
-          (p) => p && p.slug && p.nombre
+          (p) => p && p.slug && p.nombre,
         );
 
         if (productosValidos.length === 0) return null;
@@ -140,16 +139,19 @@ export default function MenuGaleria({
                   <div className="p-3.5 pt-2 flex flex-col flex-1 bg-[var(--color-bg)]/20">
                     <h3
                       className="
-                        text-xs
-                        sm:text-sm
-                        font-medium
-                        leading-snug
-                        line-clamp-2
-                        min-h-[2.7rem]
-                        text-[var(--color-text)]
-                        transition-colors
-                        duration-200
+                     text-xs sm:text-sm
+                     font-medium leading-snug
+                      h-[2.7rem]
+                      overflow-hidden
+                      text-[var(--color-text)]
+                      transition-colors duration-200
                       "
+                      style={{
+                        display: "-webkit-box",
+                        WebkitBoxOrient: "vertical",
+                        WebkitLineClamp: 2,
+                        overflow: "hidden",
+                      }}
                     >
                       {p.nombre}
                     </h3>

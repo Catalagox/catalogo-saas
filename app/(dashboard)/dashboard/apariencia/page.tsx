@@ -28,6 +28,8 @@ export default function AparienciaPage() {
   const [colorFondoCategoria, setColorFondoCategoria] = useState("#ffffff");
   const [colorTextoCategoria, setColorTextoCategoria] = useState("#111827");
   const [colorBorderCategoria, setColorBorderCategoria] = useState("#e5e7eb");
+    
+const [previewOpen, setPreviewOpen] = useState(false);
 
   useEffect(() => {
     cargarDatos();
@@ -153,9 +155,11 @@ export default function AparienciaPage() {
     );
   }
 
+
+
   return (
+  <>
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start relative max-w-full">
-      
       <div className="w-full">
         <AparienciaForm
           nombre={nombre}
@@ -168,10 +172,10 @@ export default function AparienciaPage() {
           setEstiloMenu={setEstiloMenu}
           colorHeader={colorHeader}
           setColorHeader={setColorHeader}
-          colorTextHeader={colorTextHeader}             
-          setColorTextHeader={setColorTextHeader}       
-          colorBorderHeader={colorBorderHeader}        
-          setColorBorderHeader={setColorBorderHeader}   
+          colorTextHeader={colorTextHeader}
+          setColorTextHeader={setColorTextHeader}
+          colorBorderHeader={colorBorderHeader}
+          setColorBorderHeader={setColorBorderHeader}
           colorFooter={colorFooter}
           setColorFooter={setColorFooter}
           colorTexto={colorTexto}
@@ -182,21 +186,19 @@ export default function AparienciaPage() {
           setColorHamburguesa={setColorHamburguesa}
           colorTarjeta={colorTarjeta}
           setColorTarjeta={setColorTarjeta}
-          
           colorLupa={colorLupa}
           setColorLupa={setColorLupa}
           colorFondoCategoria={colorFondoCategoria}
           setColorFondoCategoria={setColorFondoCategoria}
-
           colorTextoCategoria={colorTextoCategoria}
           setColorTextoCategoria={setColorTextoCategoria}
-
           colorBorderCategoria={colorBorderCategoria}
           setColorBorderCategoria={setColorBorderCategoria}
           guardar={guardar}
         />
       </div>
 
+      {/* Teléfono fijo solo en escritorio */}
       <div className="hidden lg:block lg:sticky lg:top-6 h-fit w-full">
         <div className="flex justify-center lg:justify-end">
           <PhonePreview
@@ -206,14 +208,13 @@ export default function AparienciaPage() {
             logo={logo}
             categorias={categorias}
             colorHeader={colorHeader}
-            colorTextHeader={colorTextHeader}           
-            colorBorderHeader={colorBorderHeader}       
+            colorTextHeader={colorTextHeader}
+            colorBorderHeader={colorBorderHeader}
             colorFooter={colorFooter}
             colorTexto={colorTexto}
             colorPrecio={colorPrecio}
             colorHamburguesa={colorHamburguesa}
             colorTarjeta={colorTarjeta}
-            
             colorLupa={colorLupa}
             colorFondoCategoria={colorFondoCategoria}
             colorTextoCategoria={colorTextoCategoria}
@@ -221,7 +222,49 @@ export default function AparienciaPage() {
           />
         </div>
       </div>
-
     </div>
-  );
+
+    {/* Botón solo en pantallas menores a 1024px */}
+    <button
+  onClick={() => setPreviewOpen(true)}
+  className="lg:hidden fixed bottom-24 right-5 z-[60] rounded-full bg-orange-500 px-5 py-3 text-sm font-bold text-white shadow-xl"
+>
+  Ver vista previa
+</button>
+
+    {previewOpen && (
+      <div className="lg:hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+        <div className="relative max-h-full overflow-auto">
+          <button
+            onClick={() => setPreviewOpen(false)}
+            className="absolute right-2 top-2 z-10 h-9 w-9 rounded-full bg-black/70 text-lg text-white"
+            aria-label="Cerrar vista previa"
+          >
+            ×
+          </button>
+
+          <PhonePreview
+            nombre={nombre}
+            colorFondo={colorFondo}
+            estiloMenu={estiloMenu}
+            logo={logo}
+            categorias={categorias}
+            colorHeader={colorHeader}
+            colorTextHeader={colorTextHeader}
+            colorBorderHeader={colorBorderHeader}
+            colorFooter={colorFooter}
+            colorTexto={colorTexto}
+            colorPrecio={colorPrecio}
+            colorHamburguesa={colorHamburguesa}
+            colorTarjeta={colorTarjeta}
+            colorLupa={colorLupa}
+            colorFondoCategoria={colorFondoCategoria}
+            colorTextoCategoria={colorTextoCategoria}
+            colorBorderCategoria={colorBorderCategoria}
+          />
+        </div>
+      </div>
+    )}
+  </>
+);
 }

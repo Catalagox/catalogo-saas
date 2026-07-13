@@ -1,21 +1,20 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./app/**/*.{js,ts,jsx,tsx}",        // Todas las páginas y layouts
-    "./components/**/*.{js,ts,jsx,tsx}"  // Todos los componentes
+    "./app/**/*.{js,ts,jsx,tsx}",
+    "./components/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
       colors: {
-        background: "var(--background)", // Tu variable CSS
+        background: "var(--background)",
         foreground: "var(--foreground)",
       },
       fontFamily: {
-        sans: ["Arial", "Helvetica", "sans-serif"], // Fuente base
+        sans: ["Arial", "Helvetica", "sans-serif"],
       },
     },
   },
-  plugins: [],
+  plugins: [require("@tailwindcss/line-clamp")],
 };
-
 

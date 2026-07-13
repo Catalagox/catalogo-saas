@@ -12,26 +12,25 @@ export default function HeaderCategoria({
   colorTextoCategoria,
 }: HeaderCategoriaProps) {
   
-  // Guardamos el color en una constante para no repetir la lógica
   const textColor = colorTextoCategoria || "var(--color-texto-categoria)";
 
   return (
-    <div className="flex items-baseline gap-2 mb-6 px-1 md:px-0">
+    <div className="flex items-start mb-5 pl-4 pr-1 md:pl-1 md:pr-0">
       
-      {/* Título de la Categoría con su color dinámico */}
+      {/* Título Responsivo y Estilizado */}
       <h2 
-        className="text-2xl font-bold tracking-tight capitalize"
+        className="text-lg md:text-xl font-bold tracking-tight capitalize leading-none"
         style={{ color: textColor }}
       >
         {nombre}
       </h2>
 
-      {/* Contador de Productos (comparte el mismo color pero con opacidad) */}
+      {/* Contador de Productos Adaptado */}
       <span 
-        className="text-sm font-medium opacity-75"
+        className="text-[10px] md:text-[11px] font-semibold ml-1.5 px-1.5 py-0.5 rounded-md bg-current/5 align-super"
         style={{ color: textColor }}
       >
-        ({totalProductos})
+        {totalProductos}
       </span>
 
     </div>

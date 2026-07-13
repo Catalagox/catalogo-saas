@@ -1,6 +1,6 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 interface Producto {
   id: string;
@@ -8,6 +8,8 @@ interface Producto {
   precio: number;
   descripcion?: string;
   imagen_url: string | null;
+  disponible?: boolean;
+  slug?: string;
 }
 
 interface Categoria {
@@ -18,12 +20,12 @@ interface Categoria {
 
 interface Props {
   nombre: string;
-  colorFondo: string;
-  estiloMenu: "lista" | "galeria";
   logo?: string | null;
   categorias: Categoria[];
+  estiloMenu: "lista" | "galeria";
+  countryCode?: string;
 
-  // 🎨 COLORES
+  colorFondo: string;
   colorHeader: string;
   colorTextHeader?: string;
   colorBorderHeader?: string;
@@ -36,17 +38,23 @@ interface Props {
   colorFondoCategoria: string;
   colorTextoCategoria: string;
   colorBorderCategoria: string;
+
+  instagram?: string;
+  facebook?: string;
+  tiktok?: string;
+  youtube?: string;
 }
 
 export default function PhonePreview({
   nombre,
-  colorFondo,
-  estiloMenu,
   logo,
   categorias,
+  estiloMenu,
+  countryCode = "PE",
+  colorFondo,
   colorHeader,
   colorTextHeader = "#ffffff",
-  colorBorderHeader = "#ffffff10",
+  colorBorderHeader = "rgba(255,255,255,0.1)",
   colorFooter,
   colorTexto,
   colorPrecio,
@@ -56,385 +64,154 @@ export default function PhonePreview({
   colorFondoCategoria,
   colorTextoCategoria,
   colorBorderCategoria,
+  instagram,
+  facebook,
+  tiktok,
+  youtube,
 }: Props) {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [previewRecibida, setPreviewRecibida] = useState(false);
+
+  const previewData = useMemo(
+    () => ({
+      catalogo: {
+        id: "preview",
+        user_id: "preview",
+        nombre,
+        logo: logo ?? undefined,
+        estilo_menu: estiloMenu,
+        pais_code: countryCode,
+
+        color_fondo: colorFondo,
+        color_header: colorHeader,
+        color_text_header: colorTextHeader,
+        color_border_header: colorBorderHeader,
+        color_footer: colorFooter,
+        color_texto: colorTexto,
+        color_precio: colorPrecio,
+        color_hamburguesa: colorHamburguesa,
+        color_tarjeta: colorTarjeta,
+        color_lupa: colorLupa,
+        color_fondo_categoria: colorFondoCategoria,
+        color_texto_categoria: colorTextoCategoria,
+        color_border_categoria: colorBorderCategoria,
+
+        instagram,
+        facebook,
+        tiktok,
+        youtube,
+      },
+
+      categorias: categorias.map((categoria) => ({
+        ...categoria,
+        productos: categoria.productos.map((producto) => ({
+          ...producto,
+          imagen_url: producto.imagen_url ?? undefined,
+          slug: producto.slug ?? `preview-${producto.id}`,
+        })),
+      })),
+
+      countryCode,
+    }),
+    [
+      nombre,
+      logo,
+      categorias,
+      estiloMenu,
+      countryCode,
+      colorFondo,
+      colorHeader,
+      colorTextHeader,
+      colorBorderHeader,
+      colorFooter,
+      colorTexto,
+      colorPrecio,
+      colorHamburguesa,
+      colorTarjeta,
+      colorLupa,
+      colorFondoCategoria,
+      colorTextoCategoria,
+      colorBorderCategoria,
+      instagram,
+      facebook,
+      tiktok,
+      youtube,
+    ],
+  );
+
+  const enviarDatos = useCallback(() => {
+    iframeRef.current?.contentWindow?.postMessage(
+      {
+        type: "CATALOGO_PREVIEW",
+        payload: previewData,
+      },
+      window.location.origin,
+    );
+  }, [previewData]);
+
+  // Si cambian colores, logo o productos, se vuelve a enviar la preview.
+  useEffect(() => {
+    setPreviewRecibida(false);
+  }, [previewData]);
+
+  // Recibe los mensajes enviados desde /preview-catalogo.
+  useEffect(() => {
+    const recibirMensaje = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+
+      if (event.data?.type === "CATALOGO_PREVIEW_LISTO") {
+        enviarDatos();
+      }
+
+      if (event.data?.type === "CATALOGO_PREVIEW_RECIBIDO") {
+        setPreviewRecibida(true);
+      }
+    };
+
+    window.addEventListener("message", recibirMensaje);
+
+    return () => {
+      window.removeEventListener("message", recibirMensaje);
+    };
+  }, [enviarDatos]);
+
+  // Reintenta mientras el iframe termina de cargar y hasta confirmar recepción.
+  useEffect(() => {
+    if (previewRecibida) return;
+
+    enviarDatos();
+
+    const intervalo = window.setInterval(enviarDatos, 300);
+
+    return () => {
+      window.clearInterval(intervalo);
+    };
+  }, [previewRecibida, enviarDatos]);
+
   return (
     <div
       className="
-        w-[320px]
-        h-[650px]
-        rounded-[42px]
-        border-[10px]
-        border-black
-        shadow-2xl
-        overflow-hidden
-        flex
-        flex-col
-        bg-black
-      "
+    w-full max-w-[320px]
+    h-[650px] max-h-[calc(100dvh-2rem)]
+    rounded-[42px]
+    border-[10px] border-zinc-200
+    bg-zinc-200
+    shadow-[0_0_0_2px_rgba(255,255,255,0.25),0_25px_50px_rgba(0,0,0,0.45)]
+    overflow-hidden
+    flex flex-col
+  "
     >
-      {/* 🔥 TOP BAR IPHONE */}
-      <div className="h-6 bg-black flex items-center justify-center">
+      <div className="h-6 shrink-0 flex items-center justify-center bg-zinc-200">
         <div className="w-28 h-4 rounded-full bg-zinc-900" />
       </div>
 
-      {/* 🔥 HEADER */}
-      <div
-        style={{ 
-          backgroundColor: colorHeader,
-          borderColor: colorBorderHeader
-        }}
-        className="
-          px-4
-          pt-3
-          pb-4
-          border-b
-        "
-      >
-        {/* TOP */}
-        <div className="flex items-center justify-between">
-          {/* IZQUIERDA */}
-          <div className="flex items-center gap-3">
-            {/* ☰ */}
-            <div style={{ color: colorHamburguesa }} className="text-xl">
-              ☰
-            </div>
-
-            {/* LOGO */}
-            <div className="flex items-center gap-2">
-              {logo && (
-                <img
-                  src={logo}
-                  className="
-                    w-9
-                    h-9
-                    rounded-full
-                    object-cover
-                    border
-                    border-white/20
-                  "
-                  alt="Logo"
-                />
-              )}
-
-              <div>
-                <p
-                  style={{ color: colorTextHeader }}
-                  className="
-                    text-sm
-                    font-bold
-                    leading-none
-                  "
-                >
-                  {nombre}
-                </p>
-
-                <p
-                  className="
-                    text-[10px]
-                    opacity-70
-                    mt-1
-                  "
-                  style={{
-                    color: colorTextHeader,
-                  }}
-                >
-                  Menú digital
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* 🔍 LUPA */}
-          <button
-            className="
-              w-9
-              h-9
-              rounded-full
-              flex
-              items-center
-              justify-center
-              bg-white/10
-              border
-              border-white/10
-              backdrop-blur-md
-            "
-          >
-            <Search
-              size={18}
-              style={{
-                color: colorLupa,
-              }}
-            />
-          </button>
-        </div>
-
-        {/* 🔍 BUSCADOR */}
-        <div className="mt-4">
-          <div
-            className="
-              h-11
-              rounded-2xl
-              border
-              flex
-              items-center
-              px-4
-              text-xs
-              backdrop-blur-md
-            "
-            style={{
-              borderColor: `${colorLupa}25`,
-              color: colorTextHeader,
-              backgroundColor: "rgba(255,255,255,0.06)",
-            }}
-          >
-            <Search size={14} className="mr-2 opacity-70" />
-            <span className="opacity-70">Buscar productos...</span>
-          </div>
-        </div>
-
-        {/* 🔥 CATEGORÍAS HORIZONTALES (Pestañas superiores) */}
-        <div
-          className="
-            mt-4
-            flex
-            gap-2
-            overflow-x-auto
-            scrollbar-hide
-            pb-1
-          "
-        >
-          {categorias.map((cat, index) => (
-            <div
-              key={cat.id}
-              className={`
-                px-4
-                py-2
-                rounded-2xl
-                text-xs
-                font-bold
-                whitespace-nowrap
-                border
-                shadow-sm
-                flex-shrink-0
-                ${index === 0 ? "" : "bg-white/5"}
-              `}
-              style={{
-                backgroundColor:
-                  index === 0
-                    ? colorFondoCategoria
-                    : "rgba(255,255,255,0.05)",
-                borderColor: colorBorderCategoria,
-                color: colorTextoCategoria,
-              }}
-            >
-              {cat.nombre}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* 🔥 BODY */}
-      <div
-        style={{ backgroundColor: colorFondo }}
-        className="
-          flex-1
-          overflow-y-auto
-          p-4
-          space-y-6
-        "
-      >
-        {categorias.map((cat) => (
-          <div key={cat.id}>
-            {/* 🏷️ HEADER CATEGORÍA (Encabezado dentro del menú body) */}
-            <div className="flex items-center gap-3 mb-3">
-              <div
-                className="w-2 h-2 rounded-full"
-                style={{
-                  backgroundColor: colorTextoCategoria,
-                }}
-              />
-
-              <h2
-                style={{
-                  color: colorTextoCategoria,
-                }}
-                className="
-                  font-bold
-                  uppercase
-                  tracking-wide
-                  text-sm
-                "
-              >
-                {cat.nombre}
-              </h2>
-
-              <div
-                className="flex-1 h-[1px]"
-                style={{
-                  backgroundColor: colorBorderCategoria,
-                }}
-              />
-            </div>
-
-            {/* 🔥 LISTA */}
-            {estiloMenu === "lista" ? (
-              <div className="space-y-3">
-                {cat.productos.map((p) => (
-                  <div
-                    key={p.id}
-                    style={{
-                      backgroundColor: colorTarjeta,
-                    }}
-                    className="
-                      p-3
-                      rounded-2xl
-                      flex
-                      gap-3
-                      border
-                      border-white/5
-                      backdrop-blur-md
-                    "
-                  >
-                    {p.imagen_url && (
-                      <img
-                        src={p.imagen_url}
-                        className="
-                          w-16
-                          h-16
-                          rounded-xl
-                          object-cover
-                        "
-                        alt={p.nombre}
-                      />
-                    )}
-
-                    <div className="flex-1">
-                      {/* NOMBRE */}
-                      <p
-                        style={{
-                          color: colorTexto,
-                        }}
-                        className="
-                          text-sm
-                          font-bold
-                        "
-                      >
-                        {p.nombre}
-                      </p>
-
-                      {/* DESC */}
-                      {p.descripcion && (
-                        <p
-                          style={{
-                            color: colorTexto,
-                          }}
-                          className="
-                            text-xs
-                            opacity-70
-                            mt-1
-                            line-clamp-2
-                          "
-                        >
-                          {p.descripcion}
-                        </p>
-                      )}
-
-                      {/* PRECIO */}
-                      <p
-                        style={{
-                          color: colorPrecio,
-                        }}
-                        className="
-                          text-sm
-                          font-black
-                          mt-2
-                        "
-                      >
-                        ${p.precio}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              /* 🔥 GALERÍA */
-              <div className="grid grid-cols-2 gap-3">
-                {cat.productos.map((p) => (
-                  <div
-                    key={p.id}
-                    style={{
-                      backgroundColor: colorTarjeta,
-                    }}
-                    className="
-                      p-2
-                      rounded-2xl
-                      border
-                      border-white/5
-                      overflow-hidden
-                    "
-                  >
-                    {p.imagen_url && (
-                      <img
-                        src={p.imagen_url}
-                        className="
-                          w-full
-                          h-24
-                          object-cover
-                          rounded-xl
-                          mb-2
-                        "
-                        alt={p.nombre}
-                      />
-                    )}
-
-                    <p
-                      style={{
-                        color: colorTexto,
-                      }}
-                      className="
-                        text-xs
-                        font-semibold
-                        line-clamp-1
-                      "
-                    >
-                      {p.nombre}
-                    </p>
-
-                    <p
-                      style={{
-                        color: colorPrecio,
-                      }}
-                      className="
-                        text-xs
-                        font-black
-                        mt-1
-                      "
-                    >
-                      ${p.precio}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* 🔥 FOOTER */}
-      <div
-        style={{
-          backgroundColor: colorFooter,
-        }}
-        className="
-          p-3
-          text-center
-          text-xs
-          border-t
-          border-white/10
-        "
-      >
-        <p style={{ color: colorTexto }}>© {nombre || "Mi Catalógo"}</p>
-      </div>
+      <iframe
+        ref={iframeRef}
+        src="/preview-catalogo"
+        title="Vista previa del catálogo"
+        onLoad={enviarDatos}
+        className="w-full flex-1 border-0 bg-white"
+      />
     </div>
   );
 }
