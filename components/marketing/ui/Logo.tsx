@@ -26,7 +26,7 @@ export default function Logo({
       text: "text-2xl",
     },
     lg: {
-      box: "w-16 h-16",
+      box: "w-14 h-14",
       text: "text-3xl",
     },
   };
@@ -38,8 +38,8 @@ export default function Logo({
     >
       <div className={`relative ${sizes[size].box} overflow-hidden`}>
         <Image
-          src="/Logotipo-fondo-trasparente.png"
-          alt="CatalogX"
+          src="/Logotipo-fondo-trasparente4.png"
+          alt="Catalagox"
           fill
           className="object-contain"
           priority
@@ -49,7 +49,7 @@ export default function Logo({
       <span
         className={`font-black tracking-tighter transition-colors ${sizes[size].text} ${textColor}`}
       >
-        Catalago<span className="text-[var(--color-primary)]">X</span>
+        Catalagox
       </span>
     </Link>
   );

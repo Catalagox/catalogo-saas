@@ -68,7 +68,7 @@ export default function Header() {
         
         {/* LOGO (Se oculta suavemente al abrir el menú de hamburguesa) */}
         <div className={`transition-opacity duration-300 ${menuOpen ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
-          <Logo scrolled={headerSolid} size="lg" />
+          <Logo scrolled={headerSolid} size="md" />
         </div>
 
         {/* NAV DESKTOP */}

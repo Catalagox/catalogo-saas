@@ -13,43 +13,44 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://catalagox.com"),
 
   title: {
-    default: "CatalogoX | Crea tu Catálogo Digital y Menú QR",
-    template: "%s | CatalogoX",
+    default: "Catalagox | Crea tu pagina web, Catálogo Digital y Menú QR",
+    template: "%s | Catalagox",
   },
 
   description:
-    "Crea catálogos digitales y menús QR para tu negocio en minutos. Diseño profesional, fácil de usar y 7 días gratis. Ideal para restaurantes, tiendas y emprendedores en Argentina.",
+    "Crea tu pagina web, catálogos digitales y menús QR para tu negocio en minutos. Diseño profesional, fácil de usar y 7 días gratis. Ideal para restaurantes, tiendas y emprendedores en el mundo.",
 
   keywords: [
-    "catálogo digital",
-    "menú QR",
+    "crear catálogo digital",
+    "crear pagina web para negocios",
     "crear menú QR",
-    "catálogo online",
-    "catálogo para negocios",
-    "menú digital restaurante",
-    "menú QR Argentina",
-    "catálogos digitales Argentina",
+    "crear pagina web",
+    "crear catálogo online",
+    "crear catálogo para negocios",
+    "crear menú digital restaurante",
+    "crear menú QR Argentina",
+    "crear catálogos digitales Argentina",
   ],
 
-  authors: [{ name: "CatalogoX" }],
-  creator: "CatalogoX",
-  publisher: "CatalogoX",
+  authors: [{ name: "Catalagox" }],
+  creator: "Catalagox",
+  publisher: "Catalagox",
 
   openGraph: {
-    title: "CatalogoX | Crea tu Catálogo Digital y Menú QR",
+    title: "Catalagox | Crea tu pagina web, Catálogo Digital y Menú QR",
     description:
-      "Crea tu catálogo digital o menú QR profesional en minutos. 7 días gratis.",
+      "Crea tu pagina web, catálogo digital o menú QR profesional en minutos. 7 días gratis.",
     url: "https://catalagox.com",
-    siteName: "CatalogoX",
+    siteName: "Catalagox",
     locale: "es_AR",
     type: "website",
   },
 
   twitter: {
     card: "summary_large_image",
-    title: "CatalogoX | Catálogos Digitales y Menús QR",
+    title: "Catalagox | Paginas web, Catálogos Digitales y Menús QR",
     description:
-      "Crea tu catálogo digital o menú QR profesional para tu negocio.",
+      "Crea tu pagina web, catálogo digital o menú QR profesional para tu negocio.",
   },
 
   robots: {
