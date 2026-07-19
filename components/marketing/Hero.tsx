@@ -80,7 +80,8 @@ export default function Hero() {
       </p>
 
       {/* Contenedor Único del Botón */}
-      <div className="mt-10 flex items-center justify-center w-full px-4">
+    <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 w-full px-4">
+        {/* Botón Principal: Empezar Gratis */}
         <Link
           href="/auth"
           className="
@@ -103,6 +104,35 @@ export default function Hero() {
           {/* Cohete dinámico con animación de rebote reactivada */}
           <FaRocket className="animate-bounce flex-shrink-0 text-xl text-slate-950 relative z-10" />
         </Link>
+
+        {/* Botón Secundario: Ver Demo */}
+        <a
+          href="https://www.youtube.com/watch?v=RV7S4Pz7XZA&t=26s"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="
+            group relative inline-flex items-center justify-center gap-3 
+            w-full max-w-[340px] sm:max-w-none sm:w-auto px-12 py-5 
+            bg-white/5 text-white rounded-2xl font-black text-lg sm:text-xl
+            border border-white/10 backdrop-blur-md
+            overflow-hidden transition-all duration-300
+            hover:bg-white/10 hover:border-emerald-500/30
+            hover:-translate-y-1 active:scale-95
+          "
+        >
+          <span className="relative z-10 text-center leading-tight">
+            Ver demo
+          </span>
+          
+          {/* Flecha minimalista integrada en SVG para mantener el rendimiento libre de iconos extra */}
+          <svg 
+            className="w-5 h-5 text-emerald-400 transition-transform duration-300 group-hover:translate-x-1 relative z-10" 
+            fill="currentColor" 
+            viewBox="0 0 20 20"
+          >
+            <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+          </svg>
+        </a>
       </div>
     </motion.div>
   </div>
@@ -410,12 +440,14 @@ export default function Hero() {
                 ))}
               </ul>
 
-              <Link
-                href="contacto"
-                className="mt-auto w-fit px-6 py-3 bg-[var(--color-primary)] text-black rounded-xl font-bold hover:scale-105 transition-transform duration-300"
+             <a
+                href="https://www.youtube.com/watch?v=RV7S4Pz7XZA&t=26s"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-auto w-fit px-6 py-3 bg-[var(--color-primary)] text-black rounded-xl font-bold hover:scale-105 transition-transform duration-300 block text-center"
               >
-                Probar Demo
-              </Link>
+                Ver Demo
+              </a>
             </div>
           </div>
         </div>
