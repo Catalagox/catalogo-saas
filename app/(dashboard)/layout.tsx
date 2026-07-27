@@ -6,6 +6,7 @@ import Sidebar from "@/components/dashboard/principal/Sidebar";
 import Logo from "@/components/marketing/ui/Logo";
 import { useRouter } from "next/navigation";
 import { Menu, X } from "lucide-react";
+import { InstalarAppBanner } from "@/components/dashboard/InstalarAppBanner"; // 👈 Importación añadida
 
 export default function DashboardLayout({
   children,
@@ -154,6 +155,9 @@ export default function DashboardLayout({
         </header>
 
         <main className="mx-auto flex-1 w-full max-w-[1600px] p-4 md:p-6 lg:p-10">
+          {/* Banner de Instalación PWA */}
+          <InstalarAppBanner />
+
           {children}
         </main>
       </div>
