@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import imageCompression from "browser-image-compression"; // 🔥 IMPORTAMOS EL COMPRESOR
+import imageCompression from "browser-image-compression";
+
+import { PageHeader } from "@/components/dashboard/PageHeader";
+import { Settings } from "lucide-react";
 
 // Importación de subcomponentes visuales
 import FormNombreMenu from "@/components/dashboard/ajustes/FormNombreMenu";
@@ -255,12 +258,16 @@ export default function AjustesPage() {
   }
 
   return (
-    <div className="flex justify-center w-full px-4">
-      <div className="w-full max-w-2xl space-y-8">
-        <h1 className="text-3xl font-bold text-[var(--text-primary)]">
-          Ajustes
-        </h1>
+    <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+      {/* HEADER REUTILIZABLE */}
+      <PageHeader
+        title="Ajustes de la cuenta"
+        category="Configuración"
+        icon={Settings}
+        showBackButton={true}
+      />
 
+      <div className="max-w-2xl mx-auto space-y-8">
         {/* NOMBRE DEL MENÚ */}
         <FormNombreMenu
           nombreMenu={nombreMenu}
@@ -278,7 +285,7 @@ export default function AjustesPage() {
 
         {/* CONTACTO Y REDES */}
         <FormContacto
-          paisCode={paisCode}       
+          paisCode={paisCode}      
           setPaisCode={setPaisCode} 
           whatsapp={whatsapp}
           setWhatsapp={setWhatsapp}

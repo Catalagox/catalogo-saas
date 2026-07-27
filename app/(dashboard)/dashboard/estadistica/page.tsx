@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-
-import { BarChart3, TrendingUp, QrCode, Tags, MenuSquare } from "lucide-react";
+import { PageHeader } from "@/components/dashboard/PageHeader";
+import { BarChart3, TrendingUp, QrCode, Tags } from "lucide-react";
 
 export default function EstadisticasPage() {
   const [loading, setLoading] = useState(true);
@@ -54,88 +54,77 @@ export default function EstadisticasPage() {
       setQrScans(qr || 0);
       setCategoriasViews(categorias || 0);
     } catch (error) {
-      console.log("No hay tabla de estadísticas aún");
+      console.log("No hay tabla de estadísticas aún", error);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="w-full">
-      {/* HEADER */}
-      <div className="bg-[var(--bg-card)] border-b border-[var(--border-card)] sticky top-0 z-20 backdrop-blur-md px-5 py-6 md:px-10 md:py-8 mb-6 md:mb-8">
-        <div className="max-w-6xl mx-auto flex flex-col items-start gap-3">
-          <div className="flex items-center gap-2 text-[var(--text-secondary)] text-xs font-bold uppercase tracking-widest">
-            <MenuSquare className="w-4 h-4 text-[var(--text-secondary)]" />
-            <span>Estadísticas</span>
-          </div>
+    <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* HEADER REUTILIZABLE */}
+      <PageHeader
+        title="Analítica del negocio"
+        category="Estadísticas"
+        icon={BarChart3}
+        showBackButton={true}
+      />
 
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-[var(--text-primary)]">
-            Analítica del negocio
-          </h1>
+      {/* CONTENIDO PRINCIPAL */}
+      {loading ? (
+        <div className="flex justify-center items-center py-20 text-[var(--text-secondary)] font-medium">
+          Cargando estadísticas...
         </div>
-      </div>
+      ) : (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            {
+              icon: <BarChart3 className="w-6 h-6 text-[var(--color-primary)]" />,
+              label: "Vistas del catálogo",
+              value: menuViews,
+              tag: "Total",
+            },
+            {
+              icon: <TrendingUp className="w-6 h-6 text-[var(--color-success)]" />,
+              label: "Productos vistos",
+              value: productosViews,
+              tag: "Popular",
+            },
+            {
+              icon: <QrCode className="w-6 h-6 text-[var(--color-accent)]" />,
+              label: "Escaneos del QR",
+              value: qrScans,
+              tag: "QR",
+            },
+            {
+              icon: <Tags className="w-6 h-6 text-[var(--color-warning)]" />,
+              label: "Categorías visitadas",
+              value: categoriasViews,
+              tag: "Menú",
+            },
+          ].map((card, i) => (
+            <div
+              key={i}
+              className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 hover:bg-[var(--bg-card-hover)] transition-all shadow-sm"
+            >
+              <div className="flex items-center justify-between mb-4">
+                {card.icon}
+                <span className="text-xs text-[var(--text-secondary)] font-semibold uppercase tracking-wider">
+                  {card.tag}
+                </span>
+              </div>
 
-      <div className="px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto">
-          {/* LOADING */}
-          {loading ? (
-            <p className="text-[var(--text-secondary)]">
-              Cargando estadísticas...
-            </p>
-          ) : (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {/* CARD BASE */}
-              {[
-                {
-                  icon: <BarChart3 className="text-[var(--color-primary)]" />,
-                  label: "Vistas del catálogo",
-                  value: menuViews,
-                  tag: "Total",
-                },
-                {
-                  icon: <TrendingUp className="text-[var(--color-success)]" />,
-                  label: "Productos vistos",
-                  value: productosViews,
-                  tag: "Popular",
-                },
-                {
-                  icon: <QrCode className="text-[var(--color-accent)]" />,
-                  label: "Escaneos del QR",
-                  value: qrScans,
-                  tag: "QR",
-                },
-                {
-                  icon: <Tags className="text-[var(--color-warning)]" />,
-                  label: "Categorías visitadas",
-                  value: categoriasViews,
-                  tag: "Menú",
-                },
-              ].map((card, i) => (
-                <div
-                  key={i}
-                  className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 hover:bg-[var(--bg-card-hover)] transition"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    {card.icon}
-                    <span className="text-xs text-[var(--text-secondary)]">
-                      {card.tag}
-                    </span>
-                  </div>
+              <h2 className="text-3xl font-extrabold text-[var(--text-primary)]">
+                {card.value}
+              </h2>
 
-                  <h2 className="text-3xl font-bold text-[var(--text-primary)]">
-                    {card.value}
-                  </h2>
-
-                  <p className="text-sm text-[var(--text-secondary)] mt-1">
-                    {card.label}
-                  </p>
-                </div>
-              ))}
+              <p className="text-sm text-[var(--text-secondary)] mt-1 font-medium">
+                {card.label}
+              </p>
             </div>
-          )}
+          ))}
         </div>
-      </div>
+      )}
     </div>
   );
 }

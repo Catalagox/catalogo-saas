@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import QRCode from "react-qr-code";
 import { toPng } from "html-to-image";
+import { PageHeader } from "@/components/dashboard/PageHeader";
 import {
   Share2,
   Download,
@@ -11,6 +12,7 @@ import {
   Copy,
   Check,
   X,
+  QrCode,
 } from "lucide-react";
 
 export default function QRPage() {
@@ -62,12 +64,15 @@ export default function QRPage() {
   // 🛠️ CONTROL DE COMPARTIR PROFESIONAL (NATIVO EN MÓVIL / MODAL EN PC)
   const handleShare = async () => {
     // Detectamos si el navegador soporta compartir nativamente y si es un dispositivo móvil
-    if (navigator.share && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+    if (
+      navigator.share &&
+      /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+    ) {
       try {
         await navigator.share({
           title: "Mi Catálogo Digital",
           text: textoCompartir, // El mensaje va aquí
-          url: urlMenu,         // ✅ Forzamos la URL en su propiedad nativa para que WhatsApp genere la imagen
+          url: urlMenu, // ✅ Forzamos la URL en su propiedad nativa para que WhatsApp genere la imagen
         });
       } catch (error) {
         console.error("Error al compartir nativo, abriendo modal...", error);
@@ -113,18 +118,21 @@ export default function QRPage() {
 
   const shareLinks = {
     whatsapp: `https://api.whatsapp.com/send?text=${encodeURIComponent(
-      `${textoCompartir}\n\n${urlMenu}`
+      `${textoCompartir}\n\n${urlMenu}`,
     )}`,
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-      urlMenu
+      urlMenu,
     )}`,
   };
 
   return (
     <div className="max-w-2xl mx-auto px-4 relative">
-      <h1 className="text-3xl font-bold mb-8 text-[var(--text-primary)]">
-        QR de tu menú
-      </h1>
+      <PageHeader
+        title="Código QR y Enlace"
+        category="Difusión"
+        icon={QrCode}
+        showBackButton={true}
+      />
 
       <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 sm:p-8 text-center shadow-sm">
         {/* QR */}
@@ -215,8 +223,8 @@ export default function QRPage() {
             </div>
 
             <p className="text-xs text-[var(--text-secondary)] mb-4 text-left bg-[var(--bg-tertiary)] p-3 rounded-xl">
-              💡 Para <b>Instagram</b> y <b>TikTok</b>, copia el enlace y
-              pégalo directamente en tu biografía.
+              💡 Para <b>Instagram</b> y <b>TikTok</b>, copia el enlace y pégalo
+              directamente en tu biografía.
             </p>
 
             <button

@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import AparienciaForm from "@/components/dashboard/apariencia/AparienciaForm";
 import PhonePreview from "@/components/dashboard/apariencia/PhonePreview";
+import { PageHeader } from "@/components/dashboard/PageHeader";
+import { Palette } from "lucide-react";
 
 export default function AparienciaPage() {
   const [nombre, setNombre] = useState("");
@@ -16,8 +18,8 @@ export default function AparienciaPage() {
   const [loading, setLoading] = useState(true);
 
   const [colorHeader, setColorHeader] = useState("#f97316");
-  const [colorTextHeader, setColorTextHeader] = useState("#ffffff");     
-  const [colorBorderHeader, setColorBorderHeader] = useState("#ffffff10"); 
+  const [colorTextHeader, setColorTextHeader] = useState("#ffffff");
+  const [colorBorderHeader, setColorBorderHeader] = useState("#ffffff10");
   const [colorFooter, setColorFooter] = useState("#111827");
   const [colorTexto, setColorTexto] = useState("#ffffff");
   const [colorPrecio, setColorPrecio] = useState("#22c55e");
@@ -28,8 +30,8 @@ export default function AparienciaPage() {
   const [colorFondoCategoria, setColorFondoCategoria] = useState("#ffffff");
   const [colorTextoCategoria, setColorTextoCategoria] = useState("#111827");
   const [colorBorderCategoria, setColorBorderCategoria] = useState("#e5e7eb");
-    
-const [previewOpen, setPreviewOpen] = useState(false);
+
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   useEffect(() => {
     cargarDatos();
@@ -62,14 +64,14 @@ const [previewOpen, setPreviewOpen] = useState(false);
         setColorPrimario(data.color_primario || "#f97316");
         setColorFondo(data.color_fondo || "#111827");
         setColorHeader(data.color_header || "#f97316");
-        setColorTextHeader(data.color_text_header || "#ffffff");       
-        setColorBorderHeader(data.color_border_header || "#ffffff10"); 
+        setColorTextHeader(data.color_text_header || "#ffffff");
+        setColorBorderHeader(data.color_border_header || "#ffffff10");
         setColorFooter(data.color_footer || "#111827");
         setColorTexto(data.color_texto || "#ffffff");
         setColorPrecio(data.color_precio || "#22c55e");
         setColorHamburguesa(data.color_hamburguesa || "#ffffff");
         setColorTarjeta(data.color_tarjeta || "#ffffff10");
-        
+
         setColorLupa(data.color_lupa || "#ffffff");
         setColorFondoCategoria(data.color_fondo_categoria || "#ffffff");
         setColorTextoCategoria(data.color_texto_categoria || "#111827");
@@ -123,14 +125,14 @@ const [previewOpen, setPreviewOpen] = useState(false);
         color_primario: colorPrimario,
         color_fondo: colorFondo,
         color_header: colorHeader,
-        color_text_header: colorTextHeader,     
-        color_border_header: colorBorderHeader, 
+        color_text_header: colorTextHeader,
+        color_border_header: colorBorderHeader,
         color_footer: colorFooter,
         color_texto: colorTexto,
         color_precio: colorPrecio,
         color_hamburguesa: colorHamburguesa,
         color_tarjeta: colorTarjeta,
-        
+
         color_lupa: colorLupa,
         color_fondo_categoria: colorFondoCategoria,
         color_texto_categoria: colorTextoCategoria,
@@ -144,7 +146,7 @@ const [previewOpen, setPreviewOpen] = useState(false);
       return;
     }
 
-    alert("Guardado ");
+    alert("Guardado exitosamente");
   };
 
   if (loading) {
@@ -155,116 +157,123 @@ const [previewOpen, setPreviewOpen] = useState(false);
     );
   }
 
-
-
   return (
-  <>
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start relative max-w-full">
-      <div className="w-full">
-        <AparienciaForm
-          nombre={nombre}
-          setNombre={setNombre}
-          colorPrimario={colorPrimario}
-          setColorPrimario={setColorPrimario}
-          colorFondo={colorFondo}
-          setColorFondo={setColorFondo}
-          estiloMenu={estiloMenu}
-          setEstiloMenu={setEstiloMenu}
-          colorHeader={colorHeader}
-          setColorHeader={setColorHeader}
-          colorTextHeader={colorTextHeader}
-          setColorTextHeader={setColorTextHeader}
-          colorBorderHeader={colorBorderHeader}
-          setColorBorderHeader={setColorBorderHeader}
-          colorFooter={colorFooter}
-          setColorFooter={setColorFooter}
-          colorTexto={colorTexto}
-          setColorTexto={setColorTexto}
-          colorPrecio={colorPrecio}
-          setColorPrecio={setColorPrecio}
-          colorHamburguesa={colorHamburguesa}
-          setColorHamburguesa={setColorHamburguesa}
-          colorTarjeta={colorTarjeta}
-          setColorTarjeta={setColorTarjeta}
-          colorLupa={colorLupa}
-          setColorLupa={setColorLupa}
-          colorFondoCategoria={colorFondoCategoria}
-          setColorFondoCategoria={setColorFondoCategoria}
-          colorTextoCategoria={colorTextoCategoria}
-          setColorTextoCategoria={setColorTextoCategoria}
-          colorBorderCategoria={colorBorderCategoria}
-          setColorBorderCategoria={setColorBorderCategoria}
-          guardar={guardar}
-        />
-      </div>
+    <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
+      {/* Header Reutilizable */}
+      <PageHeader
+        title="Personalizar Apariencia"
+        category="Diseño"
+        icon={Palette}
+        showBackButton={true}
+      />
 
-      {/* Teléfono fijo solo en escritorio */}
-      <div className="hidden lg:block lg:sticky lg:top-6 h-fit w-full">
-        <div className="flex justify-center lg:justify-end">
-          <PhonePreview
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start relative max-w-full">
+        <div className="w-full">
+          <AparienciaForm
             nombre={nombre}
+            setNombre={setNombre}
+            colorPrimario={colorPrimario}
+            setColorPrimario={setColorPrimario}
             colorFondo={colorFondo}
+            setColorFondo={setColorFondo}
             estiloMenu={estiloMenu}
-            logo={logo}
-            categorias={categorias}
+            setEstiloMenu={setEstiloMenu}
             colorHeader={colorHeader}
+            setColorHeader={setColorHeader}
             colorTextHeader={colorTextHeader}
+            setColorTextHeader={setColorTextHeader}
             colorBorderHeader={colorBorderHeader}
+            setColorBorderHeader={setColorBorderHeader}
             colorFooter={colorFooter}
+            setColorFooter={setColorFooter}
             colorTexto={colorTexto}
+            setColorTexto={setColorTexto}
             colorPrecio={colorPrecio}
+            setColorPrecio={setColorPrecio}
             colorHamburguesa={colorHamburguesa}
+            setColorHamburguesa={setColorHamburguesa}
             colorTarjeta={colorTarjeta}
+            setColorTarjeta={setColorTarjeta}
             colorLupa={colorLupa}
+            setColorLupa={setColorLupa}
             colorFondoCategoria={colorFondoCategoria}
+            setColorFondoCategoria={setColorFondoCategoria}
             colorTextoCategoria={colorTextoCategoria}
+            setColorTextoCategoria={setColorTextoCategoria}
             colorBorderCategoria={colorBorderCategoria}
+            setColorBorderCategoria={setColorBorderCategoria}
+            guardar={guardar}
           />
         </div>
+
+        {/* Teléfono fijo solo en escritorio */}
+        <div className="hidden lg:block lg:sticky lg:top-6 h-fit w-full">
+          <div className="flex justify-center lg:justify-end">
+            <PhonePreview
+              nombre={nombre}
+              colorFondo={colorFondo}
+              estiloMenu={estiloMenu}
+              logo={logo}
+              categorias={categorias}
+              colorHeader={colorHeader}
+              colorTextHeader={colorTextHeader}
+              colorBorderHeader={colorBorderHeader}
+              colorFooter={colorFooter}
+              colorTexto={colorTexto}
+              colorPrecio={colorPrecio}
+              colorHamburguesa={colorHamburguesa}
+              colorTarjeta={colorTarjeta}
+              colorLupa={colorLupa}
+              colorFondoCategoria={colorFondoCategoria}
+              colorTextoCategoria={colorTextoCategoria}
+              colorBorderCategoria={colorBorderCategoria}
+            />
+          </div>
+        </div>
       </div>
+
+      {/* Botón solo en pantallas menores a 1024px */}
+      <button
+        onClick={() => setPreviewOpen(true)}
+        className="lg:hidden fixed bottom-24 right-5 z-[60] rounded-full bg-orange-500 px-5 py-3 text-sm font-bold text-white shadow-xl"
+      >
+        Ver vista previa
+      </button>
+
+      {/* Modal de Vista Previa Móvil */}
+      {previewOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="relative max-h-full overflow-auto">
+            <button
+              onClick={() => setPreviewOpen(false)}
+              className="absolute right-2 top-2 z-10 h-9 w-9 rounded-full bg-black/70 text-lg text-white"
+              aria-label="Cerrar vista previa"
+            >
+              ×
+            </button>
+
+            <PhonePreview
+              nombre={nombre}
+              colorFondo={colorFondo}
+              estiloMenu={estiloMenu}
+              logo={logo}
+              categorias={categorias}
+              colorHeader={colorHeader}
+              colorTextHeader={colorTextHeader}
+              colorBorderHeader={colorBorderHeader}
+              colorFooter={colorFooter}
+              colorTexto={colorTexto}
+              colorPrecio={colorPrecio}
+              colorHamburguesa={colorHamburguesa}
+              colorTarjeta={colorTarjeta}
+              colorLupa={colorLupa}
+              colorFondoCategoria={colorFondoCategoria}
+              colorTextoCategoria={colorTextoCategoria}
+              colorBorderCategoria={colorBorderCategoria}
+            />
+          </div>
+        </div>
+      )}
     </div>
-
-    {/* Botón solo en pantallas menores a 1024px */}
-    <button
-  onClick={() => setPreviewOpen(true)}
-  className="lg:hidden fixed bottom-24 right-5 z-[60] rounded-full bg-orange-500 px-5 py-3 text-sm font-bold text-white shadow-xl"
->
-  Ver vista previa
-</button>
-
-    {previewOpen && (
-      <div className="lg:hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-        <div className="relative max-h-full overflow-auto">
-          <button
-            onClick={() => setPreviewOpen(false)}
-            className="absolute right-2 top-2 z-10 h-9 w-9 rounded-full bg-black/70 text-lg text-white"
-            aria-label="Cerrar vista previa"
-          >
-            ×
-          </button>
-
-          <PhonePreview
-            nombre={nombre}
-            colorFondo={colorFondo}
-            estiloMenu={estiloMenu}
-            logo={logo}
-            categorias={categorias}
-            colorHeader={colorHeader}
-            colorTextHeader={colorTextHeader}
-            colorBorderHeader={colorBorderHeader}
-            colorFooter={colorFooter}
-            colorTexto={colorTexto}
-            colorPrecio={colorPrecio}
-            colorHamburguesa={colorHamburguesa}
-            colorTarjeta={colorTarjeta}
-            colorLupa={colorLupa}
-            colorFondoCategoria={colorFondoCategoria}
-            colorTextoCategoria={colorTextoCategoria}
-            colorBorderCategoria={colorBorderCategoria}
-          />
-        </div>
-      </div>
-    )}
-  </>
-);
+  );
 }

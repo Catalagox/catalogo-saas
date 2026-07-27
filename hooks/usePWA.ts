@@ -10,6 +10,7 @@ interface BeforeInstallPromptEvent extends Event {
 export function usePWA() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isIOS, setIsIOS] = useState(false);
+  const [isAndroid, setIsAndroid] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [showIOSModal, setShowIOSModal] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
@@ -24,12 +25,15 @@ export function usePWA() {
 
     checkStandalone();
 
-    // 2. Detectar si es iOS (iPhone / iPad)
+    // 2. Detectar plataforma (iOS y Android)
     const userAgent = window.navigator.userAgent.toLowerCase();
     const isIOSDevice = /iphone|ipad|ipod/.test(userAgent) && !(window as unknown as { MSStream?: unknown }).MSStream;
-    setIsIOS(isIOSDevice);
+    const isAndroidDevice = /android/.test(userAgent);
 
-    // 3. Capturar el evento `beforeinstallprompt` (Android / Chrome / Edge)
+    setIsIOS(isIOSDevice);
+    setIsAndroid(isAndroidDevice);
+
+    // 3. Capturar el evento `beforeinstallprompt` (Android / Chrome)
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
@@ -37,7 +41,7 @@ export function usePWA() {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-    // 4. Escuchar cuando la app sea instalada exitosamente
+    // 4. Escuchar si la app es instalada
     const handleAppInstalled = () => {
       setIsStandalone(true);
       setDeferredPrompt(null);
@@ -52,11 +56,13 @@ export function usePWA() {
   }, []);
 
   const installApp = async () => {
+    // Si es iPhone / iPad -> Abre modal personalizado
     if (isIOS) {
       setShowIOSModal(true);
       return;
     }
 
+    // Si es Android o Desktop y capturó el evento de Chrome
     if (deferredPrompt) {
       await deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
@@ -64,6 +70,11 @@ export function usePWA() {
         setIsStandalone(true);
       }
       setDeferredPrompt(null);
+    } else if (isAndroid) {
+      // Fallback si la carga asíncrona del Dashboard retrasó el evento nativo
+      alert(
+        "Para instalar CatalagoX: abre el menú de los 3 puntos (⋮) en Chrome y presiona 'Añadir a la pantalla de inicio'."
+      );
     }
   };
 
@@ -71,9 +82,8 @@ export function usePWA() {
     setIsDismissed(true);
   };
 
-  // Determinar si debemos mostrar el banner
-  // Se muestra si NO está instalada, NO fue desestimada y (hay prompt de instalación o es iOS)
-  const canShowBanner = !isStandalone && !isDismissed && (!!deferredPrompt || isIOS);
+  // El banner se muestra si NO está instalada, NO fue cerrado, y estamos en iOS, Android o hay evento capturado
+  const canShowBanner = !isStandalone && !isDismissed && (!!deferredPrompt || isIOS || isAndroid);
 
   return {
     canShowBanner,

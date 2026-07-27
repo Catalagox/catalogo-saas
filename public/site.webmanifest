@@ -4,7 +4,7 @@
   "description": "Crea tu página web, catálogo digital y menú QR.",
   "start_url": "/dashboard",
   "scope": "/",
-  "display": "standalone",
+  "display": "minimal-ui",
   "orientation": "portrait",
   "theme_color": "#22c55e",
   "background_color": "#ffffff",

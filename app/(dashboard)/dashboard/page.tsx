@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import IndicadorSuscripcion from "@/components/dashboard/principal/IndicadorSuscripcion";
+import { PageHeader } from "@/components/dashboard/PageHeader";
+import  IndicadorSuscripcion  from "@/components/dashboard/principal/IndicadorSuscripcion";
 import PelotaMundial from "@/components/PelotaMundial";
 
 import {
@@ -169,22 +170,17 @@ export default function DashboardPage() {
     
     <div className="w-full px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto space-y-6 md:space-y-10">
-        {/* HEADER */}
-        <div className="bg-[var(--bg-card)] border-b border-[var(--border-card)] sticky top-0 z-20 backdrop-blur-md px-5 py-6 md:px-10 md:py-8 mb-6 md:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2 text-[var(--text-secondary)] text-xs font-bold uppercase tracking-widest">
-              <MenuSquare className="w-4 h-4" />
-              <span>principal</span>
-            </div>
-
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-[var(--text-primary)]">
-              Panel de control
-            </h1>
-          </div>
-
-          {/* 🔥 INDICADOR SUSCRIPCIÓN */}
-          <IndicadorSuscripcion planVenceEl={catalogo?.plan_vence_el || null} />
-        </div>
+       {/* HEADER */}
+{/* HEADER */}
+<PageHeader
+  title="Panel de control"
+  category="principal"
+  icon={MenuSquare}
+  showBackButton={false}
+>
+  {/* 🔥 El indicador entra aquí como children */}
+  <IndicadorSuscripcion planVenceEl={catalogo?.plan_vence_el || null} />
+</PageHeader>
 
         {catalogo ? (
           /* GRID DASHBOARD */

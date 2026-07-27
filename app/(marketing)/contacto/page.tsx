@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { FaWhatsapp, FaEnvelope } from "react-icons/fa";
+import Link from "next/link";
+import { FaWhatsapp, FaEnvelope, FaArrowLeft } from "react-icons/fa";
 
 export const metadata: Metadata = {
   title: "Contacto",
@@ -17,6 +18,15 @@ export default function ContactoPage() {
 
           {/* COLUMNA TEXTO */}
           <div className="text-center lg:text-left space-y-8">
+
+            {/* BOTÓN VOLVER */}
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-black transition-colors"
+            >
+              <FaArrowLeft className="text-xs" />
+              <span>Volver al inicio</span>
+            </Link>
 
             <div>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-black leading-tight">

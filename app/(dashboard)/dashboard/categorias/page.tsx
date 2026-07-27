@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import CreateCategoryForm from "@/components/dashboard/agregar-producto/CreateCategoryForm";
-
-import CategoryHeader from "@/components/dashboard/categorias/CategoryHeader";
 import CategoryList from "@/components/dashboard/categorias/CategoryList";
+import { PageHeader } from "@/components/dashboard/PageHeader";
+import { Tag } from "lucide-react"; 
 
 type Categoria = {
   id: string;
@@ -96,7 +96,14 @@ export default function CategoriasPage() {
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto space-y-10">
-        <CategoryHeader />
+
+        
+        <PageHeader
+          title="Gestión de Categorías"
+          category="Catálogo"
+          icon={Tag}
+          showBackButton={true}
+        />
 
         {/* Crear categoría */}
         <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 sm:p-8">

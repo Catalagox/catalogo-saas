@@ -5,7 +5,8 @@ import { supabase } from "@/lib/supabaseClient";
 import ProductGrid from "@/components/dashboard/productos/ProductGrid";
 import ProductEditModal from "@/components/dashboard/productos/ProductEditModal";
 import { Loader2, Package, Search, Filter } from "lucide-react";
-import imageCompression from "browser-image-compression"; // 📦 Importamos la librería que ya tienes
+import imageCompression from "browser-image-compression";
+import { PageHeader } from "@/components/dashboard/PageHeader";
 
 // Tipos consistentes
 export type Categoria = { id: string; nombre: string };
@@ -93,7 +94,10 @@ export default function ProductosDashboard() {
     if (error) {
       console.error("Error al eliminar archivo del Storage:", error.message);
     } else {
-      console.log("✅ Archivo eliminado con éxito de Supabase Storage:", pathArchivo);
+      console.log(
+        "✅ Archivo eliminado con éxito de Supabase Storage:",
+        pathArchivo,
+      );
     }
   };
 
@@ -117,7 +121,7 @@ export default function ProductosDashboard() {
 
       // 3. Eliminar el registro en la base de datos PostgreSQL
       const { error } = await supabase.from("productos").delete().eq("id", id);
-      
+
       if (!error) {
         setProductos(productos.filter((p) => p.id !== id));
         alert("Producto eliminado correctamente");
@@ -155,18 +159,25 @@ export default function ProductosDashboard() {
 
     // Configuración de compresión óptima
     const opciones = {
-      maxSizeMB: 0.8,              // Tamaño máximo ~800KB
-      maxWidthOrHeight: 1000,      // Max 1000px de ancho/alto
+      maxSizeMB: 0.8, // Tamaño máximo ~800KB
+      maxWidthOrHeight: 1000, // Max 1000px de ancho/alto
       useWebWorker: true,
-      fileType: "image/webp",      // Fuerza la compresión a formato WebP moderno
+      fileType: "image/webp", // Fuerza la compresión a formato WebP moderno
     };
 
     try {
-      console.log(`📸 [Original] Peso: ${(newImageFile.size / (1024 * 1024)).toFixed(2)} MB`);
-      
+      console.log(
+        `📸 [Original] Peso: ${(newImageFile.size / (1024 * 1024)).toFixed(2)} MB`,
+      );
+
       // 1. Ejecutar compresión
-      const imagenComprimidaFile = await imageCompression(newImageFile, opciones);
-      console.log(`⚡ [Comprimido WebP] Peso: ${(imagenComprimidaFile.size / 1024).toFixed(2)} KB`);
+      const imagenComprimidaFile = await imageCompression(
+        newImageFile,
+        opciones,
+      );
+      console.log(
+        `⚡ [Comprimido WebP] Peso: ${(imagenComprimidaFile.size / 1024).toFixed(2)} KB`,
+      );
 
       // 2. Generar nombre de archivo único siempre con extensión .webp
       const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(2, 7)}.webp`;
@@ -181,7 +192,9 @@ export default function ProductosDashboard() {
 
       if (uploadError) throw uploadError;
 
-      const { data } = supabase.storage.from("productos").getPublicUrl(fileName);
+      const { data } = supabase.storage
+        .from("productos")
+        .getPublicUrl(fileName);
       return data.publicUrl;
     } catch (error) {
       console.error("Error al procesar/subir imagen:", error);
@@ -196,9 +209,11 @@ export default function ProductosDashboard() {
 
     try {
       setLoading(true);
-      
-      const fotoViejaUrl = productos.find((p) => p.id === editingProduct.id)?.imagen_url;
-      
+
+      const fotoViejaUrl = productos.find(
+        (p) => p.id === editingProduct.id,
+      )?.imagen_url;
+
       // 1. Subir y comprimir la nueva imagen (si es que se seleccionó una)
       const imagen_url = await subirImagen();
 
@@ -207,7 +222,6 @@ export default function ProductosDashboard() {
         await borrarArchivoStorage(fotoViejaUrl);
       }
 
-      
       const { error } = await supabase
         .from("productos")
         .update({
@@ -262,38 +276,34 @@ export default function ProductosDashboard() {
 
   return (
     <div className="min-h-screen text-white pb-20">
-      <div className="bg-[var(--bg-card)] border-b border-[var(--border-card)] sticky top-0 z-20 backdrop-blur-md px-6 py-8 md:px-10">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
-            <div className="flex items-center gap-2 text-[var(--text-secondary)] text-xs font-bold uppercase tracking-widest mb-2">
-              <Package className="w-4 h-4 text-[var(--text-secondary)]" />
-              <span>Inventario</span>
-            </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-[var(--text-primary)]">
-              Mis Productos
-            </h1>
-          </div>
-
-          <div className="relative w-full md:w-80">
+      {/* 🟢 NUEVO HEADER INTEGRADO */}
+      <div className="max-w-7xl mx-auto px-6 pt-6 md:px-10 md:pt-8">
+        <PageHeader
+          title="Mis Productos"
+          category="Inventario"
+          icon={Package}
+          showBackButton={true}
+        >
+          {/* El buscador se pasa como hijo (children) a la derecha */}
+          <div className="relative w-full sm:w-80">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
             <input
               type="text"
               placeholder="Buscar producto..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-[var(--bg-card)] border border-[var(--border-card)] rounded-xl py-2.5 pl-10 pr-4 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+              className="w-full bg-[var(--bg-card)] border border-[var(--border-card)] rounded-xl py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
             />
           </div>
-        </div>
+        </PageHeader>
       </div>
 
       <main className="max-w-7xl mx-auto p-6 md:p-10">
         {productosFiltrados.length > 0 ? (
-          
           <ProductGrid
             productos={productosFiltrados}
             categorias={categorias}
-            paisCode={paisCode} 
+            paisCode={paisCode}
             onToggle={cambiarDisponibilidad}
             onEdit={(p) => setEditingProduct(p)}
             onDelete={eliminarProducto}
@@ -312,7 +322,6 @@ export default function ProductosDashboard() {
       </main>
 
       {editingProduct && (
-        
         <ProductEditModal
           producto={editingProduct}
           categorias={categorias}

@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import CreateProductForm from "@/components/dashboard/agregar-producto/CreateProductForm";
 import { Loader2, AlertCircle } from "lucide-react";
+import { PageHeader } from "@/components/dashboard/PageHeader";
+import { Package } from "lucide-react"; // Importamos el ícono para la categoría
 
 type Categoria = {
   id: string;
@@ -96,6 +98,13 @@ export default function NuevoProductoPage() {
   return (
     <div className="w-full min-h-screen pb-20">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* 🟢 HEADER DE PÁGINA */}
+      <PageHeader
+        title="Crear nuevo producto"
+        category="Productos"
+        icon={Package}
+        showBackButton={true}
+      />
 
         <div className="relative">
 
