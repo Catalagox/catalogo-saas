@@ -69,7 +69,13 @@ export const metadata: Metadata = {
     apple: "/apple-touch-icon.png",
   },
   manifest: "/site.webmanifest",
-  
+
+  // 📲 Configuración para la PWA en iOS (Safari / iPhone)
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Catalagox",
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
