@@ -193,7 +193,8 @@ export default function CategoriasSlider({
 
                   window.scrollTo({ top: y, behavior: "smooth" });
                 }}
-                className={`relative max-w-[180px] sm:max-w-[220px] px-5 py-2.5 rounded-2xl text-sm font-bold tracking-wide transition-all duration-300 border flex-shrink-0 outline-none touch-manipulation overflow-hidden ${
+               // CÓDIGO NUEVO:
+className={`relative max-w-[140px] sm:max-w-[220px] px-3 py-1.5 sm:px-5 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold tracking-wide transition-all duration-300 border flex-shrink-0 outline-none touch-manipulation overflow-hidden ${
                   isActive
                     ? "scale-105"
                     : "md:hover:bg-white/10 active:bg-white/10"
