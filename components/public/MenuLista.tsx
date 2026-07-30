@@ -62,7 +62,7 @@ export default function MenuLista({
           <section
             key={categoria.id}
             id={`cat-${categoria.id}`}
-            className="scroll-mt-24"
+            className="scroll-mt-24 px-2 sm:px-6 rounded-none"
           >
             {/* 🚀 NUEVO COMPONENTE DE ENCABEZADO REUTILIZADO */}
             <HeaderCategoria 

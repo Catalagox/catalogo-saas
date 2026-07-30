@@ -31,23 +31,24 @@ export default function ProductoCard({ producto, countryCode = "PE" }: Props) {
   };
 
   return (
+    // CÓDIGO NUEVO:
+    // CÓDIGO NUEVO:
     <div
       onClick={handleClick}
-      className="group rounded-2xl p-3 flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-all duration-300 bg-[var(--color-card)] border border-white/10 md:hover:border-[var(--color-categoria)] active:bg-white/[0.02] outline-none touch-manipulation"
+      className="group rounded-none p-3 flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-all duration-300 bg-[var(--color-card)] border border-white/10 md:hover:border-[var(--color-categoria)] active:bg-white/[0.02] outline-none touch-manipulation"
     >
-      {/* IMAGEN */}
       {producto.imagen_url ? (
-        <div className="relative w-24 h-24 flex-shrink-0 overflow-hidden rounded-xl bg-white">
+        <div className="relative w-24 h-24 flex-shrink-0 overflow-hidden rounded-none bg-white">
           <img
             src={producto.imagen_url}
             alt={producto.nombre}
             loading="lazy"
             decoding="async"
-            className="w-full h-full object-contain transition-transform duration-500 md:group-hover:scale-110"
+            className="w-full h-full object-cover transition-transform duration-500 md:group-hover:scale-110"
           />
         </div>
       ) : (
-        <div className="w-24 h-24 flex items-center justify-center rounded-xl text-xs bg-white/10 text-[var(--color-text)]">
+        <div className="w-24 h-24 flex items-center justify-center rounded-none text-xs bg-white/10 text-[var(--color-text)]">
           Sin foto
         </div>
       )}

@@ -517,7 +517,7 @@ export default function Hero() {
         </div>
 
         {/* SECCIÓN ESTADÍSTICAS ANIMADAS */}
-        <div className="mt-32 relative group">
+        <div className="mt-32 mb-16 relative group">
           {/* Fondo con gradiente y efecto de cristal oscuro */}
           <div className="absolute inset-0 bg-gradient-to-br from-[#06281c] via-[#041d14] to-black rounded-[3rem] shadow-2xl overflow-hidden">
             <div className="absolute top-0 right-0 w-96 h-96 bg-[var(--color-primary)] opacity-[0.03] blur-[100px]" />
