@@ -8,7 +8,7 @@ interface FormLogoProps {
 
 export default function FormLogo({ logo, subiendoLogo, subirLogo }: FormLogoProps) {
   return (
-    <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 space-y-5">
+    <div id="logo" className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 space-y-5">
       <h2 className="text-xl font-semibold text-[var(--text-primary)]">
         Logo del restaurante
       </h2>

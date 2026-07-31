@@ -13,10 +13,10 @@ import {
   Tags,
   QrCode,
   Palette,
-  BarChart3,
+  Image,
   Globe,
   PlusCircle,
-  Video
+  Video,
 } from "lucide-react";
 
 type Catalogo = {
@@ -188,153 +188,153 @@ export default function DashboardPage() {
 
           {catalogo ? (
             /* GRID DASHBOARD */
-           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-  {[
-    {
-      icon: <PlusCircle className="w-5 h-5" />,
-      label: "Acción",
-      value: "Crear producto",
-      subtext: "Añade un nuevo producto a tu catálogo",
-      highlight: true,
-      action: () => irA("/dashboard/agregar-producto"),
-    },
-    {
-      icon: <Tags className="w-5 h-5" />,
-      label: "Categorías",
-      value: categoriasCount,
-      subtext: "Crea y edita las categorías de tus productos",
-      highlight: false,
-      action: () => irA("/dashboard/categorias"),
-    },
-    {
-      icon: <Package className="w-5 h-5" />,
-      label: "Productos",
-      value: productosCount,
-      subtext: "Edita precios, fotos y nombres de tu catálogo",
-      highlight: false,
-      action: () => irA("/dashboard/productos"),
-    },
-    {
-      icon: <QrCode className="w-5 h-5" />,
-      label: "QR",
-      value: "Activo",
-      subtext: "Descarga tu código QR y comparte el enlace",
-      highlight: false,
-      action: () => irA("/dashboard/qr"),
-    },
-    {
-      icon: <Palette className="w-5 h-5" />,
-      label: "Apariencia",
-      value: "Personalizar",
-      subtext: "Cambia los colores y el diseño de tu catálogo",
-      highlight: false,
-      action: () => irA("/dashboard/apariencia"),
-    },
-    {
-      icon: <BarChart3 className="w-5 h-5" />,
-      label: "Estadísticas",
-      value: "Ver datos",
-      subtext: "Revisa cuántas personas han visto tu catálogo",
-      highlight: false,
-      action: () => irA("/dashboard/estadistica"),
-    },
-  ].map((card, i) => (
-    <button
-      key={i}
-      onClick={card.action}
-      className={`
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {[
+                {
+                  icon: <PlusCircle className="w-5 h-5" />,
+                  label: "Acción",
+                  value: "Crear producto",
+                  subtext: "Añade un nuevo producto a tu catálogo",
+                  highlight: true,
+                  action: () => irA("/dashboard/agregar-producto"),
+                },
+                {
+                  icon: <Image className="w-5 h-5" />, // 👈 O puedes usar Upload, Camera o ImageIcon
+                  label: "Marca",
+                  value: "Subir logo",
+                  subtext: "Personaliza la imagen y marca de tu catálogo",
+                  highlight: false,
+                  action: () => irA("/dashboard/ajustes#logo"),
+                },
+                {
+                  icon: <Tags className="w-5 h-5" />,
+                  label: "Categorías",
+                  value: categoriasCount,
+                  subtext: "Crea y edita las categorías de tus productos",
+                  highlight: false,
+                  action: () => irA("/dashboard/categorias"),
+                },
+                {
+                  icon: <Package className="w-5 h-5" />,
+                  label: "Productos",
+                  value: productosCount,
+                  subtext: "Edita precios, fotos y nombres de tu catálogo",
+                  highlight: false,
+                  action: () => irA("/dashboard/productos"),
+                },
+                {
+                  icon: <QrCode className="w-5 h-5" />,
+                  label: "QR",
+                  value: "Activo",
+                  subtext: "Descarga tu código QR y comparte el enlace",
+                  highlight: false,
+                  action: () => irA("/dashboard/qr"),
+                },
+                {
+                  icon: <Palette className="w-5 h-5" />,
+                  label: "Apariencia",
+                  value: "Personalizar",
+                  subtext: "Cambia los colores y el diseño de tu catálogo",
+                  highlight: false,
+                  action: () => irA("/dashboard/apariencia"),
+                },
+              ].map((card, i) => (
+                <button
+                  key={i}
+                  onClick={card.action}
+                  className={`
         group relative text-left w-full p-5 rounded-2xl
         flex flex-col justify-between space-y-4 cursor-pointer
         ${card.highlight ? "card-dashboard-highlight" : "card-dashboard"}
       `}
-    >
-      <div className="flex items-center justify-between w-full">
-        <div
-          className={`p-2.5 rounded-xl transition-all duration-300 group-hover:scale-110 ${
-            card.highlight
-              ? "bg-[var(--color-primary-glow)] text-[var(--color-primary)]"
-              : "bg-white/5 text-[var(--text-secondary)] group-hover:text-white group-hover:bg-white/10"
-          }`}
-        >
-          {card.icon}
-        </div>
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <div
+                      className={`p-2.5 rounded-xl transition-all duration-300 group-hover:scale-110 ${
+                        card.highlight
+                          ? "bg-[var(--color-primary-glow)] text-[var(--color-primary)]"
+                          : "bg-white/5 text-[var(--text-secondary)] group-hover:text-white group-hover:bg-white/10"
+                      }`}
+                    >
+                      {card.icon}
+                    </div>
 
-        <span className="text-[11px] font-medium uppercase tracking-wider text-[var(--text-muted)] group-hover:text-[var(--text-secondary)] transition-colors">
-          {card.label}
-        </span>
-      </div>
+                    <span className="text-[11px] font-medium uppercase tracking-wider text-[var(--text-muted)] group-hover:text-[var(--text-secondary)] transition-colors">
+                      {card.label}
+                    </span>
+                  </div>
 
-      <div>
-        <h3 className="text-xl font-bold text-[var(--text-primary)] transition-colors">
-          {card.value}
-        </h3>
-        <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-          {card.subtext}
-        </p>
-      </div>
-    </button>
-  ))}
+                  <div>
+                    <h3 className="text-xl font-bold text-[var(--text-primary)] transition-colors">
+                      {card.value}
+                    </h3>
+                    <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                      {card.subtext}
+                    </p>
+                  </div>
+                </button>
+              ))}
 
-  {/* TARJETA DE TUTORIAL EN YOUTUBE */}
-  <a
-    href="https://www.youtube.com/watch?v=TU_ID_DE_VIDEO" // 👈 Solo reemplaza esto con la URL exacta de tu video
-    target="_blank"
-    rel="noopener noreferrer"
-    className="
+              {/* TARJETA DE TUTORIAL EN YOUTUBE */}
+              <a
+                href="https://www.youtube.com/watch?v=RV7S4Pz7XZA&t=26s" // 👈 Solo reemplaza esto con la URL exacta de tu video
+                target="_blank"
+                rel="noopener noreferrer"
+                className="
       group relative text-left w-full p-5 rounded-2xl
       card-dashboard flex flex-col justify-between space-y-4 cursor-pointer
     "
-  >
-    <div className="flex items-center justify-between w-full">
-      <div className="p-2.5 rounded-xl bg-white/5 text-[var(--text-secondary)] group-hover:text-red-500 group-hover:bg-red-500/10 transition-all duration-300 group-hover:scale-110">
-        <Video className="w-5 h-5" />
-      </div>
+              >
+                <div className="flex items-center justify-between w-full">
+                  <div className="p-2.5 rounded-xl bg-white/5 text-[var(--text-secondary)] group-hover:text-red-500 group-hover:bg-red-500/10 transition-all duration-300 group-hover:scale-110">
+                    <Video className="w-5 h-5" />
+                  </div>
 
-      <span className="text-[11px] font-medium uppercase tracking-wider text-[var(--text-muted)] group-hover:text-[var(--text-secondary)] transition-colors">
-        Tutorial
-      </span>
-    </div>
+                  <span className="text-[11px] font-medium uppercase tracking-wider text-[var(--text-muted)] group-hover:text-[var(--text-secondary)] transition-colors">
+                    Tutorial
+                  </span>
+                </div>
 
-    <div>
-      <h3 className="text-xl font-bold text-[var(--text-primary)] transition-colors">
-        Ver video
-      </h3>
-      <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-        Aprende a crear tu catálogo digital y menú QR en minutos
-      </p>
-    </div>
-  </a>
+                <div>
+                  <h3 className="text-xl font-bold text-[var(--text-primary)] transition-colors">
+                    Ver video
+                  </h3>
+                  <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                    Aprende a crear tu catálogo digital y menú QR en minutos
+                  </p>
+                </div>
+              </a>
 
-  {/* MENÚ PÚBLICO */}
-  <a
-    href={`/${catalogo.slug}`}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="
+              {/* MENÚ PÚBLICO */}
+              <a
+                href={`/${catalogo.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="
       group relative text-left w-full p-5 rounded-2xl
       card-dashboard-highlight flex flex-col justify-between space-y-4 cursor-pointer
     "
-  >
-    <div className="flex items-center justify-between w-full">
-      <div className="p-2.5 rounded-xl bg-[var(--color-primary-glow)] text-[var(--color-primary)] group-hover:scale-110 transition-all duration-300">
-        <Globe className="w-5 h-5" />
-      </div>
+              >
+                <div className="flex items-center justify-between w-full">
+                  <div className="p-2.5 rounded-xl bg-[var(--color-primary-glow)] text-[var(--color-primary)] group-hover:scale-110 transition-all duration-300">
+                    <Globe className="w-5 h-5" />
+                  </div>
 
-      <span className="text-[11px] font-medium uppercase tracking-wider text-[var(--text-muted)] group-hover:text-[var(--text-secondary)] transition-colors">
-        Catálogo público
-      </span>
-    </div>
+                  <span className="text-[11px] font-medium uppercase tracking-wider text-[var(--text-muted)] group-hover:text-[var(--text-secondary)] transition-colors">
+                    Catálogo público
+                  </span>
+                </div>
 
-    <div>
-      <h3 className="text-xl font-bold text-[var(--text-primary)] transition-colors">
-        Ver online
-      </h3>
-      <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-        Ver cómo se ve tu tienda para los clientes
-      </p>
-    </div>
-  </a>
-</div>
+                <div>
+                  <h3 className="text-xl font-bold text-[var(--text-primary)] transition-colors">
+                    Ver online
+                  </h3>
+                  <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                    Ver cómo se ve tu catalógo para los clientes
+                  </p>
+                </div>
+              </a>
+            </div>
           ) : (
             /* CREAR MENÚ (VISTA PARA USUARIOS EN TRIAL DE 7 DÍAS GRATIS) */
             <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-8 max-w-xl">

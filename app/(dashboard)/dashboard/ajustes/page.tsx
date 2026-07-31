@@ -249,6 +249,19 @@ export default function AjustesPage() {
     }
   };
 
+  // 1. Agrega useEffect en tus hooks si aún no lo tienes
+useEffect(() => {
+  if (!loading) {
+    // Si la URL tiene #logo, hace scroll suave hacia ese elemento
+    if (window.location.hash === "#logo") {
+      const el = document.getElementById("logo");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  }
+}, [loading]);
+
   if (loading) {
     return (
       <div className="text-center py-20 text-[var(--text-secondary)]">
