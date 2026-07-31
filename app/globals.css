@@ -1,4 +1,4 @@
-/* Tailwind base, componentes y utilidades */             
+/* Tailwind base, componentes y utilidades */ 
 
 @tailwind base;
 @tailwind components;
@@ -98,12 +98,8 @@
      🌫️ EFECTOS
   ======================================================= */
 
-  --shadow-primary:
-    0 10px 30px rgba(34, 197, 94, 0.15);
-
-  --shadow-card:
-    0 4px 20px rgba(0, 0, 0, 0.25);
-
+  --shadow-primary: 0 10px 30px rgba(34, 197, 94, 0.15);
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.25);
   --blur-glass: blur(16px);
 }
 
@@ -137,20 +133,14 @@
     scroll-behavior: smooth;
   }
 
- body {
-  background: var(--background);
-
-  font-family:
-    Arial,
-    Helvetica,
-    sans-serif;
-
-  overflow-x: hidden;
-
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+  body {
+    background: var(--background);
+    font-family: Arial, Helvetica, sans-serif;
+    overflow-x: hidden;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 }
 
 /* =======================================================
@@ -173,23 +163,17 @@
 .react-tel-input .form-control {
   width: 100% !important;
   height: 48px !important;
-
   background: var(--bg-tertiary) !important;
   color: var(--text-primary) !important;
-
   border: 1px solid var(--border-card) !important;
   border-radius: 14px !important;
-
   font-size: 14px !important;
-
   box-shadow: none !important;
-
   transition: all 0.25s ease !important;
 }
 
 .react-tel-input .form-control:focus {
   border-color: var(--color-primary) !important;
-
   box-shadow:
     0 0 0 3px rgba(34, 197, 94, 0.15),
     0 0 20px rgba(34, 197, 94, 0.1) !important;
@@ -197,9 +181,7 @@
 
 .react-tel-input .flag-dropdown {
   background: var(--bg-tertiary) !important;
-
   border: 1px solid var(--border-card) !important;
-
   border-radius: 14px 0 0 14px !important;
 }
 
@@ -217,21 +199,15 @@
 
 .react-tel-input .country-list {
   background: var(--bg-card) !important;
-
   border: 1px solid var(--border-card) !important;
-
   border-radius: 14px !important;
-
   overflow: hidden !important;
-
   box-shadow: var(--shadow-card) !important;
 }
 
 .react-tel-input .country-list .country {
   color: var(--text-primary) !important;
-
   background: transparent !important;
-
   transition: background 0.2s ease !important;
 }
 
@@ -241,7 +217,6 @@
 
 .react-tel-input .country-list .country.highlight {
   background: var(--color-primary) !important;
-
   color: white !important;
 }
 
@@ -251,11 +226,8 @@
 
 .react-tel-input .search-box {
   background: var(--bg-tertiary) !important;
-
   color: var(--text-primary) !important;
-
   border: 1px solid var(--border-card) !important;
-
   border-radius: 10px !important;
 }
 
@@ -265,11 +237,8 @@
 
 .glass {
   background: rgba(255, 255, 255, 0.05);
-
   backdrop-filter: blur(16px);
-
   -webkit-backdrop-filter: blur(16px);
-
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -292,20 +261,14 @@
   animation: bounce-slow 4s ease-in-out infinite;
 }
 
-/* =======================================================
-   ✨ FADE IN
-======================================================= */
-
 @keyframes fade-in {
   from {
     opacity: 0;
-
     transform: translateY(10px);
   }
 
   to {
     opacity: 1;
-
     transform: translateY(0);
   }
 }
@@ -314,20 +277,14 @@
   animation: fade-in 0.4s ease forwards;
 }
 
-/* =======================================================
-   ✨ SCALE
-======================================================= */
-
 @keyframes scale-in {
   from {
     opacity: 0;
-
     transform: scale(0.95);
   }
 
   to {
     opacity: 1;
-
     transform: scale(1);
   }
 }
@@ -336,20 +293,21 @@
   animation: scale-in 0.25s ease forwards;
 }
 
-
-
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
 
 /* =======================================================
-   📝 FORMULARIOS LIGHT
+   📝 FORMULARIOS LIGHT / DARK
 ======================================================= */
 
 .input-light {
   background: #ffffff;
   color: #111827;
   -webkit-text-fill-color: #111827;
-
   border: 1px solid #d1d5db;
-
   transition: all 0.25s ease;
 }
 
@@ -365,17 +323,11 @@
   transition: background-color 5000s ease-in-out 0s;
 }
 
-/* =======================================================
-   🌙 FORMULARIOS DARK
-======================================================= */
-
 .input-dark {
   background: var(--bg-tertiary);
   color: var(--text-primary);
   -webkit-text-fill-color: var(--text-primary);
-
   border: 1px solid var(--border-card);
-
   transition: all 0.25s ease;
 }
 
@@ -391,11 +343,35 @@
   transition: background-color 5000s ease-in-out 0s;
 }
 
+/* =======================================================
+   🎴 COMPONENTES DE TARJETA DASHBOARD (NUEVO)
+======================================================= */
 
+@layer components {
+  .card-dashboard {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-card);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
 
-@keyframes shimmer {
-  100% {
-    transform: translateX(100%);
+  .card-dashboard:hover {
+    background-color: var(--bg-card-hover);
+    border-color: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+  }
+
+  .card-dashboard-highlight {
+    background-color: var(--bg-card);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .card-dashboard-highlight:hover {
+    background-color: var(--bg-card-hover);
+    border-color: rgba(34, 197, 94, 0.6);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-primary);
   }
 }
 

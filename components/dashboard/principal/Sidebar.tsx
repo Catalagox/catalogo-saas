@@ -72,7 +72,7 @@ export default function Sidebar({ closeMenu }: Props) {
   const avatar = `https://ui-avatars.com/api/?name=${userName || userEmail}&background=111827&color=fff`;
 
   return (
-    <div className="flex flex-col h-full w-full bg-[var(--bg-secondary)] border-r border-[var(--border-card)] lg:bg-transparent">
+    <div className="flex flex-col h-full w-full bg-[var(--bg-secondary)] border-r border-[var(--border-card)] ">
       {/* HEADER SOLO DESKTOP */}
       <div className="hidden lg:block px-6 py-6 border-b border-[var(--border-card)]">
         <Logo size="md" />

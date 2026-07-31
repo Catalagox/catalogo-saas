@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { PageHeader } from "@/components/dashboard/PageHeader";
-import  IndicadorSuscripcion  from "@/components/dashboard/principal/IndicadorSuscripcion";
+import IndicadorSuscripcion from "@/components/dashboard/principal/IndicadorSuscripcion";
 import PelotaMundial from "@/components/PelotaMundial";
 
 import {
@@ -15,6 +15,8 @@ import {
   Palette,
   BarChart3,
   Globe,
+  PlusCircle,
+  Video
 } from "lucide-react";
 
 type Catalogo = {
@@ -46,7 +48,7 @@ export default function DashboardPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("success") === "true") {
-      inicializar(); 
+      inicializar();
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
@@ -76,7 +78,7 @@ export default function DashboardPage() {
 
       if (catalogoData) {
         setCatalogo(catalogoData);
-        
+
         // Solo buscamos productos y categorías si el catálogo realmente existe
         const { count: productos } = await supabase
           .from("productos")
@@ -124,7 +126,7 @@ export default function DashboardPage() {
           slug: slugGenerado,
           user_id: user.id,
           plan_vence_el: fechaVencimiento.toISOString(),
-        }
+        },
       ])
       .select()
       .single();
@@ -151,7 +153,7 @@ export default function DashboardPage() {
     setCategoriasCount(1);
     setNuevoNombre("");
     setIsCreating(false);
-    
+
     // Forzamos al layout a enterarse de que el catálogo ya existe y tiene días de prueba válidos
     router.refresh();
   };
@@ -166,140 +168,193 @@ export default function DashboardPage() {
 
   return (
     <>
-    <PelotaMundial />
-    
-    <div className="w-full px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto space-y-6 md:space-y-10">
-       {/* HEADER */}
-{/* HEADER */}
-<PageHeader
-  title="Panel de control"
-  category="principal"
-  icon={MenuSquare}
-  showBackButton={false}
->
-  {/* 🔥 El indicador entra aquí como children */}
-  <IndicadorSuscripcion planVenceEl={catalogo?.plan_vence_el || null} />
-</PageHeader>
+      <PelotaMundial />
 
-        {catalogo ? (
-          /* GRID DASHBOARD */
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {[
-              {
-                icon: <MenuSquare className="text-orange-500 mb-3" />,
-                label: "Catálogo",
-                value: catalogo.nombre,
-                action: () => irA("/dashboard/agregar-producto"),
-              },
-              {
-                icon: <Package className="text-green-500 mb-3" />,
-                label: "Productos",
-                value: productosCount,
-                action: () => irA("/dashboard/productos"),
-              },
-              {
-                icon: <Tags className="text-blue-500 mb-3" />,
-                label: "Categorías",
-                value: categoriasCount,
-                action: () => irA("/dashboard/categorias"),
-              },
-              {
-                icon: <QrCode className="text-purple-500 mb-3" />,
-                label: "QR",
-                value: "Activo",
-                action: () => irA("/dashboard/qr"),
-              },
-              {
-                icon: <Palette className="text-pink-500 mb-3" />,
-                label: "Apariencia",
-                value: "Personalizar",
-                action: () => irA("/dashboard/apariencia"),
-              },
-              {
-                icon: <BarChart3 className="text-yellow-500 mb-3" />,
-                label: "Estadísticas",
-                value: "Ver datos",
-                action: () => irA("/dashboard/estadistica"),
-              },
-            ].map((card, i) => (
-              <button
-                key={i}
-                onClick={card.action}
-                className="
-                  bg-[var(--bg-card)]
-                  border
-                  border-[var(--border-card)]
-                  rounded-2xl
-                  p-6
-                  text-left
-                  hover:bg-[var(--bg-card-hover)]
-                  transition
-                  duration-200
-                  cursor-pointer
-                "
-              >
-                {card.icon}
+      <div className="w-full px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto space-y-6 md:space-y-10">
+          {/* HEADER */}
+          {/* HEADER */}
+          <PageHeader
+            title="Panel de control"
+            category="principal"
+            icon={MenuSquare}
+            showBackButton={false}
+          >
+            {/* 🔥 El indicador entra aquí como children */}
+            <IndicadorSuscripcion
+              planVenceEl={catalogo?.plan_vence_el || null}
+            />
+          </PageHeader>
 
-                <p className="text-[var(--text-secondary)] text-sm">
-                  {card.label}
-                </p>
+          {catalogo ? (
+            /* GRID DASHBOARD */
+           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+  {[
+    {
+      icon: <PlusCircle className="w-5 h-5" />,
+      label: "Acción",
+      value: "Crear producto",
+      subtext: "Añade un nuevo producto a tu catálogo",
+      highlight: true,
+      action: () => irA("/dashboard/agregar-producto"),
+    },
+    {
+      icon: <Tags className="w-5 h-5" />,
+      label: "Categorías",
+      value: categoriasCount,
+      subtext: "Crea y edita las categorías de tus productos",
+      highlight: false,
+      action: () => irA("/dashboard/categorias"),
+    },
+    {
+      icon: <Package className="w-5 h-5" />,
+      label: "Productos",
+      value: productosCount,
+      subtext: "Edita precios, fotos y nombres de tu catálogo",
+      highlight: false,
+      action: () => irA("/dashboard/productos"),
+    },
+    {
+      icon: <QrCode className="w-5 h-5" />,
+      label: "QR",
+      value: "Activo",
+      subtext: "Descarga tu código QR y comparte el enlace",
+      highlight: false,
+      action: () => irA("/dashboard/qr"),
+    },
+    {
+      icon: <Palette className="w-5 h-5" />,
+      label: "Apariencia",
+      value: "Personalizar",
+      subtext: "Cambia los colores y el diseño de tu catálogo",
+      highlight: false,
+      action: () => irA("/dashboard/apariencia"),
+    },
+    {
+      icon: <BarChart3 className="w-5 h-5" />,
+      label: "Estadísticas",
+      value: "Ver datos",
+      subtext: "Revisa cuántas personas han visto tu catálogo",
+      highlight: false,
+      action: () => irA("/dashboard/estadistica"),
+    },
+  ].map((card, i) => (
+    <button
+      key={i}
+      onClick={card.action}
+      className={`
+        group relative text-left w-full p-5 rounded-2xl
+        flex flex-col justify-between space-y-4 cursor-pointer
+        ${card.highlight ? "card-dashboard-highlight" : "card-dashboard"}
+      `}
+    >
+      <div className="flex items-center justify-between w-full">
+        <div
+          className={`p-2.5 rounded-xl transition-all duration-300 group-hover:scale-110 ${
+            card.highlight
+              ? "bg-[var(--color-primary-glow)] text-[var(--color-primary)]"
+              : "bg-white/5 text-[var(--text-secondary)] group-hover:text-white group-hover:bg-white/10"
+          }`}
+        >
+          {card.icon}
+        </div>
 
-                <h3 className="text-xl font-bold text-[var(--text-primary)]">
-                  {card.value}
-                </h3>
-              </button>
-            ))}
+        <span className="text-[11px] font-medium uppercase tracking-wider text-[var(--text-muted)] group-hover:text-[var(--text-secondary)] transition-colors">
+          {card.label}
+        </span>
+      </div>
 
-            {/* MENÚ PÚBLICO */}
-            <a
-              href={`/${catalogo.slug}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="
-                bg-[var(--bg-card)]
-                border
-                border-[var(--border-card)]
-                rounded-2xl
-                p-6
-                text-left
-                hover:bg-[var(--bg-card-hover)]
-                transition
-                duration-200
-                cursor-pointer
-              "
-            >
-              <Globe className="text-cyan-500 mb-3" />
+      <div>
+        <h3 className="text-xl font-bold text-[var(--text-primary)] transition-colors">
+          {card.value}
+        </h3>
+        <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+          {card.subtext}
+        </p>
+      </div>
+    </button>
+  ))}
 
-              <p className="text-[var(--text-secondary)] text-sm">
-                Catálogo público
+  {/* TARJETA DE TUTORIAL EN YOUTUBE */}
+  <a
+    href="https://www.youtube.com/watch?v=TU_ID_DE_VIDEO" // 👈 Solo reemplaza esto con la URL exacta de tu video
+    target="_blank"
+    rel="noopener noreferrer"
+    className="
+      group relative text-left w-full p-5 rounded-2xl
+      card-dashboard flex flex-col justify-between space-y-4 cursor-pointer
+    "
+  >
+    <div className="flex items-center justify-between w-full">
+      <div className="p-2.5 rounded-xl bg-white/5 text-[var(--text-secondary)] group-hover:text-red-500 group-hover:bg-red-500/10 transition-all duration-300 group-hover:scale-110">
+        <Video className="w-5 h-5" />
+      </div>
+
+      <span className="text-[11px] font-medium uppercase tracking-wider text-[var(--text-muted)] group-hover:text-[var(--text-secondary)] transition-colors">
+        Tutorial
+      </span>
+    </div>
+
+    <div>
+      <h3 className="text-xl font-bold text-[var(--text-primary)] transition-colors">
+        Ver video
+      </h3>
+      <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+        Aprende a crear tu catálogo digital y menú QR en minutos
+      </p>
+    </div>
+  </a>
+
+  {/* MENÚ PÚBLICO */}
+  <a
+    href={`/${catalogo.slug}`}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="
+      group relative text-left w-full p-5 rounded-2xl
+      card-dashboard-highlight flex flex-col justify-between space-y-4 cursor-pointer
+    "
+  >
+    <div className="flex items-center justify-between w-full">
+      <div className="p-2.5 rounded-xl bg-[var(--color-primary-glow)] text-[var(--color-primary)] group-hover:scale-110 transition-all duration-300">
+        <Globe className="w-5 h-5" />
+      </div>
+
+      <span className="text-[11px] font-medium uppercase tracking-wider text-[var(--text-muted)] group-hover:text-[var(--text-secondary)] transition-colors">
+        Catálogo público
+      </span>
+    </div>
+
+    <div>
+      <h3 className="text-xl font-bold text-[var(--text-primary)] transition-colors">
+        Ver online
+      </h3>
+      <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+        Ver cómo se ve tu tienda para los clientes
+      </p>
+    </div>
+  </a>
+</div>
+          ) : (
+            /* CREAR MENÚ (VISTA PARA USUARIOS EN TRIAL DE 7 DÍAS GRATIS) */
+            <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-8 max-w-xl">
+              <h2 className="text-2xl font-bold mb-3 text-[var(--text-primary)]">
+                Crea tu primer catálogo
+              </h2>
+
+              <p className="text-[var(--text-secondary)] mb-6">
+                Configura tu catálogo digital en menos de 5 minutos y obtén 7
+                días de prueba completamente gratis.
               </p>
 
-              <h3 className="text-xl font-bold text-[var(--text-primary)]">
-                Ver online
-              </h3>
-            </a>
-          </div>
-        ) : (
-          /* CREAR MENÚ (VISTA PARA USUARIOS EN TRIAL DE 7 DÍAS GRATIS) */
-          <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-8 max-w-xl">
-            <h2 className="text-2xl font-bold mb-3 text-[var(--text-primary)]">
-              Crea tu primer catálogo
-            </h2>
-
-            <p className="text-[var(--text-secondary)] mb-6">
-              Configura tu catálogo digital en menos de 5 minutos y obtén 7 días de
-              prueba completamente gratis.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-3">
-              <input
-                type="text"
-                placeholder="Nombre del catalógo"
-                value={nuevoNombre}
-                onChange={(e) => setNuevoNombre(e.target.value)}
-                disabled={isCreating}
-                className="
+              <div className="flex flex-col sm:flex-row gap-3">
+                <input
+                  type="text"
+                  placeholder="Nombre del catalógo"
+                  value={nuevoNombre}
+                  onChange={(e) => setNuevoNombre(e.target.value)}
+                  disabled={isCreating}
+                  className="
                   flex-1
                   bg-gray-800
                   border
@@ -310,12 +365,12 @@ export default function DashboardPage() {
                   text-[var(--text-primary)]
                   disabled:opacity-50
                 "
-              />
+                />
 
-              <button
-                onClick={crearCatalogo}
-                disabled={isCreating}
-                className="
+                <button
+                  onClick={crearCatalogo}
+                  disabled={isCreating}
+                  className="
                   bg-white
                   text-black
                   px-6
@@ -327,15 +382,14 @@ export default function DashboardPage() {
                   transition
                   cursor-pointer
                 "
-              >
-                {isCreating ? "Creando..." : "Crear Catalógo"}
-              </button>
+                >
+                  {isCreating ? "Creando..." : "Crear Catalógo"}
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
-    
     </>
   );
 }
