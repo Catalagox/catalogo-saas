@@ -16,75 +16,69 @@ import { useInView } from "react-intersection-observer";
 export default function Hero() {
   return (
     <section className="w-full">
+      {/* HERO RENOVADO Y ADAPTADO AL ESTILO WHATSAPP */}
+      <div className="relative w-full min-h-screen flex items-center px-4 sm:px-6 overflow-hidden bg-gradient-to-bl from-black via-[#021a10] to-black border-b border-white/5">
+        {/* DECORACIÓN AMBIENTAL (Círculos estáticos de fondo tipo WhatsApp) */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {/* Círculo 1: Resplandor suave superior */}
+          <div className="absolute top-[10%] -left-[10%] w-[50%] h-[50%] bg-emerald-500/5 blur-[140px] rounded-full" />
 
+          {/* Círculo 2: Resplandor suave inferior derecho */}
+          <div className="absolute bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-emerald-500/5 blur-[140px] rounded-full" />
 
-{/* HERO RENOVADO Y ADAPTADO AL ESTILO WHATSAPP */}
-<div className="relative w-full min-h-screen flex items-center px-4 sm:px-6 overflow-hidden bg-gradient-to-bl from-black via-[#021a10] to-black border-b border-white/5">
-  
-  {/* DECORACIÓN AMBIENTAL (Círculos estáticos de fondo tipo WhatsApp) */}
-  <div className="absolute inset-0 overflow-hidden pointer-events-none">
-    {/* Círculo 1: Resplandor suave superior */}
-    <div className="absolute top-[10%] -left-[10%] w-[50%] h-[50%] bg-emerald-500/5 blur-[140px] rounded-full" />
-    
-    {/* Círculo 2: Resplandor suave inferior derecho */}
-    <div className="absolute bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-emerald-500/5 blur-[140px] rounded-full" />
-    
-    {/* Círculo 3: Anillo estructural estático (sin animación) */}
-    <div className="absolute top-[40%] left-1/2 -translate-x-1/2 w-96 h-96 border border-emerald-500/5 rounded-full scale-150" />
-  </div>
+          {/* Círculo 3: Anillo estructural estático (sin animación) */}
+          <div className="absolute top-[40%] left-1/2 -translate-x-1/2 w-96 h-96 border border-emerald-500/5 rounded-full scale-150" />
+        </div>
 
-  {/* Contenedor Principal */}
-  <div className="relative z-10 max-w-7xl mx-auto text-center py-24 w-full">
-    
-    <motion.div
-      initial={{ opacity: 0, y: 40 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-      className="relative z-10 flex flex-col items-center"
-    >
-      {/* Badge Premium de Entrada - Responsivo: Más pequeño en móviles, normal en pantallas grandes */}
-      <motion.span 
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.2 }}
-        className="inline-flex items-center gap-2 mb-3 text-[10px] sm:text-xs font-bold tracking-normal sm:tracking-widest text-emerald-400 uppercase bg-emerald-500/10 px-3 py-1 sm:px-4 sm:py-2 rounded-full border border-emerald-500/20 backdrop-blur-md"
-      >
-        Digitaliza tu negocio en minutos
-      </motion.span>
+        {/* Contenedor Principal */}
+        <div className="relative z-10 max-w-7xl mx-auto text-center py-24 w-full">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+            className="relative z-10 flex flex-col items-center"
+          >
+            {/* Badge Premium de Entrada - Responsivo: Más pequeño en móviles, normal en pantallas grandes */}
+            <motion.span
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+              className="inline-flex items-center gap-2 mb-3 text-[10px] sm:text-xs font-bold tracking-normal sm:tracking-widest text-emerald-400 uppercase bg-emerald-500/10 px-3 py-1 sm:px-4 sm:py-2 rounded-full border border-emerald-500/20 backdrop-blur-md"
+            >
+              Digitaliza tu negocio en minutos
+            </motion.span>
 
-      {/* Título Estilizado con la nueva paleta de color */}
-      <h1 className="
-        text-4xl sm:text-6xl md:text-7xl lg:text-[5.5rem] 
-        font-black text-white 
-        leading-[1.1] sm:leading-[1.15] 
-        tracking-tighter max-w-5xl mx-auto
-        flex flex-col gap-1 sm:gap-2
-        px-4 pt-2 pb-0 overflow-visible
-      ">
-        {/* Línea 1: Blanco puro y sólido, sin degradados */}
-        <span className="block text-white select-none filter backdrop-blur-[0.1px]">
-          Lleva tus productos al
-        </span>
+            {/* Título Estilizado con la nueva paleta de color */}
+   <h1 className="
+  text-3xl sm:text-5xl md:text-6xl 
+  font-extrabold text-white 
+  leading-[1.4] sm:leading-[1.3] md:leading-[1.25] 
+  tracking-tight max-w-6xl mx-auto
+  text-center
+  px-4 pt-2 mb-4
+">
+  Vende más por{" "}
+  <span className="text-emerald-400 font-black">
+    WhatsApp
+  </span>{" "}
+  <span className="inline-block">con tu Catálogo Digital o Menú QR</span>
+</h1>
 
-        {/* Línea 2 */}
-        <span className="relative inline-block text-emerald-400 pb-3 select-none">
-          Catálogo Digital
-        </span>
-      </h1>
+            {/* Subtítulo Estilizado */}
+            <p className="mt-2 text-lg sm:text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto leading-relaxed font-medium balance">
+              Crea Catálogos y Menús interactivos con{" "}
+              <span className="text-white font-semibold">Código QR</span>.
+              Digitaliza tu stock, recibe pedidos al instante y ofrece una
+              experiencia premium que enamora a tus clientes desde el primer
+              segundo.
+            </p>
 
-      {/* Subtítulo Estilizado */}
-      <p className="mt-2 text-lg sm:text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto leading-relaxed font-medium balance">
-        Crea Catálogos y Menús interactivos con <span className="text-white font-semibold">Código QR</span>. 
-        Digitaliza tu stock, recibe pedidos al instante y ofrece una experiencia premium 
-        que enamora a tus clientes desde el primer segundo.
-      </p>
-
-      {/* Contenedor Único del Botón */}
-    <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 w-full px-4">
-        {/* Botón Principal: Empezar Gratis */}
-        <Link
-          href="/auth"
-          className="
+            {/* Contenedor Único del Botón */}
+            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 w-full px-4">
+              {/* Botón Principal: Empezar Gratis */}
+              <Link
+                href="/auth"
+                className="
             group relative inline-flex items-center justify-center gap-3 
             w-full max-w-[340px] sm:max-w-none sm:w-auto px-12 py-5 
             bg-emerald-500 text-black rounded-2xl font-black text-lg sm:text-xl
@@ -93,24 +87,24 @@ export default function Hero() {
             hover:shadow-[0_15px_40px_rgba(16,185,129,0.4)]
             hover:-translate-y-1 active:scale-95
           "
-        >
-          {/* Destello sutil en Hover */}
-          <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
-          
-          <span className="relative z-10 text-slate-950 text-center leading-tight">
-            ¡Empezar gratis!
-          </span>
-          
-          {/* Cohete dinámico con animación de rebote reactivada */}
-          <FaRocket className="animate-bounce flex-shrink-0 text-xl text-slate-950 relative z-10" />
-        </Link>
+              >
+                {/* Destello sutil en Hover */}
+                <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
 
-        {/* Botón Secundario: Ver Demo */}
-        <a
-          href="https://www.youtube.com/watch?v=RV7S4Pz7XZA&t=26s"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="
+                <span className="relative z-10 text-slate-950 text-center leading-tight">
+                  ¡Empezar gratis!
+                </span>
+
+                {/* Cohete dinámico con animación de rebote reactivada */}
+                <FaRocket className="animate-bounce flex-shrink-0 text-xl text-slate-950 relative z-10" />
+              </Link>
+
+              {/* Botón Secundario: Ver Demo */}
+              <a
+                href="https://www.youtube.com/watch?v=RV7S4Pz7XZA&t=26s"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="
             group relative inline-flex items-center justify-center gap-3 
             w-full max-w-[340px] sm:max-w-none sm:w-auto px-12 py-5 
             bg-white/5 text-white rounded-2xl font-black text-lg sm:text-xl
@@ -119,38 +113,35 @@ export default function Hero() {
             hover:bg-white/10 hover:border-emerald-500/30
             hover:-translate-y-1 active:scale-95
           "
-        >
-          <span className="relative z-10 text-center leading-tight">
-            Ver demo
-          </span>
-          
-          {/* Flecha minimalista integrada en SVG para mantener el rendimiento libre de iconos extra */}
-          <svg 
-            className="w-5 h-5 text-emerald-400 transition-transform duration-300 group-hover:translate-x-1 relative z-10" 
-            fill="currentColor" 
-            viewBox="0 0 20 20"
-          >
-            <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
-          </svg>
-        </a>
+              >
+                <span className="relative z-10 text-center leading-tight">
+                  Ver video
+                </span>
+
+                {/* Flecha minimalista integrada en SVG para mantener el rendimiento libre de iconos extra */}
+                <svg
+                  className="w-5 h-5 text-emerald-400 transition-transform duration-300 group-hover:translate-x-1 relative z-10"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </a>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Indicador de Scroll Minimalista Limpio */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-30">
+          <div className="w-[1px] h-12 bg-gradient-to-b from-emerald-500 to-transparent" />
+        </div>
       </div>
-    </motion.div>
-  </div>
 
-  {/* Indicador de Scroll Minimalista Limpio */}
-  <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-30">
-    <div className="w-[1px] h-12 bg-gradient-to-b from-emerald-500 to-transparent" />
-  </div>
-</div>
-
-
-      
-      
-
-
-
-
-{/* SECCIÓN WHATSAPP: PEDIDOS EN TIEMPO REAL */}
+      {/* SECCIÓN WHATSAPP: PEDIDOS EN TIEMPO REAL */}
       <div className="w-full py-20 sm:py-32 bg-gradient-to-bl from-black via-[#021a10] to-black relative overflow-hidden border-t border-b border-white/5">
         {/* DECORACIÓN AMBIENTAL WHATSAPP */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -159,7 +150,6 @@ export default function Hero() {
         </div>
 
         <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20 items-center relative z-10">
-          
           {/* COLUMNA IZQUIERDA: TEXTO DE PROPUESTA DE VALOR (REEMPLAZA AL SIMULADOR) */}
           <div className="text-center md:text-left order-2 md:order-1 flex flex-col justify-center">
             <span className="inline-block w-fit px-4 py-1.5 mb-6 text-xs font-bold tracking-widest text-emerald-400 uppercase bg-emerald-500/10 rounded-full border border-emerald-500/20 mx-auto md:mx-0">
@@ -168,17 +158,27 @@ export default function Hero() {
 
             <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-6 leading-[1.15] tracking-tight">
               Sin intermediarios. <br />
-              El control total de tus <span className="text-emerald-400">ventas</span>.
+              El control total de tus{" "}
+              <span className="text-emerald-400">ventas</span>.
             </h3>
 
             <p className="text-gray-400 text-lg leading-relaxed mb-8 max-w-lg mx-auto md:mx-0">
-              Al recibir los pedidos directamente en tu chat de atención, eliminas las apps de delivery que se quedan con tus ganancias. Creas una línea directa con tus comensales y construyes una base de clientes propia desde el primer día.
+              Al recibir los pedidos directamente en tu chat de atención,
+              eliminas las apps de delivery que se quedan con tus ganancias.
+              Creas una línea directa con tus comensales y construyes una base
+              de clientes propia desde el primer día.
             </p>
 
             {/* Bloque Destacado de Texto Corregido */}
             <div className="p-6 rounded-2xl bg-emerald-950/30 border border-emerald-500/20 backdrop-blur-sm max-w-lg mx-auto md:mx-0 shadow-[0_4px_30px_rgba(16,185,129,0.05)]">
               <p className="text-sm text-gray-300 font-mono leading-relaxed">
-                <span className="text-emerald-400 font-bold">💡 Tip de conversión:</span> Un canal personalizado de atención a través de WhatsApp incrementa la tasa de recompra de los clientes en más de un <span className="text-emerald-400 font-bold">35%</span> en comparación con plataformas externas.
+                <span className="text-emerald-400 font-bold">
+                  💡 Tip de conversión:
+                </span>{" "}
+                Un canal personalizado de atención a través de WhatsApp
+                incrementa la tasa de recompra de los clientes en más de un{" "}
+                <span className="text-emerald-400 font-bold">35%</span> en
+                comparación con plataformas externas.
               </p>
             </div>
           </div>
@@ -196,8 +196,12 @@ export default function Hero() {
             </h2>
 
             <p className="text-gray-400 text-lg sm:text-xl mb-10 max-w-lg mx-auto md:mx-0 leading-relaxed">
-              Olvídate de anotar mensajes confusos. Tu catálogo organiza el carrito de compras y genera un{" "}
-              <span className="text-white font-medium">mensaje limpio, estructurado y listo</span> para procesar en tu chat de atención.
+              Olvídate de anotar mensajes confusos. Tu catálogo organiza el
+              carrito de compras y genera un{" "}
+              <span className="text-white font-medium">
+                mensaje limpio, estructurado y listo
+              </span>{" "}
+              para procesar en tu chat de atención.
             </p>
 
             {/* LISTA DE BENEFICIOS CON ESTILO WHATSAPP */}
@@ -232,16 +236,8 @@ export default function Hero() {
               ))}
             </ul>
           </div>
-
         </div>
       </div>
-
-
-
-
-
-  
-
 
       {/* BLOQUE PRO + MOCKUP */}
       <div className="w-full py-20 sm:py-32 bg-gradient-to-br from-[#041d14] via-[#06281c] to-black relative overflow-hidden">
@@ -440,7 +436,7 @@ export default function Hero() {
                 ))}
               </ul>
 
-             <a
+              <a
                 href="https://www.youtube.com/watch?v=RV7S4Pz7XZA&t=26s"
                 target="_blank"
                 rel="noopener noreferrer"

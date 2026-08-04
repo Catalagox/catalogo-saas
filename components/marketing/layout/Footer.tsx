@@ -1,4 +1,4 @@
-import { FaFacebookF, FaInstagram, FaTiktok } from "react-icons/fa6";
+import { FaFacebookF, FaInstagram, FaTiktok, FaYoutube } from "react-icons/fa6";
 import Link from "next/link";
 
 export default function Footer() {
@@ -10,45 +10,50 @@ export default function Footer() {
         <div className="py-20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           {/* REDES - Con el toque verde que pediste */}
           <div className="space-y-2 flex flex-col items-center lg:items-start">
-            <h2 className="font-bold mb-6 text-lg text-white">Sigueme</h2>
+            <h2 className="font-bold mb-6 text-lg text-white text-center">Sigueme</h2>
 
             <div className="flex gap-4">
-              {[
-                {
-                  Icon: FaFacebookF,
-                  href: "https://www.facebook.com/profile.php?id=61571006050029",
-                  label: "Facebook",
-                },
-                {
-                  Icon: FaInstagram,
-                  href: "https://www.instagram.com/catalago.x/",
-                  label: "Instagram",
-                },
-                {
-                  Icon: FaTiktok,
-                  href: "https://www.tiktok.com/@catalagox",
-                  label: "TikTok",
-                },
-              ].map((social, index) => (
-                <a
-                  key={index}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group relative bg-white/5 p-4 rounded-2xl transition-all duration-300 hover:-translate-y-2"
-                  aria-label={social.label}
-                >
-                  {/* El icono ahora es verde por defecto */}
-                  <social.Icon
-                    size={20}
-                    className="text-[var(--color-primary)] transition-colors duration-300 group-hover:text-black z-10 relative"
-                  />
+  {[
+    {
+      Icon: FaFacebookF,
+      href: "https://www.facebook.com/profile.php?id=61571006050029",
+      label: "Facebook",
+    },
+    {
+      Icon: FaInstagram,
+      href: "https://www.instagram.com/catalago.x/",
+      label: "Instagram",
+    },
+    {
+      Icon: FaTiktok,
+      href: "https://www.tiktok.com/@catalagox",
+      label: "TikTok",
+    },
+    {
+      Icon: FaYoutube,
+      href: "https://www.youtube.com/@Catalagox", // Tu enlace de YouTube
+      label: "YouTube",
+    },
+  ].map((social, index) => (
+    <a
+      key={index}
+      href={social.href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group relative bg-white/5 p-4 rounded-2xl transition-all duration-300 hover:-translate-y-2"
+      aria-label={social.label}
+    >
+      {/* El icono ahora es verde por defecto */}
+      <social.Icon
+        size={20}
+        className="text-[var(--color-primary)] transition-colors duration-300 group-hover:text-black z-10 relative"
+      />
 
-                  {/* Fondo que sube en hover */}
-                  <div className="absolute inset-0 bg-[var(--color-primary)] rounded-2xl scale-0 group-hover:scale-100 transition-transform duration-300 z-0" />
-                </a>
-              ))}
-            </div>
+      {/* Fondo que sube en hover */}
+      <div className="absolute inset-0 bg-[var(--color-primary)] rounded-2xl scale-0 group-hover:scale-100 transition-transform duration-300 z-0" />
+    </a>
+  ))}
+</div>
           </div>
 
           {/* PRODUCTO */}
