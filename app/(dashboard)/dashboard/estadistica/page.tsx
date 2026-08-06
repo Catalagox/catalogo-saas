@@ -71,9 +71,27 @@ export default function EstadisticasPage() {
       />
 
       {/* CONTENIDO PRINCIPAL */}
+      {/* CONTENIDO PRINCIPAL (SKELETON Y CARDS) */}
       {loading ? (
-        <div className="flex justify-center items-center py-20 text-[var(--text-secondary)] font-medium">
-          Cargando estadísticas...
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 animate-pulse">
+          {[1, 2, 3, 4].map((item) => (
+            <div
+              key={item}
+              className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 shadow-sm space-y-4"
+            >
+              {/* Fila Superior: Icono y Badge */}
+              <div className="flex items-center justify-between">
+                <div className="w-8 h-8 rounded-xl bg-white/10" />
+                <div className="h-3 w-12 rounded bg-white/10" />
+              </div>
+
+              {/* Valor Grande (Número de Métrica) */}
+              <div className="h-9 w-20 rounded-lg bg-white/10" />
+
+              {/* Etiqueta / Descripción */}
+              <div className="h-4 w-32 rounded bg-white/5" />
+            </div>
+          ))}
         </div>
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">

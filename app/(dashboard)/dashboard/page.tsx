@@ -160,8 +160,27 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20 text-[var(--text-secondary)]">
-        Cargando dashboard...
+      <div className="w-full px-4 sm:px-6 lg:px-8 animate-pulse">
+        <div className="max-w-6xl mx-auto space-y-6 md:space-y-10">
+          {/* Skeleton del Header */}
+          <div className="h-12 w-64 rounded-xl bg-white/5" />
+
+          {/* Skeleton de las Tarjetas (Grid) */}
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <div
+                key={i}
+                className="h-36 rounded-2xl bg-white/5 border border-white/5 p-5 flex flex-col justify-between"
+              >
+                <div className="h-8 w-8 rounded-lg bg-white/10" />
+                <div className="space-y-2">
+                  <div className="h-6 w-1/2 rounded bg-white/10" />
+                  <div className="h-3 w-3/4 rounded bg-white/5" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

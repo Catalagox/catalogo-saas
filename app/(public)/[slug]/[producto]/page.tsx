@@ -9,7 +9,6 @@ interface PageProps {
   params: Promise<{ slug: string; producto: string }>;
 }
 
-// 🚀 Forzamos a Next.js a renderizar dinámicamente para actualizar precios y divisas al instante
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 

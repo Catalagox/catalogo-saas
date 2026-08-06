@@ -6,6 +6,7 @@ import Sidebar from "@/components/dashboard/principal/Sidebar";
 import Logo from "@/components/marketing/ui/Logo";
 import { useRouter } from "next/navigation";
 import { Menu, X } from "lucide-react";
+import Image from "next/image";
 import { InstalarAppBanner } from "@/components/dashboard/InstalarAppBanner"; // 👈 Importación añadida
 
 export default function DashboardLayout({
@@ -85,14 +86,30 @@ export default function DashboardLayout({
   }, [router]);
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--bg-main)] text-white">
-        <div className="animate-pulse text-sm font-medium text-[var(--text-secondary)]">
-          Cargando...
+  return (
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[var(--bg-main)]">
+      <div className="flex flex-col items-center gap-6">
+        
+        {/* Logo animado con pulso */}
+        <div className="relative h-20 w-20 animate-pulse sm:h-24 sm:w-24">
+          <Image
+            src="/Logotipo-fondo-trasparente4.png"
+            alt="Catalogox"
+            fill
+            className="object-contain"
+            priority
+          />
         </div>
+
+        {/* Línea de carga */}
+        <div className="h-1 w-32 overflow-hidden rounded-full bg-white/10 sm:w-40">
+          <div className="h-full w-full animate-pulse bg-emerald-500" />
+        </div>
+
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   return (
     <div className="flex min-h-screen bg-[var(--bg-main)] text-white">

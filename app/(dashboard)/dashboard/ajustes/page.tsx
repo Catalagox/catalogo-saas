@@ -262,10 +262,75 @@ useEffect(() => {
   }
 }, [loading]);
 
+ // 🔄 LOADING (SKELETON PÁGINA AJUSTES)
   if (loading) {
     return (
-      <div className="text-center py-20 text-[var(--text-secondary)]">
-        Cargando ajustes...
+      <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8 animate-pulse">
+        {/* 🟢 HEADER SKELETON (PageHeader) */}
+        <div className="flex items-center justify-between py-4 border-b border-[var(--border-card)]">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-card)]" />
+            <div className="space-y-2">
+              <div className="h-3 w-20 rounded bg-white/10" />
+              <div className="h-6 w-48 rounded-lg bg-white/10" />
+            </div>
+          </div>
+          <div className="h-9 w-20 rounded-xl bg-[var(--bg-card)] border border-[var(--border-card)]" />
+        </div>
+
+        {/* 🟢 CONTENEDOR DE SECCIONES (MAX-W-2XL) */}
+        <div className="max-w-2xl mx-auto space-y-8">
+          
+          {/* Section 1: FormNombreMenu */}
+          <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 space-y-4">
+            <div className="h-5 w-40 rounded bg-white/10 mb-2" />
+            <div className="space-y-2">
+              <div className="h-3 w-24 rounded bg-white/10" />
+              <div className="h-11 w-full rounded-xl bg-white/5 border border-[var(--border-card)]" />
+            </div>
+            <div className="h-10 w-28 rounded-xl bg-[var(--color-primary)]/20 border border-[var(--color-primary)]/30 ml-auto" />
+          </div>
+
+          {/* Section 2: FormLogo */}
+          <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 space-y-4">
+            <div className="h-5 w-32 rounded bg-white/10 mb-2" />
+            <div className="flex items-center gap-4">
+              <div className="w-20 h-20 rounded-2xl bg-white/10 border border-[var(--border-card)] shrink-0" />
+              <div className="space-y-2 w-full">
+                <div className="h-3 w-48 rounded bg-white/10" />
+                <div className="h-9 w-36 rounded-xl bg-white/5 border border-[var(--border-card)]" />
+              </div>
+            </div>
+          </div>
+
+          {/* Section 3: FormContacto */}
+          <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 space-y-4">
+            <div className="h-5 w-48 rounded bg-white/10 mb-2" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="space-y-2">
+                  <div className="h-3 w-20 rounded bg-white/10" />
+                  <div className="h-11 w-full rounded-xl bg-white/5 border border-[var(--border-card)]" />
+                </div>
+              ))}
+            </div>
+            <div className="h-10 w-28 rounded-xl bg-[var(--color-primary)]/20 border border-[var(--color-primary)]/30 ml-auto" />
+          </div>
+
+          {/* Section 4: Cuenta & Suscripción */}
+          <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 space-y-6">
+            <div className="h-5 w-24 rounded bg-white/10" />
+            <div className="space-y-2">
+              <div className="h-3 w-32 rounded bg-white/10" />
+              <div className="h-11 w-full rounded-lg bg-white/5 border border-[var(--border-card)]" />
+            </div>
+            <div className="border-t border-[var(--border-card)] pt-4 space-y-3">
+              <div className="h-4 w-40 rounded bg-white/10" />
+              <div className="h-10 w-44 rounded-xl bg-white/5 border border-[var(--border-card)]" />
+            </div>
+          </div>
+
+        </div>
       </div>
     );
   }

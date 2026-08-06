@@ -85,10 +85,64 @@ export default function CategoriasPage() {
     if (catalogoId) cargarCategorias(catalogoId);
   };
 
+  // 🔄 LOADING (SKELETON PÁGINA CATEGORÍAS)
   if (loading) {
     return (
-      <div className="flex justify-center py-20 text-[var(--text-secondary)]">
-        Cargando categorías...
+      <div className="w-full px-4 sm:px-6 lg:px-8 animate-pulse">
+        <div className="max-w-3xl mx-auto space-y-10">
+          
+          {/* 🟢 HEADER SKELETON (PageHeader) */}
+          <div className="flex items-center justify-between py-4 border-b border-[var(--border-card)]">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-card)]" />
+              <div className="space-y-2">
+                <div className="h-3 w-16 rounded bg-white/10" />
+                <div className="h-6 w-52 rounded-lg bg-white/10" />
+              </div>
+            </div>
+            <div className="h-9 w-20 rounded-xl bg-[var(--bg-card)] border border-[var(--border-card)]" />
+          </div>
+
+          {/* 🟢 CARD SKELETON: FORMULARIO CREAR CATEGORÍA */}
+          <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 sm:p-8 space-y-4">
+            <div className="h-4 w-36 rounded bg-white/10" />
+            <div className="flex flex-col sm:flex-row gap-3">
+              {/* Input */}
+              <div className="h-12 w-full rounded-xl bg-white/5 border border-[var(--border-card)]" />
+              {/* Botón */}
+              <div className="h-12 w-full sm:w-36 rounded-xl bg-[var(--color-primary)]/20 border border-[var(--color-primary)]/30 shrink-0" />
+            </div>
+          </div>
+
+          {/* 🟢 CARD SKELETON: LISTA DE CATEGORÍAS */}
+          <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 space-y-6">
+            {/* Título de la lista */}
+            <div className="h-6 w-40 rounded-md bg-white/10" />
+
+            {/* Filas de categorías (Simulación de 4 elementos) */}
+            <div className="space-y-3">
+              {[1, 2, 3, 4].map((item) => (
+                <div
+                  key={item}
+                  className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-[var(--border-card)]"
+                >
+                  {/* Nombre de categoría con icono tenue */}
+                  <div className="flex items-center gap-3">
+                    <div className="h-4 w-4 rounded bg-white/10" />
+                    <div className="h-4 w-32 rounded bg-white/10" />
+                  </div>
+
+                  {/* Acciones (Botones Editar y Eliminar) */}
+                  <div className="flex gap-2">
+                    <div className="h-8 w-8 rounded-lg bg-white/10" />
+                    <div className="h-8 w-8 rounded-lg bg-white/10" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
       </div>
     );
   }

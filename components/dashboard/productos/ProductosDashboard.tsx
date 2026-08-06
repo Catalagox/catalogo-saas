@@ -263,13 +263,60 @@ export default function ProductosDashboard() {
     p.nombre.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
+// 🔄 LOADING (SKELETON GRID DE PRODUCTOS)
   if (loading && productos.length === 0) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <Loader2 className="w-10 h-10 text-[var(--color-primary)] animate-spin" />
-        <p className="text-[var(--text-secondary)] animate-pulse">
-          Cargando productos...
-        </p>
+      <div className="min-h-screen text-white pb-20 animate-pulse">
+        {/* 🟢 HEADER Y BUSCADOR SKELETON */}
+        <div className="max-w-7xl mx-auto px-6 pt-6 md:px-10 md:pt-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-6 border-b border-[var(--border-card)]">
+            
+            {/* Título e Icono */}
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-card)]" />
+              <div className="space-y-2">
+                <div className="h-3 w-20 rounded bg-white/10" />
+                <div className="h-6 w-40 rounded-lg bg-white/10" />
+              </div>
+            </div>
+
+            {/* Simulación del buscador */}
+            <div className="h-10 w-full sm:w-80 rounded-xl bg-[var(--bg-card)] border border-[var(--border-card)]" />
+          </div>
+        </div>
+
+        {/* 🟢 GRID SKELETON DE TARJETAS (Simula 8 productos) */}
+        <main className="max-w-7xl mx-auto p-6 md:p-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
+              <div
+                key={item}
+                className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl overflow-hidden flex flex-col justify-between p-4 space-y-4"
+              >
+                {/* Imagen del producto */}
+                <div className="w-full h-44 rounded-xl bg-white/5 border border-white/5" />
+
+                {/* Info del producto (Nombre, Categoría, Precio) */}
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <div className="h-4 w-2/3 rounded bg-white/10" />
+                    <div className="h-4 w-12 rounded bg-emerald-500/20" />
+                  </div>
+                  <div className="h-3 w-1/3 rounded bg-white/5" />
+                </div>
+
+                {/* Botones / Switches inferiores de la tarjeta */}
+                <div className="pt-2 border-t border-[var(--border-card)] flex items-center justify-between">
+                  <div className="h-6 w-16 rounded-full bg-white/10" />
+                  <div className="flex gap-2">
+                    <div className="h-8 w-8 rounded-lg bg-white/5" />
+                    <div className="h-8 w-8 rounded-lg bg-white/5" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </main>
       </div>
     );
   }

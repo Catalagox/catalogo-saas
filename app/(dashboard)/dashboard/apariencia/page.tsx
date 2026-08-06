@@ -149,10 +149,88 @@ export default function AparienciaPage() {
     alert("Guardado exitosamente");
   };
 
+ // 🔄 LOADING (SKELETON PÁGINA APARIENCIA)
   if (loading) {
     return (
-      <div className="flex justify-center py-20 text-[var(--text-secondary)]">
-        Cargando...
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-6 animate-pulse">
+        {/* 🟢 HEADER SKELETON (PageHeader) */}
+        <div className="flex items-center justify-between py-4 border-b border-[var(--border-card)] mb-8">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-card)]" />
+            <div className="space-y-2">
+              <div className="h-3 w-16 rounded bg-white/10" />
+              <div className="h-6 w-56 rounded-lg bg-white/10" />
+            </div>
+          </div>
+          <div className="h-9 w-20 rounded-xl bg-[var(--bg-card)] border border-[var(--border-card)]" />
+        </div>
+
+        {/* 🟢 DOS COLUMNAS: FORMULARIO Y PREVIEW */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start relative max-w-full">
+          
+          {/* Columna Izquierda: Simulación del AparienciaForm */}
+          <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 sm:p-8 space-y-6">
+            <div className="h-6 w-48 rounded-md bg-white/10 mb-4" />
+            
+            {/* Input Nombre */}
+            <div className="space-y-2">
+              <div className="h-3 w-28 rounded bg-white/10" />
+              <div className="h-11 w-full rounded-xl bg-white/5 border border-[var(--border-card)]" />
+            </div>
+
+            {/* Selector Estilo Menú */}
+            <div className="space-y-2">
+              <div className="h-3 w-32 rounded bg-white/10" />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="h-10 rounded-xl bg-white/5 border border-[var(--border-card)]" />
+                <div className="h-10 rounded-xl bg-white/5 border border-[var(--border-card)]" />
+              </div>
+            </div>
+
+            {/* Grid de Selectores de Color (Color Pickers) */}
+            <div className="space-y-3 pt-2">
+              <div className="h-4 w-40 rounded bg-white/10" />
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div
+                    key={i}
+                    className="h-12 rounded-xl bg-white/5 border border-[var(--border-card)] flex items-center p-2 gap-2"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-white/10 shrink-0" />
+                    <div className="h-3 w-12 rounded bg-white/10" />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Botón Guardar */}
+            <div className="pt-4">
+              <div className="h-12 w-full rounded-xl bg-[var(--color-primary)]/20 border border-[var(--color-primary)]/30" />
+            </div>
+          </div>
+
+          {/* Columna Derecha: Simulación de la Maqueta PhonePreview (solo visible en LG) */}
+          <div className="hidden lg:flex justify-end">
+            <div className="w-[300px] h-[580px] rounded-[40px] bg-[var(--bg-card)] border-4 border-[var(--border-card)] p-4 flex flex-col justify-between items-center relative shadow-xl">
+              {/* Notch / Cámara del teléfono */}
+              <div className="w-28 h-4 bg-white/10 rounded-full mb-4" />
+              
+              {/* Pantalla simulada */}
+              <div className="w-full flex-1 rounded-2xl bg-white/5 border border-white/5 p-3 space-y-3">
+                <div className="h-10 w-full rounded-lg bg-white/10" />
+                <div className="h-6 w-20 rounded bg-white/10" />
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="h-20 rounded-lg bg-white/5" />
+                  <div className="h-20 rounded-lg bg-white/5" />
+                </div>
+              </div>
+
+              {/* Barra inferior del teléfono */}
+              <div className="w-20 h-1 bg-white/10 rounded-full mt-4" />
+            </div>
+          </div>
+
+        </div>
       </div>
     );
   }

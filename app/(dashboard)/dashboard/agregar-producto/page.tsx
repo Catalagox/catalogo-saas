@@ -58,14 +58,67 @@ export default function NuevoProductoPage() {
     }
   };
 
-  // 🔄 LOADING
+// 🔄 LOADING (SKELETON PADDING & FORM)
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <Loader2 className="w-10 h-10 text-[var(--color-primary)] animate-spin" />
-        <p className="text-[var(--text-secondary)] font-medium animate-pulse">
-          Sincronizando catálogo...
-        </p>
+      <div className="w-full min-h-screen pb-20 animate-pulse">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+          
+          {/* 🟢 SKELETON HEADER (PageHeader) */}
+          <div className="flex items-center justify-between py-4 border-b border-[var(--border-card)]">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-card)]" />
+              <div className="space-y-2">
+                <div className="h-3 w-20 rounded bg-white/10" />
+                <div className="h-6 w-48 rounded-lg bg-white/10" />
+              </div>
+            </div>
+            <div className="h-9 w-24 rounded-xl bg-[var(--bg-card)] border border-[var(--border-card)]" />
+          </div>
+
+          {/* 🟢 SKELETON DEL FORMULARIO */}
+          <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-3xl p-6 sm:p-8 space-y-8">
+            
+            {/* Campo 1: Imagen del producto */}
+            <div className="space-y-3">
+              <div className="h-4 w-36 rounded bg-white/10" />
+              <div className="h-40 w-full rounded-2xl border-2 border-dashed border-[var(--border-card)] bg-white/5 flex items-center justify-center">
+                <div className="h-10 w-10 rounded-full bg-white/10" />
+              </div>
+            </div>
+
+            {/* Grid 2 columnas: Nombre y Precio */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <div className="h-4 w-28 rounded bg-white/10" />
+                <div className="h-12 w-full rounded-xl bg-white/5 border border-[var(--border-card)]" />
+              </div>
+              <div className="space-y-2">
+                <div className="h-4 w-24 rounded bg-white/10" />
+                <div className="h-12 w-full rounded-xl bg-white/5 border border-[var(--border-card)]" />
+              </div>
+            </div>
+
+            {/* Campo 3: Categoría */}
+            <div className="space-y-2">
+              <div className="h-4 w-32 rounded bg-white/10" />
+              <div className="h-12 w-full rounded-xl bg-white/5 border border-[var(--border-card)]" />
+            </div>
+
+            {/* Campo 4: Descripción */}
+            <div className="space-y-2">
+              <div className="h-4 w-40 rounded bg-white/10" />
+              <div className="h-28 w-full rounded-xl bg-white/5 border border-[var(--border-card)]" />
+            </div>
+
+            {/* Botón Guardar */}
+            <div className="pt-4 flex justify-end">
+              <div className="h-12 w-full sm:w-44 rounded-xl bg-[var(--color-primary)]/20 border border-[var(--color-primary)]/30" />
+            </div>
+
+          </div>
+
+        </div>
       </div>
     );
   }

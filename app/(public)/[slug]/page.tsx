@@ -2,19 +2,23 @@ import { createClient } from "@/lib/supabase/server";
 import MenuClient from "@/components/public/MenuClient";
 import { Metadata } from "next";
 import PelotaMundial from "@/components/PelotaMundial";
-import { unstable_noStore as noStore } from "next/cache"; // 🚀 Forzar lectura directa sin caché de datos
+import { cache } from "react";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ qr?: string }>;
 }
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 60;
 
-// 1. FUNCIÓN AUXILIAR PARA OBTENER LOS DATOS DEL CATÁLOGO Y PROCESAR EL LOGO
-async function getCatalogo(slug: string) {
-  noStore(); // 🚀 Rompe cualquier almacenamiento en caché de datos de Supabase
+
+
+
+// ✅ POR ESTO (Envolver la función con cache):
+const getCatalogo = cache(async (slug: string) => {
+  // ... (deja todo el contenido interno exactamente igual)
+
+   
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -94,7 +98,7 @@ async function getCatalogo(slug: string) {
     ...data,
     logoUrl,
   };
-}
+});
 
 export async function generateMetadata({
   params,
@@ -162,25 +166,34 @@ export default async function MenuPage({
   params,
   searchParams,
 }: PageProps) {
-  noStore(); // 🚀 Asegura que las categorías se consulten limpias en cada recarga
-  const { slug } = await params;
-  const { qr } = await searchParams;
+ // ✅ POR ESTO (Carga paralela):
+const [{ slug }, { qr }] = await Promise.all([params, searchParams]);
 
-  const supabase = await createClient();
+if (!slug) {
+  return <div className="p-10 text-center">Slug inválido</div>;
+}
 
-  if (!slug) {
-    return <div className="p-10 text-center">Slug inválido</div>;
-  }
+const [catalogoDB, supabase] = await Promise.all([
+  getCatalogo(slug),
+  createClient(),
+]);
 
-  const catalogoDB = await getCatalogo(slug);
-
-  if (!catalogoDB) {
-    return (
-      <div className="p-10 text-center">
-        Catálogo no disponible
+  // ✅ Recomendado:
+if (!catalogoDB) {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-[var(--bg-main)] text-[var(--text-primary)]">
+      <div className="w-16 h-16 mb-4 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500">
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
       </div>
-    );
-  }
+      <h1 className="text-xl font-bold mb-2">Catálogo no disponible</h1>
+      <p className="text-[var(--text-secondary)] text-sm max-w-sm">
+        Este catálogo no existe o la suscripción del comercio no está activa.
+      </p>
+    </div>
+  );
+}
 
  const catalogo = {
   ...catalogoDB,
@@ -208,22 +221,27 @@ export default async function MenuPage({
     catalogoDB.color_border_categoria ?? "#e5e7eb",
 };
 
-  // 🔥 TRACKING ESTADÍSTICAS
-  try {
-    await supabase.from("estadisticas").insert({
-      user_id: catalogo.user_id,
-      tipo: "menu_view",
-    });
-
-    if (qr) {
+// 🔥 TRACKING ESTADÍSTICAS (En segundo plano)
+  const registrarEstadisticas = async () => {
+    try {
       await supabase.from("estadisticas").insert({
         user_id: catalogo.user_id,
-        tipo: "qr_scan",
+        tipo: "menu_view",
       });
+
+      if (qr) {
+        await supabase.from("estadisticas").insert({
+          user_id: catalogo.user_id,
+          tipo: "qr_scan",
+        });
+      }
+    } catch (err) {
+      console.error("TRACKING ERROR:", err);
     }
-  } catch (err) {
-    console.error("TRACKING ERROR:", err);
-  }
+  };
+
+  // Se ejecuta en segundo plano sin bloquear el renderizado
+  registrarEstadisticas();
 
   const { data: categorias, error: categoriasError } = await supabase
     .from("categorias")

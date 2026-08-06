@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import MenuHeader from "@/components/public/MenuHeader";
 import MenuFooter from "@/components/public/MenuFooter";
@@ -69,6 +69,16 @@ interface MenuClientProps {
   countryCode?: string;
 }
 
+// Función helper fuera del componente para no saturar la memoria
+const formatPriceWithCurrency = (amount: number, countryCode: string) => {
+  if (countryCode === "PE") return `S/. ${amount.toLocaleString()}`;
+  if (countryCode === "CL") return `$CLP ${amount.toLocaleString()}`;
+  if (countryCode === "CO") return `$COP ${amount.toLocaleString()}`;
+  if (countryCode === "MX") return `$MXN ${amount.toLocaleString()}`;
+  if (countryCode === "AR") return `$ARS ${amount.toLocaleString()}`;
+  return `$${amount.toLocaleString()}`;
+};
+
 export default function MenuClient({
   catalogo,
   categorias,
@@ -96,12 +106,27 @@ export default function MenuClient({
   }, []);
 
   if (!catalogo) {
-    return (
-      <div className="flex items-center justify-center min-h-screen text-gray-400">
-        Cargando menu...
+  return (
+    <div className="min-h-screen w-full max-w-2xl mx-auto p-4 space-y-6 animate-pulse">
+      {/* Header simulado */}
+      <div className="h-32 bg-gray-800/50 rounded-2xl w-full" />
+      
+      {/* Categorías simuladas */}
+      <div className="flex gap-2 overflow-hidden">
+        <div className="h-8 w-24 bg-gray-800/50 rounded-full shrink-0" />
+        <div className="h-8 w-24 bg-gray-800/50 rounded-full shrink-0" />
+        <div className="h-8 w-24 bg-gray-800/50 rounded-full shrink-0" />
       </div>
-    );
-  }
+
+      {/* Tarjetas de productos simuladas */}
+      <div className="space-y-4 pt-4">
+        <div className="h-24 bg-gray-800/40 rounded-xl w-full" />
+        <div className="h-24 bg-gray-800/40 rounded-xl w-full" />
+        <div className="h-24 bg-gray-800/40 rounded-xl w-full" />
+      </div>
+    </div>
+  );
+}
 
   const safeCategorias = categorias ?? [];
   const viewMode = catalogo.estilo_menu ?? "lista";
@@ -124,7 +149,7 @@ export default function MenuClient({
   const colorTextoCategoria = catalogo.color_texto_categoria ?? "#df0c0c";
   const colorBorderCategoria = catalogo.color_border_categoria ?? "#e5e7eb";
 
-  const theme = {
+  const theme = useMemo(() => ({
     "--color-bg": colorFondo,
     "--color-header": colorHeader,
     "--color-text-header": colorTextHeader,
@@ -140,29 +165,27 @@ export default function MenuClient({
     "--color-fondo-categoria": colorFondoCategoria,
     "--color-texto-categoria": colorTextoCategoria,
     "--color-border-categoria": colorBorderCategoria,
-  } as React.CSSProperties;
+  } as React.CSSProperties), [
+    colorFondo, colorHeader, colorTextHeader, colorBorderHeader,
+    colorFooter, colorTexto, colorPrecio, colorHamburguesa,
+    colorTarjeta, colorCategoria, colorPrimario, colorLupa,
+    colorFondoCategoria, colorTextoCategoria, colorBorderCategoria
+  ]);
 
-  const trackCategoria = async (categoriaId: string) => {
+  const trackCategoria = (categoriaId: string) => {
     if (categoriasVisitadas.current.has(categoriaId)) return;
     categoriasVisitadas.current.add(categoriaId);
 
-    try {
-      await supabase.from("estadisticas").insert({
-        user_id: catalogo.user_id,
-        tipo: "categoria_view",
-      });
-    } catch (err) {
-      console.error("TRACKING CATEGORIA ERROR:", err);
-    }
-  };
-
-  const formatPriceWithCurrency = (amount: number) => {
-    if (userCountry === "PE") return `S/. ${amount.toLocaleString()}`;
-    if (userCountry === "CL") return `$CLP ${amount.toLocaleString()}`;
-    if (userCountry === "CO") return `$COP ${amount.toLocaleString()}`;
-    if (userCountry === "MX") return `$MXN ${amount.toLocaleString()}`;
-    if (userCountry === "AR") return `$ARS ${amount.toLocaleString()}`;
-    return `$${amount.toLocaleString()}`;
+    (async () => {
+      try {
+        await supabase.from("estadisticas").insert({
+          user_id: catalogo.user_id,
+          tipo: "categoria_view",
+        });
+      } catch (err) {
+        console.error("TRACKING CATEGORIA ERROR:", err);
+      }
+    })();
   };
 
   const enviarPedidoWhatsApp = () => {
@@ -173,11 +196,12 @@ export default function MenuClient({
     items.forEach((item) => {
       const subtotal = item.precio * item.cantidad;
       mensaje += `- ${item.cantidad}x *${item.nombre}* - ${formatPriceWithCurrency(
-        item.precio
-      )} (Subtotal: ${formatPriceWithCurrency(subtotal)})\n`;
+        item.precio,
+        userCountry
+      )} (Subtotal: ${formatPriceWithCurrency(subtotal, userCountry)})\n`;
     });
 
-    mensaje += `\n*Total a pagar: ${formatPriceWithCurrency(total)}*`;
+    mensaje += `\n*Total a pagar: ${formatPriceWithCurrency(total, userCountry)}*`;
     mensaje += `\n\n_Pedido enviado desde el catalogo web._`;
 
     const numeroFormateado = catalogo.whatsapp.replace(/[^0-9]/g, "");

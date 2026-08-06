@@ -47,10 +47,44 @@ export default function QRPage() {
     setSlug(data.slug);
   };
 
+  // 🔄 LOADING (SKELETON PÁGINA QR)
   if (!slug) {
     return (
-      <div className="flex justify-center py-20 text-[var(--text-secondary)]">
-        Cargando QR...
+      <div className="max-w-2xl mx-auto px-4 relative animate-pulse">
+        {/* 🟢 HEADER SKELETON (PageHeader) */}
+        <div className="flex items-center justify-between py-4 border-b border-[var(--border-card)] mb-8">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-card)]" />
+            <div className="space-y-2">
+              <div className="h-3 w-16 rounded bg-white/10" />
+              <div className="h-6 w-48 rounded-lg bg-white/10" />
+            </div>
+          </div>
+          <div className="h-9 w-20 rounded-xl bg-[var(--bg-card)] border border-[var(--border-card)]" />
+        </div>
+
+        {/* 🟢 TARJETA PRINCIPAL DEL QR */}
+        <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 sm:p-8 text-center space-y-6">
+          
+          {/* Caja Blanca donde va el QR (Cuadrado de 220px aprox) */}
+          <div className="bg-white/10 p-5 rounded-2xl w-fit mx-auto h-[260px] w-[260px] flex items-center justify-center">
+            <div className="h-full w-full rounded-xl bg-white/10" />
+          </div>
+
+          {/* Subtítulo y Enlace */}
+          <div className="space-y-2 max-w-md mx-auto">
+            <div className="h-3 w-32 rounded bg-white/10 mx-auto" />
+            <div className="h-11 w-full rounded-lg bg-white/5 border border-[var(--border-card)]" />
+          </div>
+
+          {/* Grid de 3 Botones (Compartir, Descargar, Ver catálogo) */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-lg mx-auto w-full pt-2">
+            <div className="h-12 w-full rounded-xl bg-[var(--color-primary)]/20 border border-[var(--color-primary)]/30" />
+            <div className="h-12 w-full rounded-xl bg-white/5 border border-[var(--border-card)]" />
+            <div className="h-12 w-full rounded-xl bg-white/5 border border-[var(--border-card)]" />
+          </div>
+
+        </div>
       </div>
     );
   }
