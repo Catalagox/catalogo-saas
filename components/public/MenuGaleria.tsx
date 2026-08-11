@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import Price from "@/components/ui/Price";
-import HeaderCategoria from "@/components/public/HeaderCategoria"; 
+import HeaderCategoria from "@/components/public/HeaderCategoria";
 
 interface Producto {
   id: string;
@@ -31,6 +31,46 @@ interface MenuGaleriaProps {
   colorBorderCategoria?: string;
 }
 
+// ⚡ COMPONENTE AUXILIAR CON EFECTO ESQUELETO (SKELETON LOADER)
+function ImagenConSkeleton({
+  src,
+  alt,
+  isPriority,
+}: {
+  src: string;
+  alt: string;
+  isPriority: boolean;
+}) {
+  const [isLoading, setIsLoading] = useState(true);
+
+  return (
+    <div className="relative aspect-square overflow-hidden bg-white/[0.01]">
+      {/* 🚀 Fondo con animación de brillo mientras carga */}
+      {isLoading && (
+        <div className="absolute inset-0 bg-white/10 animate-pulse z-10" />
+      )}
+
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+        loading={isPriority ? "eager" : "lazy"}
+        priority={isPriority}
+        onLoad={() => setIsLoading(false)}
+        className={`
+          object-cover
+          transition-all
+          duration-500
+          md:group-hover:scale-105
+          bg-[var(--color-card)]
+          ${isLoading ? "opacity-0 scale-95" : "opacity-100 scale-100"}
+        `}
+      />
+    </div>
+  );
+}
+
 export default function MenuGaleria({
   categorias,
   slug,
@@ -46,7 +86,7 @@ export default function MenuGaleria({
       .map((cat) => ({
         ...cat,
         productosValidos: (cat.productos ?? []).filter(
-          (p) => p && p.slug && p.nombre
+          (p) => p && p.slug && p.nombre,
         ),
       }))
       .filter((cat) => cat.productosValidos.length > 0);
@@ -72,7 +112,7 @@ export default function MenuGaleria({
             className="scroll-mt-24 overflow-x-hidden"
           >
             {/* 🚀 CORRECCIÓN: Nombres de propiedades ajustados a la interfaz de HeaderCategoria */}
-          <HeaderCategoria
+            <HeaderCategoria
               nombre={cat.nombre}
               totalProductos={cat.productosValidos.length}
               colorTextoCategoria={colorTextoCategoria}
@@ -118,31 +158,20 @@ export default function MenuGaleria({
                 >
                   {/* Importa esto al inicio de tu archivo:  */}
 
-<div className="p-0.5 pb-1 flex-shrink-0">
-  <div className="relative aspect-square overflow-hidden bg-white/[0.01]">
-    {p.imagen_url ? (
-      <Image
-        src={p.imagen_url}
-        alt={p.nombre}
-        fill
-        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-        loading={catIndex === 0 && pIndex < 4 ? "eager" : "lazy"}
-        priority={catIndex === 0 && pIndex < 4}
-        className="
-          object-cover
-          transition-transform
-          duration-500
-          md:group-hover:scale-105
-          bg-[var(--color-card)]
-        "
-      />
-    ) : (
-      <div className="absolute inset-0 flex items-center justify-center text-[10px] uppercase tracking-widest opacity-30 text-[var(--color-text)]">
-        Sin foto
-      </div>
-    )}
-  </div>
-</div>
+                  {/* ✅ POR ESTE NUEVO BLOQUE: */}
+                  <div className="p-0.5 pb-1 flex-shrink-0">
+                    {p.imagen_url ? (
+                      <ImagenConSkeleton
+                        src={p.imagen_url}
+                        alt={p.nombre}
+                        isPriority={catIndex === 0 && pIndex < 4}
+                      />
+                    ) : (
+                      <div className="relative aspect-square overflow-hidden bg-white/[0.01] flex items-center justify-center text-[10px] uppercase tracking-widest opacity-30 text-[var(--color-text)]">
+                        Sin foto
+                      </div>
+                    )}
+                  </div>
 
                   <div className="p-3.5 pt-2 flex flex-col flex-1 bg-[var(--color-bg)]/20">
                     <h3
