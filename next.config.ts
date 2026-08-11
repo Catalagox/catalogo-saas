@@ -4,14 +4,17 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
 
   images: {
+    // Permite que Next.js optimice imágenes de Supabase
     remotePatterns: [
       {
         protocol: "https",
-        // 🔥 CORRECCIÓN: Reemplaza esto con tu dominio real de Supabase 
-        // O usa '*.supabase.co' si quieres permitir subdominios de Supabase.
-        hostname: "*.supabase.co", 
+        hostname: "**.supabase.co", // Los dos asteriscos (**) permiten cualquier proyecto de Supabase
+        port: "",
+        pathname: "/storage/v1/object/public/**", // Ruta estándar del Storage de Supabase
       },
     ],
+    // Formatos modernos de imagen automáticos (los convierte según el navegador)
+    formats: ["image/avif", "image/webp"],
   },
 
   async headers() {

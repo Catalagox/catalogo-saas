@@ -1,8 +1,10 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import Price from "@/components/ui/Price";
-import HeaderCategoria from "@/components/public/HeaderCategoria"; // 🚀 Importamos el nuevo encabezado
+import HeaderCategoria from "@/components/public/HeaderCategoria"; 
 
 interface Producto {
   id: string;
@@ -37,7 +39,20 @@ export default function MenuGaleria({
   colorTextoCategoria = "#111827",
   colorBorderCategoria = "#e5e7eb",
 }: MenuGaleriaProps) {
-  if (!categorias || categorias.length === 0) {
+  // Memoizamos las categorías filtrando previamente los productos válidos
+  const categoriasProcesadas = useMemo(() => {
+    if (!categorias) return [];
+    return categorias
+      .map((cat) => ({
+        ...cat,
+        productosValidos: (cat.productos ?? []).filter(
+          (p) => p && p.slug && p.nombre
+        ),
+      }))
+      .filter((cat) => cat.productosValidos.length > 0);
+  }, [categorias]);
+
+  if (!categoriasProcesadas || categoriasProcesadas.length === 0) {
     return (
       <div className="text-center py-20 border border-dashed rounded-xl border-white/10 bg-white/[0.02] backdrop-blur-sm">
         <p className="text-sm uppercase tracking-[0.3em] opacity-60 text-[var(--color-text)]">
@@ -49,13 +64,7 @@ export default function MenuGaleria({
 
   return (
     <div className="space-y-14 pb-0 mb-0">
-      {categorias.map((cat) => {
-        const productosValidos = (cat.productos ?? []).filter(
-          (p) => p && p.slug && p.nombre,
-        );
-
-        if (productosValidos.length === 0) return null;
-
+      {categoriasProcesadas.map((cat, catIndex) => {
         return (
           <section
             key={cat.id}
@@ -63,9 +72,9 @@ export default function MenuGaleria({
             className="scroll-mt-24 overflow-x-hidden"
           >
             {/* 🚀 CORRECCIÓN: Nombres de propiedades ajustados a la interfaz de HeaderCategoria */}
-            <HeaderCategoria
+          <HeaderCategoria
               nombre={cat.nombre}
-              totalProductos={productosValidos.length}
+              totalProductos={cat.productosValidos.length}
               colorTextoCategoria={colorTextoCategoria}
             />
 
@@ -84,7 +93,7 @@ export default function MenuGaleria({
                 overflow-hidden
               "
             >
-              {productosValidos.map((p) => (
+              {cat.productosValidos.map((p, pIndex) => (
                 <Link
                   key={p.id}
                   id={`prod-${p.id}`}
@@ -107,34 +116,33 @@ export default function MenuGaleria({
                     touch-manipulation
                   "
                 >
-                  {/* IMAGEN */}
-                  <div className="p-0.5 pb-1 flex-shrink-0">
-                    <div className="relative aspect-square overflow-hidden bg-white/[0.01]">
-                      {p.imagen_url ? (
-                        <img
-                          src={p.imagen_url}
-                          alt={p.nombre}
-                          loading="lazy"
-                          decoding="async"
-                          className="
-                            absolute
-                            inset-0
-                            w-full
-                            h-full
-                            object-cover
-                            transition-transform
-                            duration-500
-                            md:group-hover:scale-105
-                            bg-[var(--color-card)]
-                          "
-                        />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center text-[10px] uppercase tracking-widest opacity-30 text-[var(--color-text)]">
-                          Sin foto
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  {/* Importa esto al inicio de tu archivo:  */}
+
+<div className="p-0.5 pb-1 flex-shrink-0">
+  <div className="relative aspect-square overflow-hidden bg-white/[0.01]">
+    {p.imagen_url ? (
+      <Image
+        src={p.imagen_url}
+        alt={p.nombre}
+        fill
+        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+        loading={catIndex === 0 && pIndex < 4 ? "eager" : "lazy"}
+        priority={catIndex === 0 && pIndex < 4}
+        className="
+          object-cover
+          transition-transform
+          duration-500
+          md:group-hover:scale-105
+          bg-[var(--color-card)]
+        "
+      />
+    ) : (
+      <div className="absolute inset-0 flex items-center justify-center text-[10px] uppercase tracking-widest opacity-30 text-[var(--color-text)]">
+        Sin foto
+      </div>
+    )}
+  </div>
+</div>
 
                   <div className="p-3.5 pt-2 flex flex-col flex-1 bg-[var(--color-bg)]/20">
                     <h3
