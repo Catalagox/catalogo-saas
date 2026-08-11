@@ -23,6 +23,7 @@ interface Props {
   colorFondoCategoria?: string;  // 👈 Añadir
   colorTextoCategoria?: string;  // 👈 Añadir
   colorBorderCategoria?: string; // 👈 Añadir
+  isFirstCategory?: boolean;
 }
 
 export default function CategoriaSection({ 

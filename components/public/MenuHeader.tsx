@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, FormEvent } from "react";
+import Image from "next/image";
 import { Search, X, Menu } from "lucide-react";
 
 type Producto = {
@@ -32,18 +33,41 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
   const [search, setSearch] = useState("");
   const [scrolled, setScrolled] = useState(false);
 
+  // 1. Detección de Scroll
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 0);
     };
 
     handleScroll();
-
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // 🔥 BUSCADOR EN TIEMPO REAL
+  // 2. 🔒 Bloqueo de Scroll en móvil cuando el menú o la búsqueda están abiertos
+  // ⌨️ Cierre con la tecla Escape
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        setSearchOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
+  // 🔥 BUSCADOR EN TIEMPO REAL MEMOIZADO
   const resultados = useMemo(() => {
     if (!search.trim()) return [];
 
@@ -80,7 +104,7 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
     return encontrados.slice(0, 8);
   }, [search, categorias]);
 
-  // 🚀 FUNCIÓN DE SCROLL MEJORADA
+  // 🚀 FUNCIÓN DE SCROLL
   const irAResultado = (idDestino: string) => {
     const element = document.getElementById(idDestino);
 
@@ -90,7 +114,6 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
         block: "start",
       });
     } else {
-      // Si buscas un producto y no tiene ID propio asignado, intenta caer en su categoría padre
       console.warn(`No se encontró el elemento con ID: ${idDestino}`);
     }
 
@@ -98,11 +121,10 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
     setSearch("");
   };
 
-  // 🚀 MANEJADOR PARA EL ENTER (SUBMIT DEL FORMULARIO)
+  // 🚀 MANEJADOR SUBMIT
   const handleSearchSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (resultados.length > 0) {
-      // Si el usuario presiona Enter, viaja automáticamente al primer resultado encontrado
       irAResultado(resultados[0].idDestino);
     }
   };
@@ -134,11 +156,16 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
 
             <div className="absolute left-1/2 -translate-x-1/2 lg:relative lg:left-0 lg:translate-x-0 flex items-center justify-center h-full z-10">
               {catalogo.logo ? (
-                <img
-                  src={catalogo.logo}
-                  alt={catalogo.nombre}
-                  className="h-16 w-auto object-contain max-w-[240px] md:max-w-[300px]"
-                />
+                <div className="relative h-16 w-48 sm:w-60 flex items-center">
+                  <Image
+                    src={catalogo.logo}
+                    alt={catalogo.nombre}
+                    fill
+                    priority
+                    sizes="(max-width: 768px) 192px, 240px"
+                    className="object-contain"
+                  />
+                </div>
               ) : (
                 <h1 className="text-xl font-bold tracking-tight text-[var(--color-text-header,#ffffff)] whitespace-nowrap">
                   {catalogo.nombre}
@@ -165,7 +192,7 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
             <button
               onClick={() => setSearchOpen(!searchOpen)}
               className="p-2 rounded-full transition-transform duration-200 hover:scale-105"
-              aria-label="Buscar"
+              aria-label={searchOpen ? "Cerrar búsqueda" : "Abrir búsqueda"}
             >
               {searchOpen ? (
                 <X
@@ -229,11 +256,15 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
                       >
                         {item.tipo === "producto" &&
                           (item.imagen_url ? (
-                            <img
-                              src={item.imagen_url}
-                              alt={item.nombre}
-                              className="h-12 w-12 shrink-0 rounded-lg object-cover bg-white/10"
-                            />
+                            <div className="relative h-12 w-12 shrink-0 rounded-lg overflow-hidden bg-white/10">
+                              <Image
+                                src={item.imagen_url}
+                                alt={item.nombre}
+                                fill
+                                sizes="48px"
+                                className="object-cover"
+                              />
+                            </div>
                           ) : (
                             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white/10 text-[10px] opacity-60 text-[var(--color-text-header,#ffffff)]">
                               Sin foto
@@ -282,6 +313,7 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
           </h2>
           <button
             onClick={() => setOpen(false)}
+            aria-label="Cerrar menú"
             className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 text-[var(--color-text-header,#ffffff)] transition-colors text-lg"
           >
             ✕

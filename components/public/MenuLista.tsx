@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import CategoriaSection from "@/components/public/CategoriaSection";
 import HeaderCategoria from "@/components/public/HeaderCategoria"; // 🚀 Importamos el nuevo encabezado
 
@@ -30,13 +31,23 @@ interface MenuListaProps {
 export default function MenuLista({ 
   categorias, 
   countryCode = "PE",
-  colorFondoCategoria,  // 👈 Añadir
-  colorTextoCategoria,  // 👈 Añadir
-  colorBorderCategoria, // 👈 Añadir
+  colorFondoCategoria,
+  colorTextoCategoria,
+  colorBorderCategoria,
 }: MenuListaProps) {
-  const safeCategorias = categorias ?? [];
+  const categoriasProcesadas = useMemo(() => {
+    if (!categorias) return [];
+    return categorias
+      .map((cat) => ({
+        ...cat,
+        productosValidos: (cat.productos ?? []).filter(
+          (p) => p && p.slug && p.nombre
+        ),
+      }))
+      .filter((cat) => cat.productosValidos.length > 0);
+  }, [categorias]);
 
-  if (safeCategorias.length === 0) {
+  if (categoriasProcesadas.length === 0) {
     return (
       <div className="text-center py-24 px-6 rounded-3xl border border-dashed border-white/10 bg-white/[0.02] backdrop-blur-sm">
         <div className="space-y-3">
@@ -53,28 +64,28 @@ export default function MenuLista({
 
   return (
     <div className="space-y-14 pb-16 animate-fade-in">
-      {safeCategorias.map((categoria) => {
-        const productosValidos = (categoria.productos ?? []).filter(
-          (p) => p && p.slug && p.nombre
-        );
+      {categoriasProcesadas.map((categoria, catIndex) => (
+        <section
+          key={categoria.id}
+          id={`cat-${categoria.id}`}
+          className="scroll-mt-24 px-2 sm:px-6 rounded-none"
+        >
+          <HeaderCategoria 
+            nombre={categoria.nombre} 
+            totalProductos={categoria.productosValidos.length}
+            colorTextoCategoria={colorTextoCategoria}
+          />
 
-        return (
-          <section
-            key={categoria.id}
-            id={`cat-${categoria.id}`}
-            className="scroll-mt-24 px-2 sm:px-6 rounded-none"
-          >
-            {/* 🚀 NUEVO COMPONENTE DE ENCABEZADO REUTILIZADO */}
-            <HeaderCategoria 
-              nombre={categoria.nombre} 
-              totalProductos={productosValidos.length}
-              colorTextoCategoria={colorTextoCategoria}
-            />
-
-            <CategoriaSection categoria={categoria} countryCode={countryCode} />
-          </section>
-        );
-      })}
+          <CategoriaSection 
+            categoria={{
+              ...categoria,
+              productos: categoria.productosValidos,
+            }} 
+            countryCode={countryCode}
+            isFirstCategory={catIndex === 0}
+          />
+        </section>
+      ))}
     </div>
   );
-}
+  }

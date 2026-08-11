@@ -1,7 +1,9 @@
 "use client";
 
-import { useRouter, useParams } from "next/navigation";
-import Price from "@/components/ui/Price"; // 🚀 Componente dinámico para formatear la moneda
+import { useParams } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
+import Price from "@/components/ui/Price";
 
 // 🔥 Tipado real
 interface Producto {
@@ -15,36 +17,35 @@ interface Producto {
 
 interface Props {
   producto: Producto;
-  countryCode?: string; // 👈 NUEVO: Recibimos el código de país desde el componente padre
+  countryCode?: string; 
+  isPriority?: boolean;
 }
 
-export default function ProductoCard({ producto, countryCode = "PE" }: Props) {
-  const router = useRouter();
+export default function ProductoCard({ 
+  producto, 
+  countryCode = "PE", 
+  isPriority = false 
+}: Props) {
   const params = useParams();
-  const slug = params.slug as string;
+  const slug = (params?.slug as string) || "";
 
   if (!producto) return null;
 
-  const handleClick = () => {
-    if (!producto.slug) return;
-    router.push(`/${slug}/${producto.slug}`);
-  };
-
   return (
-    // CÓDIGO NUEVO:
-    // CÓDIGO NUEVO:
-    <div
-      onClick={handleClick}
+    <Link
+      href={`/${slug}/${producto.slug}`}
       className="group rounded-none p-3 flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-all duration-300 bg-[var(--color-card)] border border-white/10 md:hover:border-[var(--color-categoria)] active:bg-white/[0.02] outline-none touch-manipulation"
     >
       {producto.imagen_url ? (
-        <div className="relative w-24 h-24 flex-shrink-0 overflow-hidden rounded-none bg-white">
-          <img
+        <div className="relative w-24 h-24 flex-shrink-0 overflow-hidden rounded-none bg-white/[0.01]">
+          <Image
             src={producto.imagen_url}
             alt={producto.nombre}
-            loading="lazy"
-            decoding="async"
-            className="w-full h-full object-cover transition-transform duration-500 md:group-hover:scale-110"
+            fill
+            sizes="96px"
+            priority={isPriority}
+            loading={isPriority ? "eager" : "lazy"}
+            className="object-cover transition-transform duration-500 md:group-hover:scale-110"
           />
         </div>
       ) : (
@@ -67,7 +68,6 @@ export default function ProductoCard({ producto, countryCode = "PE" }: Props) {
 
         <div className="mt-2 flex items-center justify-between">
           <span className="text-sm font-bold text-[var(--color-price)]">
-            {/* 🚀 Reemplazado el "$" estático por el renderizador dinámico */}
             <Price amount={producto.precio} countryCode={countryCode} />
           </span>
 
@@ -76,6 +76,6 @@ export default function ProductoCard({ producto, countryCode = "PE" }: Props) {
           </span>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
