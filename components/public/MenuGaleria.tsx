@@ -31,7 +31,7 @@ interface MenuGaleriaProps {
   colorBorderCategoria?: string;
 }
 
-// ⚡ COMPONENTE AUXILIAR CON EFECTO ESQUELETO (SKELETON LOADER)
+// ⚡ COMPONENTE AUXILIAR CON SHIMMER GRIS CLARO
 function ImagenConSkeleton({
   src,
   alt,
@@ -44,10 +44,13 @@ function ImagenConSkeleton({
   const [isLoading, setIsLoading] = useState(true);
 
   return (
-    <div className="relative aspect-square overflow-hidden bg-white/[0.01]">
-      {/* 🚀 Fondo con animación de brillo mientras carga */}
+    // 1. Cambiamos bg-neutral-800 por bg-neutral-200 / bg-zinc-200 para el fondo claro
+    <div className="relative aspect-square overflow-hidden bg-neutral-200">
+      {/* 🚀 EFECTO SHIMMER EN FONDO CLARO */}
       {isLoading && (
-        <div className="absolute inset-0 bg-white/10 animate-pulse z-10" />
+        <div className="absolute inset-0 z-10 overflow-hidden bg-neutral-200">
+          <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/70 to-transparent" />
+        </div>
       )}
 
       <Image
@@ -60,11 +63,10 @@ function ImagenConSkeleton({
         onLoad={() => setIsLoading(false)}
         className={`
           object-cover
-          transition-all
-          duration-500
+          transition-opacity
+          duration-300
           md:group-hover:scale-105
-          bg-[var(--color-card)]
-          ${isLoading ? "opacity-0 scale-95" : "opacity-100 scale-100"}
+          ${isLoading ? "opacity-0" : "opacity-100"}
         `}
       />
     </div>
