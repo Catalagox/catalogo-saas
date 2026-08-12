@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import MenuHeader from "@/components/public/MenuHeader";
 import MenuFooter from "@/components/public/MenuFooter";
 import MenuLista from "@/components/public/MenuLista";
 import MenuGaleria from "@/components/public/MenuGaleria";
 import CategoriasSlider from "@/components/public/CategoriasSlider";
+import  CartDrawer  from "@/components/public/CartDrawer";
 import { useCart } from "@/context/CartContext";
-import Price from "@/components/ui/Price";
 
 // TIPOS
 interface Producto {
@@ -69,16 +69,6 @@ interface MenuClientProps {
   countryCode?: string;
 }
 
-// Función helper fuera del componente para no saturar la memoria
-const formatPriceWithCurrency = (amount: number, countryCode: string) => {
-  if (countryCode === "PE") return `S/. ${amount.toLocaleString()}`;
-  if (countryCode === "CL") return `$CLP ${amount.toLocaleString()}`;
-  if (countryCode === "CO") return `$COP ${amount.toLocaleString()}`;
-  if (countryCode === "MX") return `$MXN ${amount.toLocaleString()}`;
-  if (countryCode === "AR") return `$ARS ${amount.toLocaleString()}`;
-  return `$${amount.toLocaleString()}`;
-};
-
 export default function MenuClient({
   catalogo,
   categorias,
@@ -87,46 +77,54 @@ export default function MenuClient({
   // Evitar tracking duplicado
   const categoriasVisitadas = useRef<Set<string>>(new Set());
 
-  // Carrito
-  const {
-    items,
-    increaseQuantity,
-    decreaseQuantity,
-    total,
-    cantidadTotal,
-    clearCart,
-  } = useCart();
-
+  // Estado del Carrito
+  const { cantidadTotal } = useCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
-  // Evitar errores de hidratacion con localStorage
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  if (!catalogo) {
-  return (
-    <div className="min-h-screen w-full max-w-2xl mx-auto p-4 space-y-6 animate-pulse">
-      {/* Header simulado */}
-      <div className="h-32 bg-gray-800/50 rounded-2xl w-full" />
-      
-      {/* Categorías simuladas */}
-      <div className="flex gap-2 overflow-hidden">
-        <div className="h-8 w-24 bg-gray-800/50 rounded-full shrink-0" />
-        <div className="h-8 w-24 bg-gray-800/50 rounded-full shrink-0" />
-        <div className="h-8 w-24 bg-gray-800/50 rounded-full shrink-0" />
-      </div>
+  // Tracking de categorías vistas
+  const trackCategoria = useCallback(
+    (categoriaId: string) => {
+      if (!catalogo?.user_id) return;
+      if (categoriasVisitadas.current.has(categoriaId)) return;
+      categoriasVisitadas.current.add(categoriaId);
 
-      {/* Tarjetas de productos simuladas */}
-      <div className="space-y-4 pt-4">
-        <div className="h-24 bg-gray-800/40 rounded-xl w-full" />
-        <div className="h-24 bg-gray-800/40 rounded-xl w-full" />
-        <div className="h-24 bg-gray-800/40 rounded-xl w-full" />
-      </div>
-    </div>
+      (async () => {
+        try {
+          await supabase.from("estadisticas").insert({
+            user_id: catalogo.user_id,
+            tipo: "categoria_view",
+          });
+        } catch (err) {
+          console.error("TRACKING CATEGORIA ERROR:", err);
+        }
+      })();
+    },
+    [catalogo?.user_id]
   );
-}
+
+  // Fallback Skeleton si no hay catálogo
+  if (!catalogo) {
+    return (
+      <div className="min-h-screen w-full max-w-2xl mx-auto p-4 space-y-6 animate-pulse">
+        <div className="h-32 bg-gray-800/50 rounded-2xl w-full" />
+        <div className="flex gap-2 overflow-hidden">
+          <div className="h-8 w-24 bg-gray-800/50 rounded-full shrink-0" />
+          <div className="h-8 w-24 bg-gray-800/50 rounded-full shrink-0" />
+          <div className="h-8 w-24 bg-gray-800/50 rounded-full shrink-0" />
+        </div>
+        <div className="space-y-4 pt-4">
+          <div className="h-24 bg-gray-800/40 rounded-xl w-full" />
+          <div className="h-24 bg-gray-800/40 rounded-xl w-full" />
+          <div className="h-24 bg-gray-800/40 rounded-xl w-full" />
+        </div>
+      </div>
+    );
+  }
 
   const safeCategorias = categorias ?? [];
   const viewMode = catalogo.estilo_menu ?? "lista";
@@ -135,8 +133,7 @@ export default function MenuClient({
   const colorFondo = catalogo.color_fondo ?? "#fefefe";
   const colorHeader = catalogo.color_header ?? "#2c2c2c";
   const colorTextHeader = catalogo.color_text_header ?? "#ffffff";
-  const colorBorderHeader =
-    catalogo.color_border_header ?? "rgba(255,255,255,0.1)";
+  const colorBorderHeader = catalogo.color_border_header ?? "rgba(255,255,255,0.1)";
   const colorFooter = catalogo.color_footer ?? "#111827";
   const colorTexto = catalogo.color_texto ?? "#4f4d4d";
   const colorPrecio = catalogo.color_precio ?? "#22c55e";
@@ -149,71 +146,44 @@ export default function MenuClient({
   const colorTextoCategoria = catalogo.color_texto_categoria ?? "#df0c0c";
   const colorBorderCategoria = catalogo.color_border_categoria ?? "#e5e7eb";
 
-  const theme = useMemo(() => ({
-    "--color-bg": colorFondo,
-    "--color-header": colorHeader,
-    "--color-text-header": colorTextHeader,
-    "--color-border-header": colorBorderHeader,
-    "--color-footer": colorFooter,
-    "--color-text": colorTexto,
-    "--color-price": colorPrecio,
-    "--color-hamburguesa": colorHamburguesa,
-    "--color-card": colorTarjeta,
-    "--color-categoria": colorCategoria,
-    "--color-primary": colorPrimario,
-    "--color-lupa": colorLupa,
-    "--color-fondo-categoria": colorFondoCategoria,
-    "--color-texto-categoria": colorTextoCategoria,
-    "--color-border-categoria": colorBorderCategoria,
-  } as React.CSSProperties), [
-    colorFondo, colorHeader, colorTextHeader, colorBorderHeader,
-    colorFooter, colorTexto, colorPrecio, colorHamburguesa,
-    colorTarjeta, colorCategoria, colorPrimario, colorLupa,
-    colorFondoCategoria, colorTextoCategoria, colorBorderCategoria
-  ]);
-
-  const trackCategoria = (categoriaId: string) => {
-    if (categoriasVisitadas.current.has(categoriaId)) return;
-    categoriasVisitadas.current.add(categoriaId);
-
-    (async () => {
-      try {
-        await supabase.from("estadisticas").insert({
-          user_id: catalogo.user_id,
-          tipo: "categoria_view",
-        });
-      } catch (err) {
-        console.error("TRACKING CATEGORIA ERROR:", err);
-      }
-    })();
-  };
-
-  const enviarPedidoWhatsApp = () => {
-    if (items.length === 0 || !catalogo.whatsapp) return;
-
-    let mensaje = `*Hola! Me gustaria realizar el siguiente pedido en ${catalogo.nombre}:*\n\n`;
-
-    items.forEach((item) => {
-      const subtotal = item.precio * item.cantidad;
-      mensaje += `- ${item.cantidad}x *${item.nombre}* - ${formatPriceWithCurrency(
-        item.precio,
-        userCountry
-      )} (Subtotal: ${formatPriceWithCurrency(subtotal, userCountry)})\n`;
-    });
-
-    mensaje += `\n*Total a pagar: ${formatPriceWithCurrency(total, userCountry)}*`;
-    mensaje += `\n\n_Pedido enviado desde el catalogo web._`;
-
-    const numeroFormateado = catalogo.whatsapp.replace(/[^0-9]/g, "");
-    const whatsappUrl = `https://wa.me/${numeroFormateado}?text=${encodeURIComponent(
-      mensaje
-    )}`;
-
-    window.open(whatsappUrl, "_blank");
-
-    clearCart();
-    setIsCartOpen(false);
-  };
+  // Mapeo CSS Theme
+  const theme = useMemo(
+    () =>
+      ({
+        "--color-bg": colorFondo,
+        "--color-header": colorHeader,
+        "--color-text-header": colorTextHeader,
+        "--color-border-header": colorBorderHeader,
+        "--color-footer": colorFooter,
+        "--color-text": colorTexto,
+        "--color-price": colorPrecio,
+        "--color-hamburguesa": colorHamburguesa,
+        "--color-card": colorTarjeta,
+        "--color-categoria": colorCategoria,
+        "--color-primary": colorPrimario,
+        "--color-lupa": colorLupa,
+        "--color-fondo-categoria": colorFondoCategoria,
+        "--color-texto-categoria": colorTextoCategoria,
+        "--color-border-categoria": colorBorderCategoria,
+      } as React.CSSProperties),
+    [
+      colorFondo,
+      colorHeader,
+      colorTextHeader,
+      colorBorderHeader,
+      colorFooter,
+      colorTexto,
+      colorPrecio,
+      colorHamburguesa,
+      colorTarjeta,
+      colorCategoria,
+      colorPrimario,
+      colorLupa,
+      colorFondoCategoria,
+      colorTextoCategoria,
+      colorBorderCategoria,
+    ]
+  );
 
   return (
     <div
@@ -224,16 +194,16 @@ export default function MenuClient({
       <MenuHeader catalogo={catalogo} categorias={safeCategorias} />
 
       {/* SUB-BARRA DE CATEGORIAS */}
-<CategoriasSlider
-  categorias={safeCategorias}
-  onTrackCategoria={trackCategoria}
-  colorFondoCategoria={colorFondoCategoria}
-  colorTextoCategoria={colorTextoCategoria}
-  colorBorderCategoria={colorBorderCategoria}
-  colorHeader={colorHeader}
-  colorTextHeader={colorTextHeader}
-  colorBorderHeader={colorBorderHeader}
-/>
+      <CategoriasSlider
+        categorias={safeCategorias}
+        onTrackCategoria={trackCategoria}
+        colorFondoCategoria={colorFondoCategoria}
+        colorTextoCategoria={colorTextoCategoria}
+        colorBorderCategoria={colorBorderCategoria}
+        colorHeader={colorHeader}
+        colorTextHeader={colorTextHeader}
+        colorBorderHeader={colorBorderHeader}
+      />
 
       {/* MAIN */}
       <main className="max-w-7xl mx-auto w-full px-0 sm:px-6 lg:px-8 pt-8 pb-0 mb-0 flex-grow">
@@ -269,12 +239,13 @@ export default function MenuClient({
         youtube={catalogo.youtube}
       />
 
-      {/* CARRITO FLOTANTE */}
+      {/* BOTÓN FLOTANTE CARRITO */}
       {isMounted && cantidadTotal > 0 && (
         <button
           onClick={() => setIsCartOpen(true)}
           className="fixed bottom-6 right-6 p-4 rounded-full text-white shadow-2xl flex items-center justify-center gap-2 z-50 transition-transform active:scale-95 touch-manipulation"
           style={{ backgroundColor: "var(--color-primary)" }}
+          aria-label="Ver carrito"
         >
           <span className="text-2xl">🛒</span>
           <span className="font-bold bg-white text-black text-xs px-2 py-0.5 rounded-full absolute -top-1 -right-1 shadow">
@@ -283,85 +254,15 @@ export default function MenuClient({
         </button>
       )}
 
-      {isMounted && isCartOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-end z-[9999]">
-          <div
-            className="w-full max-w-md h-full p-6 flex flex-col justify-between shadow-2xl overflow-hidden"
-            style={{
-              backgroundColor: "var(--color-bg)",
-              color: "var(--color-text)",
-            }}
-          >
-            <div>
-              <div className="flex justify-between items-center mb-6 border-b pb-4 border-white/10">
-                <h2 className="text-xl font-black uppercase tracking-wider">
-                  Tu Pedido
-                </h2>
-                <button
-                  onClick={() => setIsCartOpen(false)}
-                  className="text-xl opacity-70 hover:opacity-100 p-2"
-                >
-                  x
-                </button>
-              </div>
-
-              <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 scrollbar-hide">
-                {items.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/5"
-                  >
-                    <div>
-                      <p className="font-bold text-sm sm:text-base">
-                        {item.nombre}
-                      </p>
-                      <div className="text-xs font-black text-[var(--color-price)]">
-                        <Price amount={item.precio} countryCode={userCountry} />
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3 bg-black/20 rounded-lg p-1 border border-white/10">
-                      <button
-                        onClick={() => decreaseQuantity(item.id)}
-                        className="w-8 h-8 flex items-center justify-center font-bold md:hover:bg-white/10 active:bg-white/20 rounded"
-                      >
-                        -
-                      </button>
-                      <span className="font-bold text-sm w-4 text-center">
-                        {item.cantidad}
-                      </span>
-                      <button
-                        onClick={() => increaseQuantity(item.id)}
-                        className="w-8 h-8 flex items-center justify-center font-bold md:hover:bg-white/10 active:bg-white/20 rounded"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="border-t pt-4 border-white/10">
-              <div className="flex justify-between items-center mb-4 px-1">
-                <span className="text-sm font-bold uppercase opacity-60 tracking-wider">
-                  Total estimado:
-                </span>
-                <div className="text-2xl font-black text-[var(--color-price)]">
-                  <Price amount={total} countryCode={userCountry} />
-                </div>
-              </div>
-
-              <button
-                onClick={enviarPedidoWhatsApp}
-                className="w-full h-14 rounded-xl font-black text-sm uppercase tracking-widest text-white flex justify-center items-center gap-2 transition-all md:hover:brightness-110 active:scale-[0.98] touch-manipulation"
-                style={{ backgroundColor: "#25D366" }}
-              >
-                Enviar a WhatsApp
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* COMPONENTE MODAL / DRAWER DEL CARRITO */}
+      {isMounted && (
+        <CartDrawer
+          isOpen={isCartOpen}
+          onClose={() => setIsCartOpen(false)}
+          catalogoNombre={catalogo.nombre}
+          whatsapp={catalogo.whatsapp}
+          userCountry={userCountry}
+        />
       )}
     </div>
   );

@@ -16,29 +16,29 @@ export default function PelotaMundial() {
       </div>
 
       <style jsx>{`
-        /* La animación completa dura 30 segundos */
+        
         .pelota-mundial {
           animation: recorrer 30s linear infinite;
         }
 
-        /* La pelota gira constantemente */
+        
         .pelota {
           animation: girar 3s linear infinite;
         }
 
         @keyframes recorrer {
-          /* Oculta la pelota los primeros segundos */
+          
           0% {
             transform: translateX(-120px) translateY(0px) rotate(0deg);
             opacity: 0;
           }
 
-          /* Aparece */
+        
           5% {
             opacity: 1;
           }
 
-          /* Rebotes */
+          
           10% {
             transform: translateX(20vw) translateY(-20px) rotate(360deg);
           }
@@ -61,7 +61,7 @@ export default function PelotaMundial() {
             opacity: 1;
           }
 
-          /* Permanece escondida hasta completar los 30 segundos */
+          
           31% {
             opacity: 0;
           }
@@ -86,3 +86,4 @@ export default function PelotaMundial() {
     </>
   );
 }
+  

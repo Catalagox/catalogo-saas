@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, FormEvent } from "react";
+import { useState, useEffect, useMemo, FormEvent, useCallback } from "react";
 import Image from "next/image";
 import { Search, X, Menu } from "lucide-react";
 
@@ -33,10 +33,11 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
   const [search, setSearch] = useState("");
   const [scrolled, setScrolled] = useState(false);
 
-  // 1. Detección de Scroll
+  // 1. Detección optimizada de Scroll
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 0);
+      const isScrolled = window.scrollY > 0;
+      setScrolled((prev) => (prev !== isScrolled ? isScrolled : prev));
     };
 
     handleScroll();
@@ -44,8 +45,7 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // 2. 🔒 Bloqueo de Scroll en móvil cuando el menú o la búsqueda están abiertos
-  // ⌨️ Cierre con la tecla Escape
+  // 2. Control de Bloqueo de Scroll & Tecla Escape
   useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
@@ -67,12 +67,11 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
     };
   }, [open]);
 
-  // 🔥 BUSCADOR EN TIEMPO REAL MEMOIZADO
+  // 3. Buscador Memoizado
   const resultados = useMemo(() => {
     if (!search.trim()) return [];
 
     const texto = search.toLowerCase();
-
     const encontrados: {
       tipo: "categoria" | "producto";
       nombre: string;
@@ -80,7 +79,7 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
       imagen_url?: string;
     }[] = [];
 
-    categorias.forEach((cat) => {
+    for (const cat of categorias) {
       if (cat.nombre.toLowerCase().includes(texto)) {
         encontrados.push({
           tipo: "categoria",
@@ -89,23 +88,25 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
         });
       }
 
-      cat.productos?.forEach((producto) => {
-        if (producto.nombre.toLowerCase().includes(texto)) {
-          encontrados.push({
-            tipo: "producto",
-            nombre: producto.nombre,
-            idDestino: `prod-${producto.id}`,
-            imagen_url: producto.imagen_url,
-          });
+      if (cat.productos) {
+        for (const producto of cat.productos) {
+          if (producto.nombre.toLowerCase().includes(texto)) {
+            encontrados.push({
+              tipo: "producto",
+              nombre: producto.nombre,
+              idDestino: `prod-${producto.id}`,
+              imagen_url: producto.imagen_url,
+            });
+          }
         }
-      });
-    });
+      }
+    }
 
     return encontrados.slice(0, 8);
   }, [search, categorias]);
 
-  // 🚀 FUNCIÓN DE SCROLL
-  const irAResultado = (idDestino: string) => {
+  // 4. Scroll suave a elemento
+  const irAResultado = useCallback((idDestino: string) => {
     const element = document.getElementById(idDestino);
 
     if (element) {
@@ -113,15 +114,13 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
         behavior: "smooth",
         block: "start",
       });
-    } else {
-      console.warn(`No se encontró el elemento con ID: ${idDestino}`);
     }
 
     setSearchOpen(false);
     setSearch("");
-  };
+  }, []);
 
-  // 🚀 MANEJADOR SUBMIT
+  // 5. Manejador de Búsqueda
   const handleSearchSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (resultados.length > 0) {
@@ -133,9 +132,8 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
     <>
       {/* HEADER PRINCIPAL */}
       <header
-        className="sticky top-0 z-50 w-full transition-all duration-300 bg-[var(--color-header)]"
+        className="sticky top-0 z-50 w-full transition-all duration-300 bg-[var(--color-header)] text-[var(--color-text-header,#ffffff)]"
         style={{
-          boxShadow: "none",
           borderBottomWidth: "1px",
           borderBottomStyle: "solid",
           borderBottomColor: scrolled
@@ -144,7 +142,7 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
         }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          {/* BLOQUE IZQUIERDO / CENTRO RESPONSIVO */}
+          {/* BLOQUE IZQUIERDO */}
           <div className="flex items-center gap-4 md:w-auto">
             <button
               onClick={() => setOpen(true)}
@@ -167,14 +165,14 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
                   />
                 </div>
               ) : (
-                <h1 className="text-xl font-bold tracking-tight text-[var(--color-text-header,#ffffff)] whitespace-nowrap">
+                <h1 className="text-xl font-bold tracking-tight whitespace-nowrap">
                   {catalogo.nombre}
                 </h1>
               )}
             </div>
           </div>
 
-          {/* BLOQUE DERECHO (NAVEGACIÓN + ACCIONES) */}
+          {/* NAVEGACIÓN DESKTOP & BUSCADOR */}
           <div className="flex items-center gap-6 lg:gap-8">
             <nav className="hidden lg:flex items-center gap-5 lg:gap-8 py-1">
               {categorias.slice(0, 4).map((cat) => (
@@ -182,7 +180,7 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
                   key={cat.id}
                   href={`#cat-${cat.id}`}
                   title={cat.nombre}
-                  className="max-w-[180px] truncate text-sm font-medium uppercase tracking-wider whitespace-nowrap transition-all duration-200 hover:opacity-80 text-[var(--color-text-header,#ffffff)] relative after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-[2px] after:bottom-0 after:left-0 after:bg-[var(--color-text-header,#ffffff)] after:origin-bottom-right after:transition-transform after:duration-200 hover:after:scale-x-100 hover:after:origin-bottom-left"
+                  className="max-w-[180px] truncate text-sm font-medium uppercase tracking-wider whitespace-nowrap transition-all duration-200 hover:opacity-80 relative after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-[2px] after:bottom-0 after:left-0 after:bg-current after:origin-bottom-right after:transition-transform after:duration-200 hover:after:scale-x-100 hover:after:origin-bottom-left"
                 >
                   {cat.nombre}
                 </a>
@@ -197,12 +195,12 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
               {searchOpen ? (
                 <X
                   size={22}
-                  style={{ color: catalogo.color_lupa || "#ffffff" }}
+                  style={{ color: catalogo.color_lupa || "inherit" }}
                 />
               ) : (
                 <Search
                   size={22}
-                  style={{ color: catalogo.color_lupa || "#ffffff" }}
+                  style={{ color: catalogo.color_lupa || "inherit" }}
                 />
               )}
             </button>
@@ -215,38 +213,22 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
             <div className="relative">
               <form
                 onSubmit={handleSearchSubmit}
-                className="flex items-center gap-3 rounded-2xl px-4 py-3.5 border bg-[var(--color-header)]"
-                style={{
-                  borderColor:
-                    "var(--color-border-header, rgba(255,255,255,0.1))",
-                }}
+                className="flex items-center gap-3 rounded-2xl px-4 py-3.5 border bg-[var(--color-header)] border-[var(--color-border-header,rgba(255,255,255,0.1))]"
               >
-                <Search
-                  size={18}
-                  style={{ color: "var(--color-text-header, #ffffff)" }}
-                />
+                <Search size={18} className="opacity-70" />
 
                 <input
                   type="text"
                   placeholder="Buscar productos o categorías..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  style={{
-                    color: "var(--color-text-header, #ffffff)",
-                  }}
-                  className="w-full bg-transparent outline-none text-base placeholder:text-[var(--color-text-header)] placeholder:opacity-60"
+                  className="w-full bg-transparent outline-none text-base text-current placeholder:text-current placeholder:opacity-60"
                   autoFocus
                 />
               </form>
 
               {search.trim() && (
-                <div
-                  className="absolute top-full left-0 right-0 mt-2 z-50 overflow-hidden rounded-2xl border bg-[var(--color-header)] shadow-2xl"
-                  style={{
-                    borderColor:
-                      "var(--color-border-header, rgba(255,255,255,0.1))",
-                  }}
-                >
+                <div className="absolute top-full left-0 right-0 mt-2 z-50 overflow-hidden rounded-2xl border bg-[var(--color-header)] border-[var(--color-border-header,rgba(255,255,255,0.1))] shadow-2xl">
                   {resultados.length > 0 ? (
                     resultados.map((item) => (
                       <button
@@ -266,22 +248,22 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
                               />
                             </div>
                           ) : (
-                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white/10 text-[10px] opacity-60 text-[var(--color-text-header,#ffffff)]">
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white/10 text-[10px] opacity-60">
                               Sin foto
                             </div>
                           ))}
 
-                        <span className="flex-1 text-sm font-medium text-[var(--color-text-header,#ffffff)]">
+                        <span className="flex-1 text-sm font-medium">
                           {item.nombre}
                         </span>
 
-                        <span className="rounded border border-white/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-header,#ffffff)] opacity-60">
+                        <span className="rounded border border-white/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest opacity-60">
                           {item.tipo}
                         </span>
                       </button>
                     ))
                   ) : (
-                    <div className="px-5 py-6 text-center text-sm text-[var(--color-text-header,#ffffff)] opacity-80">
+                    <div className="px-5 py-6 text-center text-sm opacity-80">
                       No encontramos resultados para{" "}
                       <span className="font-semibold">"{search}"</span>
                     </div>
@@ -293,7 +275,7 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
         )}
       </header>
 
-      {/* OVERLAY DEL MENU LATERAL */}
+      {/* OVERLAY DEL MENÚ LATERAL */}
       {open && (
         <div
           onClick={() => setOpen(false)}
@@ -301,20 +283,18 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
         />
       )}
 
-      {/* MENÚ DRAWER (MÓVIL / SIDEBAR) */}
+      {/* DRAWER / MENÚ MÓVIL */}
       <aside
-        className={`fixed top-0 left-0 h-full w-[280px] z-[70] transform transition-transform duration-300 shadow-2xl ${
+        className={`fixed top-0 left-0 h-full w-[280px] z-[70] transform transition-transform duration-300 shadow-2xl bg-[var(--color-header)] text-[var(--color-text-header,#ffffff)] ${
           open ? "translate-x-0" : "-translate-x-full"
-        } bg-[var(--color-header)]`}
+        }`}
       >
         <div className="p-6 flex items-center justify-between border-b border-[var(--color-border-header,rgba(255,255,255,0.1))]">
-          <h2 className="text-xl font-bold text-[var(--color-text-header,#ffffff)]">
-            Categorías
-          </h2>
+          <h2 className="text-xl font-bold">Categorías</h2>
           <button
             onClick={() => setOpen(false)}
             aria-label="Cerrar menú"
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 text-[var(--color-text-header,#ffffff)] transition-colors text-lg"
+            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors text-lg"
           >
             ✕
           </button>
@@ -326,7 +306,7 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
               key={cat.id}
               href={`#cat-${cat.id}`}
               onClick={() => setOpen(false)}
-              className="block px-6 py-4 text-base font-medium border-b border-white/5 transition-colors hover:bg-white/5 text-[var(--color-text-header,#ffffff)]"
+              className="block px-6 py-4 text-base font-medium border-b border-white/5 transition-colors hover:bg-white/5"
             >
               {cat.nombre}
             </a>

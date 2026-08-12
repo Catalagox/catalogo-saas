@@ -1,38 +1,30 @@
 "use client";
 
 interface HeaderCategoriaProps {
+  id?: string;
   nombre: string;
-  totalProductos: number;
+  totalProductos?: number; // Opcional por si aún se pasa en alguna prop pero no se renderiza
   colorTextoCategoria?: string;
 }
 
-export default function HeaderCategoria({ 
-  nombre, 
-  totalProductos,
+export default function HeaderCategoria({
+  id,
+  nombre,
   colorTextoCategoria,
 }: HeaderCategoriaProps) {
-  
   const textColor = colorTextoCategoria || "var(--color-texto-categoria)";
 
   return (
-    <div className="flex items-start mb-5 pl-4 pr-1 md:pl-1 md:pr-0">
-      
-      {/* Título Responsivo y Estilizado */}
-      <h2 
-        className="text-lg md:text-xl font-bold tracking-tight capitalize leading-none"
+    <div
+      id={id}
+      className="flex items-baseline gap-2 mb-5 pl-4 pr-1 md:pl-1 md:pr-0 scroll-mt-36"
+    >
+      <h2
+        className="text-lg md:text-xl font-bold tracking-tight capitalize leading-none break-words"
         style={{ color: textColor }}
       >
         {nombre}
       </h2>
-
-      {/* Contador de Productos Adaptado */}
-      <span 
-        className="text-[10px] md:text-[11px] font-semibold ml-1.5 px-1.5 py-0.5 rounded-md bg-current/5 align-super"
-        style={{ color: textColor }}
-      >
-        {totalProductos}
-      </span>
-
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Categoria {
@@ -43,17 +43,37 @@ export default function CategoriasSlider({
   const [isScrolled, setIsScrolled] = useState(false);
 
   const lastScrollY = useRef(0);
+  const showCategoriesRef = useRef(true);
   const sliderRef = useRef<HTMLDivElement | null>(null);
+  const buttonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
 
+  // Sincronizar Ref para el listener de scroll sin forzar re-renders
+  useEffect(() => {
+    showCategoriesRef.current = showCategories;
+  }, [showCategories]);
+
+  // Mover el slider con las flechas
   const moverSlider = (direccion: "left" | "right") => {
     if (!sliderRef.current) return;
-
     sliderRef.current.scrollBy({
       left: direccion === "left" ? -340 : 340,
       behavior: "smooth",
     });
   };
 
+  // Scroll automático en la barra horizontal para centrar el botón activo
+  const autoScrollToActiveButton = useCallback((catId: string) => {
+    const activeBtn = buttonRefs.current.get(catId);
+    if (activeBtn && sliderRef.current) {
+      activeBtn.scrollIntoView({
+        behavior: "smooth",
+        inline: "center",
+        block: "nearest",
+      });
+    }
+  }, []);
+
+  // Control de scroll y detección de categoría activa
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
@@ -74,32 +94,33 @@ export default function CategoriasSlider({
 
       let current: string | null = null;
 
-      categorias.forEach((categoria) => {
+      for (const categoria of categorias) {
         const element = document.getElementById(`cat-${categoria.id}`);
-        if (!element) return;
+        if (!element) continue;
 
         const rect = element.getBoundingClientRect();
-        const offsetCheck = showCategories ? 160 : 90;
+        const offsetCheck = showCategoriesRef.current ? 160 : 90;
 
         if (rect.top <= offsetCheck && rect.bottom >= offsetCheck) {
           current = categoria.id;
+          break;
         }
-      });
+      }
 
       if (current && current !== categoriaActiva) {
         setCategoriaActiva(current);
         onTrackCategoria?.(current);
+        autoScrollToActiveButton(current);
       }
     };
 
     handleScroll();
-
     window.addEventListener("scroll", handleScroll, { passive: true });
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
-  }, [categorias, categoriaActiva, showCategories, onTrackCategoria]);
+  }, [categorias, categoriaActiva, onTrackCategoria, autoScrollToActiveButton]);
 
   if (categorias.length === 0) return null;
 
@@ -121,6 +142,7 @@ export default function CategoriasSlider({
       }}
     >
       <div className="relative w-full px-0 sm:px-4 lg:px-6">
+        {/* FLECHA IZQUIERDA DESKTOP */}
         <button
           type="button"
           onClick={() => moverSlider("left")}
@@ -138,9 +160,10 @@ export default function CategoriasSlider({
           <ChevronLeft className="h-5 w-5" />
         </button>
 
+        {/* CONTENEDOR SLIDER */}
         <div
           ref={sliderRef}
-          className="overflow-x-auto whitespace-nowrap py-3 px-3 sm:px-0 flex gap-3 scroll-smooth md:px-12"
+          className="overflow-x-auto whitespace-nowrap py-3 px-3 sm:px-0 flex gap-1.5 scroll-smooth md:px-12"
           style={{
             WebkitOverflowScrolling: "touch",
             scrollbarWidth: "none",
@@ -156,32 +179,37 @@ export default function CategoriasSlider({
                 ? `color-mix(in srgb, ${colorHeader} 85%, ${colorTextHeader})`
                 : colorHeader
               : isActive
-                ? colorFondoCategoriaActiva || colorFondoCategoria
-                : colorFondoCategoria;
+              ? colorFondoCategoriaActiva || colorFondoCategoria
+              : colorFondoCategoria;
 
             const borderColor = isScrolled
               ? colorBorderHeader
               : isActive
-                ? colorBorderCategoriaActiva || colorBorderCategoria
-                : colorBorderCategoria;
+              ? colorBorderCategoriaActiva || colorBorderCategoria
+              : colorBorderCategoria;
 
             const textColor = isScrolled
               ? colorTextHeader
               : isActive
-                ? colorTextoCategoriaActiva || colorTextoCategoria
-                : colorTextoCategoria;
+              ? colorTextoCategoriaActiva || colorTextoCategoria
+              : colorTextoCategoria;
 
             return (
               <button
                 key={categoria.id}
+                ref={(el) => {
+                  if (el) buttonRefs.current.set(categoria.id, el);
+                  else buttonRefs.current.delete(categoria.id);
+                }}
                 type="button"
                 title={categoria.nombre}
                 onClick={() => {
                   setCategoriaActiva(categoria.id);
                   onTrackCategoria?.(categoria.id);
+                  autoScrollToActiveButton(categoria.id);
 
                   const element = document.getElementById(
-                    `cat-${categoria.id}`,
+                    `cat-${categoria.id}`
                   );
                   if (!element) return;
 
@@ -193,11 +221,8 @@ export default function CategoriasSlider({
 
                   window.scrollTo({ top: y, behavior: "smooth" });
                 }}
-               // CÓDIGO NUEVO:
-className={`relative max-w-[140px] sm:max-w-[220px] px-3 py-1.5 sm:px-5 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold tracking-wide transition-all duration-300 border flex-shrink-0 outline-none touch-manipulation overflow-hidden ${
-                  isActive
-                    ? "scale-105"
-                    : "md:hover:bg-white/10 active:bg-white/10"
+                className={`relative max-w-[140px] sm:max-w-[200px] px-3 py-1.5 sm:px-3.5 sm:py-1.5 rounded-lg text-xs sm:text-xs font-semibold tracking-normal transition-all duration-300 border flex-shrink-0 outline-none touch-manipulation overflow-hidden ${
+                  isActive ? "" : "md:hover:bg-white/10 active:bg-white/10"
                 }`}
                 style={{
                   backgroundColor,
@@ -207,12 +232,12 @@ className={`relative max-w-[140px] sm:max-w-[220px] px-3 py-1.5 sm:px-5 sm:py-2.
                 }}
               >
                 <span className="block truncate">{categoria.nombre}</span>
-
               </button>
             );
           })}
         </div>
 
+        {/* FLECHA DERECHA DESKTOP */}
         <button
           type="button"
           onClick={() => moverSlider("right")}
