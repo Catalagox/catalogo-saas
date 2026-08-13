@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import ProductoCard from "@/components/public/ProductoCard";
 
 interface Producto {
@@ -8,6 +9,7 @@ interface Producto {
   descripcion?: string;
   precio: number;
   imagen_url?: string;
+  disponible?: boolean;
   slug: string;
 }
 
@@ -19,46 +21,50 @@ interface Categoria {
 
 interface Props {
   categoria: Categoria;
-  countryCode?: string; 
-  colorFondoCategoria?: string;  // 👈 Añadir
-  colorTextoCategoria?: string;  // 👈 Añadir
-  colorBorderCategoria?: string; // 👈 Añadir
+  countryCode?: string;
+  colorFondoCategoria?: string;
+  colorTextoCategoria?: string;
+  colorBorderCategoria?: string;
   isFirstCategory?: boolean;
 }
 
-export default function CategoriaSection({ 
-  categoria, 
+export default function CategoriaSection({
+  categoria,
   countryCode = "PE",
-  colorFondoCategoria,  // 👈 Añadir
-  colorTextoCategoria,  // 👈 Añadir
-  colorBorderCategoria, // 👈 Añadir
+  isFirstCategory = false,
 }: Props) {
-
-  const productosValidos =
-    (categoria.productos ?? []).filter(
-      (p) => p && p.id && p.nombre
+  // ⚡ Memoizamos la lista filtrada para evitar filtrar en cada re-render
+  const productosValidos = useMemo(() => {
+    if (!categoria?.productos) return [];
+    return categoria.productos.filter(
+      (p) => Boolean(p) && Boolean(p.id) && Boolean(p.nombre)
     );
+  }, [categoria?.productos]);
 
   if (productosValidos.length === 0) return null;
 
   return (
-    <section className="py-6">
+  <section className="py-6">
+    {/* ⚡ 'md:grid-cols-2' hace que a partir de tablets/PC se divida en 2 columnas */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {productosValidos.map((producto, index) => {
+        const isPriority = isFirstCategory && index < 4;
 
-      <div className="grid grid-cols-1 gap-4">
-        {productosValidos.map((producto) => (
-          <div 
-            key={producto.id} 
-            id={`prod-${producto.id}`} 
+        return (
+          <div
+            key={producto.id}
+            id={`prod-${producto.id}`}
             className="scroll-mt-24"
           >
             <ProductoCard
               producto={producto}
               countryCode={countryCode}
+              isPriority={isPriority}
             />
           </div>
-        ))}
-      </div>
-
-    </section>
-  );
+        );
+      })}
+    </div>
+  </section>
+);
 }

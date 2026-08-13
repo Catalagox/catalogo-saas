@@ -1,33 +1,35 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import Price from "@/components/ui/Price";
+import OptimizedImage from "@/components/public/OptimizedImage";
 
-// 🔥 Tipado real
 interface Producto {
   id: string;
   nombre: string;
   descripcion?: string;
   precio: number;
   imagen_url?: string;
+  disponible?: boolean;
   slug: string;
 }
 
 interface Props {
   producto: Producto;
-  countryCode?: string; 
+  countryCode?: string;
   isPriority?: boolean;
+  slug?: string;
 }
 
-export default function ProductoCard({ 
-  producto, 
-  countryCode = "PE", 
-  isPriority = false 
+export default function ProductoCard({
+  producto,
+  countryCode = "PE",
+  isPriority = false,
+  slug: slugProp,
 }: Props) {
   const params = useParams();
-  const slug = (params?.slug as string) || "";
+  const slug = slugProp || (params?.slug as string) || "";
 
   if (!producto) return null;
 
@@ -36,20 +38,20 @@ export default function ProductoCard({
       href={`/${slug}/${producto.slug}`}
       className="group rounded-none p-3 flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-all duration-300 bg-[var(--color-card)] border border-white/10 md:hover:border-[var(--color-categoria)] active:bg-white/[0.02] outline-none touch-manipulation"
     >
+      {/* IMAGEN DEL PRODUCTO */}
       {producto.imagen_url ? (
         <div className="relative w-24 h-24 flex-shrink-0 overflow-hidden rounded-none bg-white/[0.01]">
-          <Image
+          <OptimizedImage
             src={producto.imagen_url}
             alt={producto.nombre}
             fill
             sizes="96px"
             priority={isPriority}
-            loading={isPriority ? "eager" : "lazy"}
             className="object-cover transition-transform duration-500 md:group-hover:scale-110"
           />
         </div>
       ) : (
-        <div className="w-24 h-24 flex items-center justify-center rounded-none text-xs bg-white/10 text-[var(--color-text)]">
+        <div className="w-24 h-24 flex items-center justify-center flex-shrink-0 rounded-none text-xs bg-white/10 text-[var(--color-text)]">
           Sin foto
         </div>
       )}

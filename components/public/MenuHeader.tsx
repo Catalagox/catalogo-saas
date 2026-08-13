@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useMemo, FormEvent, useCallback } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Search, X, Menu } from "lucide-react";
+import HeaderSearch from "@/components/public/HeaderSearch";
 
 type Producto = {
   id: string;
@@ -30,10 +31,9 @@ type Props = {
 export default function MenuHeader({ catalogo, categorias }: Props) {
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [search, setSearch] = useState("");
   const [scrolled, setScrolled] = useState(false);
 
-  // 1. Detección optimizada de Scroll
+  // Detección optimizada de Scroll
   useEffect(() => {
     const handleScroll = () => {
       const isScrolled = window.scrollY > 0;
@@ -45,7 +45,7 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // 2. Control de Bloqueo de Scroll & Tecla Escape
+  // Bloqueo de Scroll (Menú hamburguesa) & Tecla Escape
   useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
@@ -66,67 +66,6 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [open]);
-
-  // 3. Buscador Memoizado
-  const resultados = useMemo(() => {
-    if (!search.trim()) return [];
-
-    const texto = search.toLowerCase();
-    const encontrados: {
-      tipo: "categoria" | "producto";
-      nombre: string;
-      idDestino: string;
-      imagen_url?: string;
-    }[] = [];
-
-    for (const cat of categorias) {
-      if (cat.nombre.toLowerCase().includes(texto)) {
-        encontrados.push({
-          tipo: "categoria",
-          nombre: cat.nombre,
-          idDestino: `cat-${cat.id}`,
-        });
-      }
-
-      if (cat.productos) {
-        for (const producto of cat.productos) {
-          if (producto.nombre.toLowerCase().includes(texto)) {
-            encontrados.push({
-              tipo: "producto",
-              nombre: producto.nombre,
-              idDestino: `prod-${producto.id}`,
-              imagen_url: producto.imagen_url,
-            });
-          }
-        }
-      }
-    }
-
-    return encontrados.slice(0, 8);
-  }, [search, categorias]);
-
-  // 4. Scroll suave a elemento
-  const irAResultado = useCallback((idDestino: string) => {
-    const element = document.getElementById(idDestino);
-
-    if (element) {
-      element.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }
-
-    setSearchOpen(false);
-    setSearch("");
-  }, []);
-
-  // 5. Manejador de Búsqueda
-  const handleSearchSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    if (resultados.length > 0) {
-      irAResultado(resultados[0].idDestino);
-    }
-  };
 
   return (
     <>
@@ -172,7 +111,7 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
             </div>
           </div>
 
-          {/* NAVEGACIÓN DESKTOP & BUSCADOR */}
+          {/* NAVEGACIÓN DESKTOP & BOTÓN BUSCADOR */}
           <div className="flex items-center gap-6 lg:gap-8">
             <nav className="hidden lg:flex items-center gap-5 lg:gap-8 py-1">
               {categorias.slice(0, 4).map((cat) => (
@@ -207,75 +146,15 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
           </div>
         </div>
 
-        {/* PANEL DESPLEGABLE DE BÚSQUEDA */}
-        {searchOpen && (
-          <div className="max-w-3xl mx-auto px-4 pb-4 animate-in fade-in slide-in-from-top-2 duration-200">
-            <div className="relative">
-              <form
-                onSubmit={handleSearchSubmit}
-                className="flex items-center gap-3 rounded-2xl px-4 py-3.5 border bg-[var(--color-header)] border-[var(--color-border-header,rgba(255,255,255,0.1))]"
-              >
-                <Search size={18} className="opacity-70" />
-
-                <input
-                  type="text"
-                  placeholder="Buscar productos o categorías..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full bg-transparent outline-none text-base text-current placeholder:text-current placeholder:opacity-60"
-                  autoFocus
-                />
-              </form>
-
-              {search.trim() && (
-                <div className="absolute top-full left-0 right-0 mt-2 z-50 overflow-hidden rounded-2xl border bg-[var(--color-header)] border-[var(--color-border-header,rgba(255,255,255,0.1))] shadow-2xl">
-                  {resultados.length > 0 ? (
-                    resultados.map((item) => (
-                      <button
-                        key={item.idDestino}
-                        onClick={() => irAResultado(item.idDestino)}
-                        className="flex w-full items-center gap-3 px-5 py-3.5 text-left transition-colors hover:bg-white/10"
-                      >
-                        {item.tipo === "producto" &&
-                          (item.imagen_url ? (
-                            <div className="relative h-12 w-12 shrink-0 rounded-lg overflow-hidden bg-white/10">
-                              <Image
-                                src={item.imagen_url}
-                                alt={item.nombre}
-                                fill
-                                sizes="48px"
-                                className="object-cover"
-                              />
-                            </div>
-                          ) : (
-                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white/10 text-[10px] opacity-60">
-                              Sin foto
-                            </div>
-                          ))}
-
-                        <span className="flex-1 text-sm font-medium">
-                          {item.nombre}
-                        </span>
-
-                        <span className="rounded border border-white/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest opacity-60">
-                          {item.tipo}
-                        </span>
-                      </button>
-                    ))
-                  ) : (
-                    <div className="px-5 py-6 text-center text-sm opacity-80">
-                      No encontramos resultados para{" "}
-                      <span className="font-semibold">"{search}"</span>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+        {/* COMPONENTE DE BÚSQUEDA DESPRENDIDO */}
+        <HeaderSearch
+          searchOpen={searchOpen}
+          setSearchOpen={setSearchOpen}
+          categorias={categorias}
+        />
       </header>
 
-      {/* OVERLAY DEL MENÚ LATERAL */}
+      {/* OVERLAY DEL MENÚ LATERAL MÓVIL */}
       {open && (
         <div
           onClick={() => setOpen(false)}

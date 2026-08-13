@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import CategoriaSection from "@/components/public/CategoriaSection";
-import HeaderCategoria from "@/components/public/HeaderCategoria"; // 🚀 Importamos el nuevo encabezado
+import HeaderCategoria from "@/components/public/HeaderCategoria";
 
 interface Producto {
   id: string;
@@ -22,26 +22,26 @@ interface Categoria {
 
 interface MenuListaProps {
   categorias: Categoria[];
-  countryCode?: string; 
-  colorFondoCategoria?: string;  // 👈 Añadir
-  colorTextoCategoria?: string;  // 👈 Añadir
-  colorBorderCategoria?: string; // 👈 Añadir
+  countryCode?: string;
+  colorFondoCategoria?: string;
+  colorTextoCategoria?: string;
+  colorBorderCategoria?: string;
 }
 
-export default function MenuLista({ 
-  categorias, 
+export default function MenuLista({
+  categorias,
   countryCode = "PE",
-  colorFondoCategoria,
   colorTextoCategoria,
-  colorBorderCategoria,
 }: MenuListaProps) {
+  // Memoizamos el filtrado para ejecutarlo únicamente cuando cambien las categorías
   const categoriasProcesadas = useMemo(() => {
-    if (!categorias) return [];
+    if (!Array.isArray(categorias)) return [];
+
     return categorias
       .map((cat) => ({
         ...cat,
         productosValidos: (cat.productos ?? []).filter(
-          (p) => p && p.slug && p.nombre
+          (p) => Boolean(p) && Boolean(p.slug) && Boolean(p.nombre)
         ),
       }))
       .filter((cat) => cat.productosValidos.length > 0);
@@ -70,17 +70,21 @@ export default function MenuLista({
           id={`cat-${categoria.id}`}
           className="scroll-mt-24 px-2 sm:px-6 rounded-none"
         >
-          <HeaderCategoria 
-            nombre={categoria.nombre} 
-            totalProductos={categoria.productosValidos.length}
+          <HeaderCategoria
+            id={`cat-header-${categoria.id}`}
+            nombre={categoria.nombre}
             colorTextoCategoria={colorTextoCategoria}
           />
 
-          <CategoriaSection 
+          {/* 
+            📌 CategoriaSection es el encargado de iterar sobre los productos 
+            y renderizar la imagen utilizando <OptimizedImage />
+          */}
+          <CategoriaSection
             categoria={{
               ...categoria,
               productos: categoria.productosValidos,
-            }} 
+            }}
             countryCode={countryCode}
             isFirstCategory={catIndex === 0}
           />
@@ -88,4 +92,4 @@ export default function MenuLista({
       ))}
     </div>
   );
-  }
+}
