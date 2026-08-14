@@ -27,6 +27,10 @@ const DEFAULT_COLORS = {
   color_tarjeta: "rgba(0,0,0,0.02)",
 };
 
+// Data-URL SVG para placeholder dinámico ultraligero
+const blurDataURL =
+  "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PC9zdmc+";
+
 async function getProductoData(slug: string, productoSlug: string) {
   const supabase = await createClient();
 
@@ -131,12 +135,12 @@ export default async function ProductoPage({ params }: PageProps) {
       className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] transition-colors duration-200 relative"
       style={dynamicTheme}
     >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-4 sm:pt-10 pb-28">
+      <div className="max-w-6xl mx-auto px-0 sm:px-6 pt-0 sm:pt-10 pb-28">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 items-start">
           
-          {/* COLUMNA IZQUIERDA: IMAGEN */}
-          <div className="lg:col-span-6 relative">
-            <div className="relative w-full aspect-square rounded-3xl overflow-hidden bg-black/[0.02] dark:bg-white/[0.02] border border-black/5 dark:border-white/10 flex items-center justify-center p-4 sm:p-8">
+          {/* COLUMNA IZQUIERDA: IMAGEN RESPONSIVE BORDER-TO-BORDER */}
+          <div className="lg:col-span-6 relative w-full">
+            <div className="relative w-full aspect-square sm:rounded-3xl overflow-hidden bg-black/[0.02] dark:bg-white/[0.02] sm:border sm:border-black/5 dark:sm:border-white/10 flex items-center justify-center">
               
               {/* BOTÓN VOLVER */}
               <div className="absolute top-4 left-4 z-20">
@@ -149,8 +153,11 @@ export default async function ProductoPage({ params }: PageProps) {
                   alt={producto.nombre}
                   fill
                   priority
+                  quality={90}
+                  placeholder="blur"
+                  blurDataURL={blurDataURL}
                   sizes="(max-width: 1024px) 100vw, 50vw"
-                  className="object-contain hover:scale-105 transition-transform duration-500 ease-out p-4"
+                  className="object-cover sm:object-contain hover:scale-105 transition-transform duration-500 ease-out p-0 sm:p-4"
                 />
               ) : (
                 <div className="text-sm font-medium opacity-40">
@@ -161,16 +168,16 @@ export default async function ProductoPage({ params }: PageProps) {
           </div>
 
           {/* COLUMNA DERECHA: DETALLES DEL PRODUCTO */}
-          <div className="lg:col-span-6 space-y-6">
+          <div className="lg:col-span-6 space-y-6 px-4 sm:px-0">
             
-            {/* TÍTULO DEL PRODUCTO (PEGANTE A LA IMAGEN EN MÓVIL) */}
+            {/* TÍTULO DEL PRODUCTO */}
             <div>
               <h1 className="text-2xl sm:text-4xl font-black tracking-tight leading-tight">
                 {producto.nombre}
               </h1>
             </div>
 
-            {/* SECCIÓN DE PRECIO CON BOTÓN COMPARTIR A LA DERECHA */}
+            {/* SECCIÓN DE PRECIO CON BOTÓN COMPARTIR */}
             <div className="py-2 border-b border-black/5 dark:border-white/10 flex items-end justify-between gap-4">
               <div>
                 <span className="text-[11px] font-black uppercase tracking-widest opacity-40 block mb-1">
@@ -181,13 +188,12 @@ export default async function ProductoPage({ params }: PageProps) {
                 </div>
               </div>
 
-              {/* BOTÓN COMPARTIR ALINEADO A LA DERECHA DEL PRECIO */}
               <div className="pb-1">
                 <BotonCompartir titulo={producto.nombre} />
               </div>
             </div>
 
-            {/* BOTONES DE ACCIÓN (SELECTOR Y AGREGAR AL CARRITO) */}
+            {/* BOTONES DE ACCIÓN */}
             <div className="pt-2">
               <AccionesProducto
                 producto={producto}
