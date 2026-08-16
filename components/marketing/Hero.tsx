@@ -12,6 +12,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import CountUp from "react-countup";
 import { useInView } from "react-intersection-observer";
+import FloatingWhatsapp from "@/components/marketing/FloatingWhatsapp";
 
 export default function Hero() {
   return (
@@ -606,20 +607,7 @@ export default function Hero() {
         </div>
       </div>
       {/* BOTÓN FLOTANTE DE WHATSAPP */}
-      <a
-        href="https://wa.me/5491176617374?text=Hola!%20Me%20gustar%C3%ADa%20que%20me%20ayudes%20a%20crear%20mi%20cat%C3%A1logo%20digital."
-        target="_blank"
-        rel="noopener noreferrer"
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-[#25D366] text-white px-4 py-3.5 rounded-full shadow-[0_10px_25px_rgba(37,211,102,0.4)] hover:shadow-[0_15px_30px_rgba(37,211,102,0.6)] hover:scale-105 active:scale-95 transition-all duration-300 group"
-        aria-label="Contactar por WhatsApp"
-      >
-        <FaWhatsapp className="text-2xl sm:text-3xl animate-bounce" />
-
-        {/* Texto expandible al pasar el cursor / Siempre visible en pantallas medianas */}
-        <span className="hidden sm:inline-block font-bold text-sm text-slate-950 pr-1">
-          ¿Te ayudo a crearlo?
-        </span>
-      </a>
+      <FloatingWhatsapp />
     </section>
   );
 }
