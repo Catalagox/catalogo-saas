@@ -16,7 +16,6 @@ import { useInView } from "react-intersection-observer";
 export default function Hero() {
   return (
     <section className="w-full">
-      {/* HERO RENOVADO Y ADAPTADO AL ESTILO WHATSAPP */}
       <div className="relative w-full min-h-screen flex items-center px-4 sm:px-6 overflow-hidden bg-gradient-to-bl from-black via-[#021a10] to-black border-b border-white/5">
         {/* DECORACIÓN AMBIENTAL (Círculos estáticos de fondo tipo WhatsApp) */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -38,39 +37,29 @@ export default function Hero() {
             transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
             className="relative z-10 flex flex-col items-center"
           >
-            {/* Badge Premium de Entrada - Responsivo: Más pequeño en móviles, normal en pantallas grandes */}
-            <motion.span
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 }}
-              className="inline-flex items-center gap-2 mb-3 text-[10px] sm:text-xs font-bold tracking-normal sm:tracking-widest text-emerald-400 uppercase bg-emerald-500/10 px-3 py-1 sm:px-4 sm:py-2 rounded-full border border-emerald-500/20 backdrop-blur-md"
-            >
-              Digitaliza tu negocio en minutos
-            </motion.span>
-
             {/* Título Estilizado con la nueva paleta de color */}
-   <h1 className="
-  text-3xl sm:text-5xl md:text-6xl 
-  font-extrabold text-white 
-  leading-[1.4] sm:leading-[1.3] md:leading-[1.25] 
-  tracking-tight max-w-6xl mx-auto
-  text-center
-  px-4 pt-2 mb-4
-">
-  Vende más por{" "}
-  <span className="text-emerald-400 font-black">
-    WhatsApp
-  </span>{" "}
-  <span className="inline-block">con tu Catálogo Digital o Menú QR</span>
-</h1>
+            <h1
+              className="
+              text-3xl sm:text-5xl md:text-6xl 
+              font-extrabold text-white 
+              leading-[1.4] sm:leading-[1.3] md:leading-[1.25] 
+              tracking-tight max-w-6xl mx-auto
+              text-center
+              px-4 pt-2 mb-4
+              "
+            >
+              Vende más con un{" "}
+              <span className="text-emerald-400 font-black">Catálogo</span>{" "}
+              <span className="inline-block">Digital profesional</span>
+            </h1>
 
             {/* Subtítulo Estilizado */}
             <p className="mt-2 text-lg sm:text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto leading-relaxed font-medium balance">
-              Crea Catálogos y Menús interactivos con{" "}
-              <span className="text-white font-semibold">Código QR</span>.
-              Digitaliza tu stock, recibe pedidos al instante y ofrece una
-              experiencia premium que enamora a tus clientes desde el primer
-              segundo.
+              Crea tu Catálogo Digital o Menú QR en minutos. Muestra tus
+              productos, comparte tu{" "}
+              <span className="text-white font-semibold">catálogo</span>. por
+              WhatsApp e Instagram y recibe pedidos directamente de tus
+              clientes.
             </p>
 
             {/* Contenedor Único del Botón */}
@@ -132,6 +121,13 @@ export default function Hero() {
                 </svg>
               </a>
             </div>
+            <p className="mt-6 text-xs sm:text-sm text-gray-400/80 font-medium tracking-wide flex items-center justify-center gap-2 flex-wrap">
+              <span>7 días gratis</span>
+              <span className="text-emerald-500/50">•</span>
+              <span>Sin ingresar tarjeta</span>
+              <span className="text-emerald-500/50">•</span>
+              <span>Sin comisiones por venta</span>
+            </p>
           </motion.div>
         </div>
 
@@ -609,6 +605,21 @@ export default function Hero() {
           </div>
         </div>
       </div>
+      {/* BOTÓN FLOTANTE DE WHATSAPP */}
+      <a
+        href="https://wa.me/5491176617374?text=Hola!%20Me%20gustar%C3%ADa%20que%20me%20ayudes%20a%20crear%20mi%20cat%C3%A1logo%20digital."
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-[#25D366] text-white px-4 py-3.5 rounded-full shadow-[0_10px_25px_rgba(37,211,102,0.4)] hover:shadow-[0_15px_30px_rgba(37,211,102,0.6)] hover:scale-105 active:scale-95 transition-all duration-300 group"
+        aria-label="Contactar por WhatsApp"
+      >
+        <FaWhatsapp className="text-2xl sm:text-3xl animate-bounce" />
+
+        {/* Texto expandible al pasar el cursor / Siempre visible en pantallas medianas */}
+        <span className="hidden sm:inline-block font-bold text-sm text-slate-950 pr-1">
+          ¿Te ayudo a crearlo?
+        </span>
+      </a>
     </section>
   );
 }

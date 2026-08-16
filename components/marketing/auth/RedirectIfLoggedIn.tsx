@@ -9,34 +9,55 @@ export default function RedirectIfLoggedIn() {
   const [checkingAuth, setCheckingAuth] = useState(true);
 
   useEffect(() => {
-    const checkUser = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
+    // 1. Verificación e listener oficial de sesión en Supabase
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
-        // Si ya está logueado, va directo al dashboard
         router.replace("/dashboard");
       } else {
-        // Si no, quitamos la pantalla de carga para que vea la landing
         setCheckingAuth(false);
       }
-    };
+    });
 
-    checkUser();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [router]);
 
+  // Loader ULTRA MODERNO & MINIMALISTA
   if (checkingAuth) {
     return (
-      <div className="fixed inset-0 z-[200] bg-slate-50 flex flex-col items-center justify-center">
-        <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-        <p className="mt-4 text-sm font-semibold text-slate-500 animate-pulse">
-          Cargando CatalogoX...
-        </p>
+      <div className="fixed inset-0 z-[200] bg-white dark:bg-[#09090b] text-zinc-900 dark:text-zinc-100 flex flex-col items-center justify-center transition-colors">
+        
+        {/* BARRA DE CARGA SUPERIOR ULTRA FINA (ESTILO VERCEL / NEXT.JS) */}
+        <div className="fixed top-0 left-0 w-full h-[3px] bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
+          <div className="h-full bg-emerald-500 w-full animate-[shimmer_1.5s_infinite_linear] origin-left bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500" />
+        </div>
+
+        {/* LOGO DE BRANDING CON EFECTO RESPIRACIÓN/PULSO */}
+        <div className="flex flex-col items-center gap-3 animate-fade-in">
+          <div className="relative flex items-center justify-center">
+            {/* Resplandor ambiental posterior */}
+            <div className="absolute w-16 h-16 bg-emerald-500/20 rounded-full blur-xl animate-pulse" />
+            
+            {/* Texto o Isotipo del Logotipo */}
+            <span className="text-2xl font-black tracking-tighter relative select-none">
+              Catalogox
+            </span>
+          </div>
+
+          {/* INDICADOR DE CARGA SUTIL */}
+          <div className="flex items-center gap-1.5 pt-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce [animation-delay:-0.3s]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce [animation-delay:-0.15s]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce" />
+          </div>
+        </div>
+
       </div>
     );
   }
 
-  // Si no está logueado, no renderiza nada y permite ver la página
   return null;
 }

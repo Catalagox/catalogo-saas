@@ -121,13 +121,27 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const titulo = `Catálogo Digital - ${catalogoDB.nombre}`;
-  const descripcion = "¡Hola! Te invito a ver nuestro catálogo digital actualizado. Revisa nuestros productos y precios aquí.";
+  const descripcion = `¡Hola! Te invito a ver nuestro catálogo digital actualizado. Revisa nuestros productos y precios de ${catalogoDB.nombre} aquí.`;
 
   return {
     metadataBase: new URL("https://catalagox.com"),
     title: titulo,
     description: descripcion,
     alternates: { canonical: `https://catalagox.com/${slug}` },
+    // 🚀 MEJORA SEO: Robots explícitos para asegurar indexación
+    robots: {
+      index: true,
+      follow: true,
+      nocache: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        noimageindex: false,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
+    },
     openGraph: {
       title: titulo,
       description: descripcion,
@@ -186,11 +200,40 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
     return <div className="p-10 text-center">Error al cargar categorías</div>;
   }
 
+  // 🚀 MEJORA SEO: Datos Estructurados (Schema.org) para Organización
+  // Esto no cambia el diseño, solo añade info para Google a nivel de código.
+  const schemaOrgJSONLD = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": catalogo.nombre,
+    "url": `https://catalagox.com/${catalogo.slug}`,
+    "logo": catalogo.logoUrl,
+    "sameAs": [
+      catalogo.facebook,
+      catalogo.instagram,
+      catalogo.tiktok,
+      catalogo.youtube
+    ].filter(Boolean), // Elimina valores nulos si no existen
+    "contactPoint": catalogo.whatsapp ? {
+      "@type": "ContactPoint",
+      "telephone": catalogo.whatsapp,
+      "contactType": "customer service",
+      "availableLanguage": "Spanish"
+    } : undefined,
+    "areaServed": catalogo.pais_code
+  };
+
   return (
     <div
       className="min-h-screen w-full transition-colors duration-300 relative"
       style={{ backgroundColor: catalogo.color_fondo }}
     >
+      {/* 🚀 Inyección de Datos Estructurados (Invisible en el diseño) */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaOrgJSONLD) }}
+      />
+      
       <MenuClient
         catalogo={catalogo}
         categorias={categorias}

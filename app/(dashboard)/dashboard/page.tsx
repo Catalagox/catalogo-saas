@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import IndicadorSuscripcion from "@/components/dashboard/principal/IndicadorSuscripcion";
-import PelotaMundial from "@/components/PelotaMundial";
 
 import {
   MenuSquare,
@@ -187,8 +186,6 @@ export default function DashboardPage() {
 
   return (
     <>
-      <PelotaMundial />
-
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto space-y-6 md:space-y-10">
           {/* HEADER */}
