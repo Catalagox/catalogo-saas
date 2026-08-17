@@ -44,6 +44,9 @@ export default function CategoriasSlider({
 
   const lastScrollY = useRef(0);
   const showCategoriesRef = useRef(true);
+  const isTouchingRef = useRef(false);
+  const isClickingCategoryRef = useRef(false);
+
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const buttonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
 
@@ -61,56 +64,96 @@ export default function CategoriasSlider({
     });
   };
 
-  // Scroll automático en la barra horizontal para centrar el botón activo
+  // Scroll automático en la barra horizontal para centrar el botón activo sin interrumpir el scroll vertical
   const autoScrollToActiveButton = useCallback((catId: string) => {
+    // Si el usuario tiene el dedo en la pantalla, no interrumpimos su desplazamiento vertical
+    if (isTouchingRef.current && !isClickingCategoryRef.current) return;
+
     const activeBtn = buttonRefs.current.get(catId);
     if (activeBtn && sliderRef.current) {
-      activeBtn.scrollIntoView({
+      const container = sliderRef.current;
+      const btnLeft = activeBtn.offsetLeft;
+      const btnWidth = activeBtn.offsetWidth;
+      const containerWidth = container.offsetWidth;
+
+      const targetScroll = btnLeft - containerWidth / 2 + btnWidth / 2;
+      container.scrollTo({
+        left: targetScroll,
         behavior: "smooth",
-        inline: "center",
-        block: "nearest",
       });
     }
   }, []);
 
-  // Control de scroll y detección de categoría activa
+  // Detectar interacción táctil para prevenir interferencias en dispositivos móviles
   useEffect(() => {
+    const handleTouchStart = () => {
+      isTouchingRef.current = true;
+    };
+    const handleTouchEnd = () => {
+      setTimeout(() => {
+        isTouchingRef.current = false;
+      }, 500);
+    };
+
+    window.addEventListener("touchstart", handleTouchStart, { passive: true });
+    window.addEventListener("touchend", handleTouchEnd, { passive: true });
+
+    return () => {
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, []);
+
+  // Control de scroll y detección de categoría activa optimizado
+  useEffect(() => {
+    let ticking = false;
+
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      const scrollingDown = currentScrollY > lastScrollY.current + 8;
-      const scrollingUp = currentScrollY < lastScrollY.current - 8;
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY;
+          const scrollingDown = currentScrollY > lastScrollY.current + 8;
+          const scrollingUp = currentScrollY < lastScrollY.current - 8;
 
-      setIsScrolled(currentScrollY > 10);
+          setIsScrolled(currentScrollY > 10);
 
-      if (scrollingDown && currentScrollY > 280) {
-        setShowCategories(false);
-      }
+          if (scrollingDown && currentScrollY > 280) {
+            setShowCategories(false);
+          }
 
-      if (scrollingUp || currentScrollY <= 120) {
-        setShowCategories(true);
-      }
+          if (scrollingUp || currentScrollY <= 120) {
+            setShowCategories(true);
+          }
 
-      lastScrollY.current = currentScrollY;
+          lastScrollY.current = currentScrollY;
 
-      let current: string | null = null;
+          // Si el usuario hizo clic en un botón, pausamos la autodetección brevemente
+          if (!isClickingCategoryRef.current) {
+            let current: string | null = null;
 
-      for (const categoria of categorias) {
-        const element = document.getElementById(`cat-${categoria.id}`);
-        if (!element) continue;
+            for (const categoria of categorias) {
+              const element = document.getElementById(`cat-${categoria.id}`);
+              if (!element) continue;
 
-        const rect = element.getBoundingClientRect();
-        const offsetCheck = showCategoriesRef.current ? 160 : 90;
+              const rect = element.getBoundingClientRect();
+              const offsetCheck = showCategoriesRef.current ? 160 : 90;
 
-        if (rect.top <= offsetCheck && rect.bottom >= offsetCheck) {
-          current = categoria.id;
-          break;
-        }
-      }
+              if (rect.top <= offsetCheck && rect.bottom >= offsetCheck) {
+                current = categoria.id;
+                break;
+              }
+            }
 
-      if (current && current !== categoriaActiva) {
-        setCategoriaActiva(current);
-        onTrackCategoria?.(current);
-        autoScrollToActiveButton(current);
+            if (current && current !== categoriaActiva) {
+              setCategoriaActiva(current);
+              onTrackCategoria?.(current);
+              autoScrollToActiveButton(current);
+            }
+          }
+
+          ticking = false;
+        });
+        ticking = true;
       }
     };
 
@@ -204,6 +247,7 @@ export default function CategoriasSlider({
                 type="button"
                 title={categoria.nombre}
                 onClick={() => {
+                  isClickingCategoryRef.current = true;
                   setCategoriaActiva(categoria.id);
                   onTrackCategoria?.(categoria.id);
                   autoScrollToActiveButton(categoria.id);
@@ -220,6 +264,10 @@ export default function CategoriasSlider({
                     yOffset;
 
                   window.scrollTo({ top: y, behavior: "smooth" });
+
+                  setTimeout(() => {
+                    isClickingCategoryRef.current = false;
+                  }, 800);
                 }}
                 className={`relative max-w-[140px] sm:max-w-[200px] px-3 py-1.5 sm:px-3.5 sm:py-1.5 rounded-lg text-xs sm:text-xs font-semibold tracking-normal transition-all duration-300 border flex-shrink-0 outline-none touch-manipulation overflow-hidden ${
                   isActive ? "" : "md:hover:bg-white/10 active:bg-white/10"
