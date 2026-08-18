@@ -18,9 +18,13 @@ interface PricingCardProps {
 
 // Lista compartida de características de tus planes
 const FEATURES = [
-  "1 Catalógo Digital Profesional",
+  "1 Catálogo Digital Profesional",
+  "Hasta 300 productos",
   "QR Personalizado de Alta Calidad",
+  "Carrito de Compra",
+  "Personalización de Colores",
   "Edición de Productos",
+  "Estadísticas del Catálogo",
   "Soporte Prioritario 24/7",
   "Panel de Administración Pro",
   "Sin Comisiones por Venta",
