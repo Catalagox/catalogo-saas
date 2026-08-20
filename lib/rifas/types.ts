@@ -8,6 +8,7 @@ export interface Rifa {
   cantidad_numeros: number;
   fecha_sorteo: string;
   estado: 'activa' | 'finalizada' | 'cancelada';
+  terminos_condiciones?: string;
   created_at: string;
 }
 

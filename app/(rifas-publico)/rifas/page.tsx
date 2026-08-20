@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Rifa, RifaNumero } from '@/lib/rifas/types';
+import { Rifa } from '@/lib/rifas/types';
 import { getRifaActiva, getNumerosOcupados, registrarParticipante } from '@/lib/rifas/supabase';
+import { supabase } from '@/lib/supabase/client';
 import { PAISES } from '@/components/rifas/paises';
 import NumeroGrid from '@/components/rifas/NumeroGrid';
 
@@ -36,6 +37,29 @@ export default function RifasPage() {
 
   useEffect(() => {
     cargarDatos();
+
+    // Escuchar cambios en tiempo real de Supabase (Suscripción Realtime)
+    const channel = supabase
+      .channel('public:rifas_realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'rifas' },
+        () => {
+          cargarDatos();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'rifa_numeros' },
+        () => {
+          cargarDatos();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const handleToggleNumero = (num: number) => {
@@ -64,7 +88,7 @@ export default function RifasPage() {
       try {
         await navigator.share(shareData);
       } catch (err) {
-        // Usuario canceló la acción de compartir
+        // Ignorar si cancela
       }
     } else {
       navigator.clipboard.writeText(window.location.href);
@@ -90,7 +114,7 @@ export default function RifasPage() {
     setErrorMsg(null);
 
     try {
-      const telefonoCompleto = `${paisCodigo} ${telefono.trim()}`;
+      const telefonoCompleto = `${paisCodigo} ${telefono.trim().replace(/\s+/g, '')}`;
       await registrarParticipante({
         rifa_id: rifa.id,
         nombre: nombre.trim(),
@@ -99,14 +123,14 @@ export default function RifasPage() {
         numeros: numerosSeleccionados,
       });
 
-      setSuccessMsg(`¡Registro completado con éxito! Reservaste ${numerosSeleccionados.length} número(s).`);
+      setSuccessMsg(`¡Reserva completada con éxito! Tus ${numerosSeleccionados.length} número(s) quedaron en estado pendiente (Morado) hasta confirmar el pago.`);
       setNumerosSeleccionados([]);
       setNombre('');
       setTelefono('');
       
       await cargarDatos();
     } catch (err: any) {
-      setErrorMsg(err.message || 'Error al procesar la solicitud.');
+      setErrorMsg(err.message || 'Error al procesar la reserva.');
     } finally {
       setSubmitting(false);
     }
@@ -130,8 +154,10 @@ export default function RifasPage() {
     );
   }
 
-  const cantidadOcupados = numerosOcupadosMap.size;
-  const cantidadDisponibles = rifa.cantidad_numeros - cantidadOcupados;
+  // Desglosar conteos por estado exacto
+  const cantidadPagados = Array.from(numerosOcupadosMap.values()).filter((e) => e === 'ocupado').length;
+  const cantidadReservados = Array.from(numerosOcupadosMap.values()).filter((e) => e === 'reservado').length;
+  const cantidadDisponibles = rifa.cantidad_numeros - (cantidadPagados + cantidadReservados);
   const precioTotal = numerosSeleccionados.length * rifa.precio_numero;
 
   return (
@@ -166,7 +192,6 @@ export default function RifasPage() {
             <span className="text-xs uppercase tracking-widest text-green-700 font-bold bg-green-50 px-3 py-1 rounded-full border border-green-200">
               Gran Sorteo Internacional
             </span>
-            {/* Botón Compartir */}
             <button 
               onClick={handleShare}
               className="flex items-center gap-1.5 text-xs font-semibold text-green-700 bg-green-100 hover:bg-green-200 px-3 py-1.5 rounded-full transition-colors active:scale-95"
@@ -194,10 +219,11 @@ export default function RifasPage() {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-3 text-xs font-semibold">
+          <div className="flex flex-wrap gap-2 text-xs font-semibold">
             <span className="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-md">Total: {rifa.cantidad_numeros}</span>
             <span className="bg-green-100 text-green-800 px-2.5 py-1 rounded-md">Disponibles: {cantidadDisponibles}</span>
-            <span className="bg-red-100 text-red-800 px-2.5 py-1 rounded-md">Ocupados: {cantidadOcupados}</span>
+            <span className="bg-purple-100 text-purple-800 px-2.5 py-1 rounded-md">Reservados: {cantidadReservados}</span>
+            <span className="bg-red-100 text-red-800 px-2.5 py-1 rounded-md">Pagados: {cantidadPagados}</span>
           </div>
         </div>
       </div>
@@ -304,11 +330,21 @@ export default function RifasPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full bg-green-600 hover:bg-green-500 active:scale-[0.99] disabled:bg-gray-300 text-white font-extrabold py-4 rounded-xl transition-all shadow-lg shadow-green-600/25 text-base text-center"
+            className="w-full bg-green-600 hover:bg-green-500 active:scale-[0.99] disabled:bg-gray-300 text-white font-extrabold py-4 rounded-xl transition-all shadow-lg shadow-green-600/25 text-base text-center cursor-pointer"
           >
             {submitting ? 'Reservando números...' : 'Confirmar Selección'}
           </button>
         </form>
+      )}
+
+      {/* Términos y Condiciones */}
+      {rifa.terminos_condiciones && (
+        <div className="bg-white border border-gray-100 rounded-3xl p-5 sm:p-6 shadow-sm space-y-2">
+          <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Términos y Condiciones</h4>
+          <p className="text-xs text-gray-500 whitespace-pre-line leading-relaxed">
+            {rifa.terminos_condiciones}
+          </p>
+        </div>
       )}
     </div>
   );
