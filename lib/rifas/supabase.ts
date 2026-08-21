@@ -117,11 +117,14 @@ export async function getParticipantesAdmin(rifaId: string): Promise<RifaPartici
     return [];
   }
 
-  // Agrupar los números asignados por participante
+  // Agrupar los números asignados por participante normalizando los IDs
   return participantes.map((p) => {
+    const pIdNormalized = String(p.id).trim().toLowerCase();
+    
     const nums = numeros
-      .filter((n) => n.participante_id === p.id)
+      .filter((n) => n.participante_id && String(n.participante_id).trim().toLowerCase() === pIdNormalized)
       .map((n) => n.numero);
+
     return {
       ...p,
       numeros: nums,
@@ -164,16 +167,28 @@ export async function actualizarRifa(id: string, datos: Partial<Rifa>): Promise<
 
 /**
  * Actualiza el estado de pago del participante ('pagado' | 'pendiente') 
- * y sincroniza la tabla 'rifa_numeros'
+ * y sincroniza la tabla 'rifa_numeros'.
  */
 export async function actualizarEstadoPagoParticipante(
-  rifaId: string,
-  participanteId: string, 
-  estado: 'pagado' | 'pendiente'
+  arg1: string,
+  arg2: string | 'pagado' | 'pendiente',
+  arg3?: 'pagado' | 'pendiente'
 ) {
+  let participanteId: string;
+  let estado: 'pagado' | 'pendiente';
+  let rifaId: string | undefined;
+
+  if (arg3 !== undefined) {
+    rifaId = arg1;
+    participanteId = arg2 as string;
+    estado = arg3;
+  } else {
+    participanteId = arg1;
+    estado = arg2 as 'pagado' | 'pendiente';
+  }
+
   console.log(`🔄 Cambiando estado de pago del participante ${participanteId} a: ${estado}`);
 
-  // 1. Actualizar el registro en rifa_participantes
   const { error: pError } = await supabase
     .from('rifa_participantes')
     .update({ estado_pago: estado })
@@ -184,14 +199,18 @@ export async function actualizarEstadoPagoParticipante(
     throw new Error(pError.message || 'No se pudo actualizar el estado de pago del participante.');
   }
 
-  // 2. Sincronizar el estado de sus números en 'rifa_numeros'
   const nuevoEstadoNumero = estado === 'pagado' ? 'ocupado' : 'reservado';
 
-  const { error: nError } = await supabase
+  let query = supabase
     .from('rifa_numeros')
     .update({ estado: nuevoEstadoNumero })
-    .eq('rifa_id', rifaId)
     .eq('participante_id', participanteId);
+
+  if (rifaId) {
+    query = query.eq('rifa_id', rifaId);
+  }
+
+  const { error: nError } = await query;
 
   if (nError) {
     console.error('❌ Error al sincronizar tabla rifa_numeros:', nError);
@@ -202,7 +221,7 @@ export async function actualizarEstadoPagoParticipante(
 }
 
 /**
- * Libera/Elimina un número huérfano o específico de la tabla rifa_numeros
+ * Libera/Elimina un número huérfano de la tabla rifa_numeros
  */
 export async function liberarNumeroHuerfano(rifaId: string, numero: number) {
   console.log(`🔄 Eliminando número huérfano #${numero} de la rifa ${rifaId}...`);

@@ -127,7 +127,7 @@ export default function AdminRifasPage() {
 
     setLoading(true);
     try {
-      await actualizarEstadoPagoParticipante(participanteId, nuevoEstado);
+      await actualizarEstadoPagoParticipante(rifa.id, participanteId, nuevoEstado);
 
       if (nuevoEstado === 'pagado') {
           await confirmarPagoNumerosParticipante(rifa.id, participanteId);
@@ -175,12 +175,22 @@ export default function AdminRifasPage() {
 
   const handleNumeroClick = (num: number) => {
     const regNumero = numerosMap.get(num);
+    
     if (regNumero && regNumero.participante_id) {
-      const part = participantes.find((p) => p.id === regNumero.participante_id);
+      const targetId = String(regNumero.participante_id).trim().toLowerCase();
+      
+      // 1. Intentar buscar por ID de participante normalizado
+      let part = participantes.find((p) => String(p.id).trim().toLowerCase() === targetId);
+      
+      // 2. Fallback: Buscar participante que contenga este número asignado
+      if (!part) {
+        part = participantes.find((p) => p.numeros && p.numeros.includes(num));
+      }
+
       if (part) {
         setSelectedParticipante(part);
       } else {
-        alert(`El número #${num} está asignado al ID de participante ${regNumero.participante_id}, pero no se encontró en la lista.`);
+        alert(`El número #${num} está asignado al ID ${regNumero.participante_id}, pero el registro del participante no existe en 'rifa_participantes'.`);
       }
     } else {
       alert(`El número #${num} se encuentra libre/disponible.`);
