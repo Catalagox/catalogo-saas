@@ -1,6 +1,8 @@
 export interface Rifa {
   id: string;
+  user_id: string; // 👈 Clave para identificar al creador de la rifa
   titulo: string;
+  slug: string;    // 👈 Campo amigable necesario para las rutas públicas
   descripcion: string | null;
   premio: string;
   imagen_url: string | null;
@@ -25,6 +27,8 @@ export interface RifaParticipante {
   id: string;
   rifa_id: string;
   nombre: string;
+  email?: string | null;
+  estado_pago: 'pendiente' | 'pagado';
   pais: string;
   telefono: string;
   created_at: string;
@@ -39,5 +43,6 @@ export interface RegistrarParticipantePayload {
   nombre: string;
   pais: string;
   telefono: string;
+  email?: string;
   numeros: number[];
 }

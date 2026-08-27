@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Search, X, Menu } from "lucide-react";
+import Link from "next/link";
+import { Search, X, Menu, ExternalLink } from "lucide-react";
 import HeaderSearch from "@/components/public/HeaderSearch";
 
 type Producto = {
@@ -164,10 +165,11 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
 
       {/* DRAWER / MENÚ MÓVIL */}
       <aside
-        className={`fixed top-0 left-0 h-full w-[280px] z-[70] transform transition-transform duration-300 shadow-2xl bg-[var(--color-header)] text-[var(--color-text-header,#ffffff)] ${
+        className={`fixed top-0 left-0 h-full w-[280px] z-[70] flex flex-col transform transition-transform duration-300 shadow-2xl bg-[var(--color-header)] text-[var(--color-text-header,#ffffff)] ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
+        {/* ENCABEZADO */}
         <div className="p-6 flex items-center justify-between border-b border-[var(--color-border-header,rgba(255,255,255,0.1))]">
           <h2 className="text-xl font-bold">Categorías</h2>
           <button
@@ -179,7 +181,8 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
           </button>
         </div>
 
-        <nav className="py-2 overflow-y-auto max-h-[calc(100vh-80px)]">
+        {/* NAVEGACIÓN CON SCROLL */}
+        <nav className="py-2 overflow-y-auto flex-1">
           {categorias.map((cat) => (
             <a
               key={cat.id}
@@ -191,6 +194,27 @@ export default function MenuHeader({ catalogo, categorias }: Props) {
             </a>
           ))}
         </nav>
+
+        {/* PIE FIJO CON ENLACE A CATALAGOX.COM TOTALMENTE VERDE */}
+        <div className="bg-[#25D366] hover:bg-[#20ba5a] transition-colors border-t border-black/10">
+          <Link
+            href="https://catalagox.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setOpen(false)}
+            className="flex items-center justify-between w-full p-5 text-black font-semibold active:opacity-90"
+          >
+            <div className="flex flex-col">
+              <span className="text-[10px] uppercase tracking-wider font-bold opacity-80 text-black">
+                Creado con
+              </span>
+              <span className="font-extrabold text-base text-black leading-tight">
+                catalagox.com
+              </span>
+            </div>
+            <ExternalLink size={20} className="text-black" />
+          </Link>
+        </div>
       </aside>
     </>
   );

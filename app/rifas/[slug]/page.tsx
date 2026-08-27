@@ -1,13 +1,21 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, use } from 'react';
 import { Rifa } from '@/lib/rifas/types';
-import { getRifaActiva, getNumerosOcupados, registrarParticipante } from '@/lib/rifas/supabase';
+import { getRifaPorSlug, getNumerosOcupados, registrarParticipante } from '@/lib/rifas/supabase';
 import { supabase } from '@/lib/supabase/client';
 import { PAISES } from '@/components/rifas/paises';
 import NumeroGrid from '@/components/rifas/NumeroGrid';
 
-export default function RifasPage() {
+interface PageProps {
+  params: Promise<{ slug: string }>;
+}
+
+export default function RifaSlugPage({ params }: PageProps) {
+  // Desempaquetar los parámetros dinámicos de forma compatible con Next.js 15+
+  const resolvedParams = use(params);
+  const slug = resolvedParams.slug;
+
   const [rifa, setRifa] = useState<Rifa | null>(null);
   const [numerosOcupadosMap, setNumerosOcupadosMap] = useState<Map<number, 'ocupado' | 'reservado' | 'disponible'>>(new Map());
   const [loading, setLoading] = useState(true);
@@ -18,19 +26,23 @@ export default function RifasPage() {
   // Form State
   const [numerosSeleccionados, setNumerosSeleccionados] = useState<number[]>([]);
   const [nombre, setNombre] = useState('');
-  const [paisCodigo, setPaisCodigo] = useState(PAISES[0].codigo);
-  const [paisNombre, setPaisNombre] = useState(PAISES[0].nombre);
+  const [paisCodigo, setPaisCodigo] = useState(PAISES[0]?.codigo || '+58');
+  const [paisNombre, setPaisNombre] = useState(PAISES[0]?.nombre || 'Venezuela');
   const [telefono, setTelefono] = useState('');
 
   const cargarDatos = async () => {
+    if (!slug) return;
     setLoading(true);
-    const dataRifa = await getRifaActiva();
+    const dataRifa = await getRifaPorSlug(slug);
+    
     if (dataRifa) {
       setRifa(dataRifa);
       const ocupadosList = await getNumerosOcupados(dataRifa.id);
       const map = new Map<number, 'ocupado' | 'reservado' | 'disponible'>();
       ocupadosList.forEach((item) => map.set(item.numero, item.estado));
       setNumerosOcupadosMap(map);
+    } else {
+      setRifa(null);
     }
     setLoading(false);
   };
@@ -38,12 +50,12 @@ export default function RifasPage() {
   useEffect(() => {
     cargarDatos();
 
-    // Escuchar cambios en tiempo real de Supabase (Suscripción Realtime)
+    // Escuchar cambios en tiempo real en las tablas de Supabase
     const channel = supabase
-      .channel('public:rifas_realtime')
+      .channel(`public:rifas_realtime_${slug}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'rifas' },
+        { event: '*', schema: 'public', table: 'rifas', filter: `slug=eq.${slug}` },
         () => {
           cargarDatos();
         }
@@ -60,7 +72,7 @@ export default function RifasPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [slug]);
 
   const handleToggleNumero = (num: number) => {
     setErrorMsg(null);
@@ -88,7 +100,7 @@ export default function RifasPage() {
       try {
         await navigator.share(shareData);
       } catch (err) {
-        // Ignorar si cancela
+        // Cancelación de acción compartir omitida por el usuario
       }
     } else {
       navigator.clipboard.writeText(window.location.href);
@@ -106,7 +118,7 @@ export default function RifasPage() {
     }
 
     if (!nombre.trim() || !telefono.trim()) {
-      setErrorMsg('Por favor completa todos los campos.');
+      setErrorMsg('Por favor completa todos los campos requeridos.');
       return;
     }
 
@@ -123,7 +135,7 @@ export default function RifasPage() {
         numeros: numerosSeleccionados,
       });
 
-      setSuccessMsg(`¡Reserva completada con éxito! Tus ${numerosSeleccionados.length} número(s) quedaron en estado pendiente (Morado) hasta confirmar el pago.`);
+      setSuccessMsg(`¡Reserva completada con éxito! Tus ${numerosSeleccionados.length} número(s) quedaron en estado pendiente hasta confirmar el pago.`);
       setNumerosSeleccionados([]);
       setNombre('');
       setTelefono('');
@@ -140,7 +152,7 @@ export default function RifasPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 bg-white text-gray-800">
         <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-gray-500 text-sm font-medium">Cargando información de la rifa...</p>
+        <p className="text-gray-500 text-sm font-medium">Cargando información del sorteo...</p>
       </div>
     );
   }
@@ -148,13 +160,12 @@ export default function RifasPage() {
   if (!rifa) {
     return (
       <div className="max-w-xl mx-auto my-12 px-4 py-8 bg-white border border-gray-200 rounded-3xl text-center shadow-sm">
-        <h2 className="text-xl font-bold mb-2 text-gray-800">No hay rifas activas</h2>
-        <p className="text-gray-500 text-sm">Vuelve a consultar más tarde para nuevas oportunidades.</p>
+        <h2 className="text-xl font-bold mb-2 text-gray-800">Rifa no encontrada</h2>
+        <p className="text-gray-500 text-sm">El enlace ingresado no corresponde a ninguna rifa activa.</p>
       </div>
     );
   }
 
-  // Desglosar conteos por estado exacto
   const cantidadPagados = Array.from(numerosOcupadosMap.values()).filter((e) => e === 'ocupado').length;
   const cantidadReservados = Array.from(numerosOcupadosMap.values()).filter((e) => e === 'reservado').length;
   const cantidadDisponibles = rifa.cantidad_numeros - (cantidadPagados + cantidadReservados);
@@ -163,7 +174,7 @@ export default function RifasPage() {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 px-3 sm:px-6 py-6 sm:py-10 space-y-6 max-w-4xl mx-auto">
       
-      {/* Banner de Publicidad para catalogox.com */}
+      {/* Banner publicitario opcional */}
       <div className="bg-gradient-to-r from-emerald-600 to-green-500 text-white p-3 sm:p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left shadow-md">
         <div>
           <p className="text-xs uppercase font-bold tracking-wider text-green-100">Publicidad</p>
@@ -179,7 +190,7 @@ export default function RifasPage() {
         </a>
       </div>
 
-      {/* Card Principal del Premio */}
+      {/* Tarjeta del Premio */}
       <div className="bg-white border border-gray-100 rounded-3xl p-5 sm:p-8 flex flex-col md:flex-row gap-6 items-center shadow-lg shadow-gray-100">
         {rifa.imagen_url && (
           <div className="w-full md:w-1/2 aspect-square rounded-2xl overflow-hidden bg-gray-100 border border-gray-200 flex items-center justify-center">
@@ -190,11 +201,11 @@ export default function RifasPage() {
         <div className="w-full md:w-1/2 space-y-4">
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs uppercase tracking-widest text-green-700 font-bold bg-green-50 px-3 py-1 rounded-full border border-green-200">
-              Gran Sorteo Internacional
+              Gran Sorteo
             </span>
             <button 
               onClick={handleShare}
-              className="flex items-center gap-1.5 text-xs font-semibold text-green-700 bg-green-100 hover:bg-green-200 px-3 py-1.5 rounded-full transition-colors active:scale-95"
+              className="flex items-center gap-1.5 text-xs font-semibold text-green-700 bg-green-100 hover:bg-green-200 px-3 py-1.5 rounded-full transition-colors active:scale-95 cursor-pointer"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684" />
@@ -228,7 +239,7 @@ export default function RifasPage() {
         </div>
       </div>
 
-      {/* Mensajes de Estado */}
+      {/* Alertas */}
       {successMsg && (
         <div className="p-4 bg-green-50 border border-green-200 rounded-2xl text-green-800 text-sm flex justify-between items-center shadow-sm">
           <span className="font-medium">{successMsg}</span>
@@ -243,9 +254,9 @@ export default function RifasPage() {
         </div>
       )}
 
-      {/* Selector de Números */}
+      {/* Grilla de Números */}
       <div className="bg-white border border-gray-100 rounded-3xl p-5 sm:p-8 space-y-6 shadow-lg shadow-gray-100">
-        <h2 className="text-xl font-bold text-gray-900 text-center">Elegí tus números</h2>
+        <h2 className="text-xl font-bold text-gray-900 text-center">Selecciona tus números</h2>
         
         <NumeroGrid
           cantidadTotal={rifa.cantidad_numeros}
@@ -254,7 +265,6 @@ export default function RifasPage() {
           onToggleNumero={handleToggleNumero}
         />
 
-        {/* Resumen de Selección */}
         {numerosSeleccionados.length > 0 && (
           <div className="bg-green-50 border border-green-200 rounded-2xl p-4 text-sm flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
@@ -277,10 +287,10 @@ export default function RifasPage() {
         )}
       </div>
 
-      {/* Formulario del Participante */}
+      {/* Formulario Participante */}
       {numerosSeleccionados.length > 0 && (
         <form onSubmit={handleSubmit} className="bg-white border border-gray-100 rounded-3xl p-5 sm:p-8 space-y-6 shadow-xl shadow-gray-100">
-          <h3 className="text-lg font-bold text-gray-900">Completá tus datos para reservar</h3>
+          <h3 className="text-lg font-bold text-gray-900">Datos para completar la reserva</h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -337,7 +347,7 @@ export default function RifasPage() {
         </form>
       )}
 
-      {/* Términos y Condiciones */}
+      {/* Términos */}
       {rifa.terminos_condiciones && (
         <div className="bg-white border border-gray-100 rounded-3xl p-5 sm:p-6 shadow-sm space-y-2">
           <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Términos y Condiciones</h4>
