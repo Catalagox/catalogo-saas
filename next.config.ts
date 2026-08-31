@@ -4,9 +4,8 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
 
   images: {
-    // Le indicamos a Next.js que use el loader personalizado de Supabase
     loader: "custom",
-    loaderFile: "./supabase-image-loader.ts",
+    loaderFile: "./supabase-image-loader.js",
 
     remotePatterns: [
       {
