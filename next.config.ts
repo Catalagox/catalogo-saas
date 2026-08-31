@@ -4,16 +4,18 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
 
   images: {
-    // Permite que Next.js optimice imágenes de Supabase
+    // Le indicamos a Next.js que use el loader personalizado de Supabase
+    loader: "custom",
+    loaderFile: "./supabase-image-loader.ts",
+
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**.supabase.co", // Los dos asteriscos (**) permiten cualquier proyecto de Supabase
+        hostname: "**.supabase.co",
         port: "",
-        pathname: "/storage/v1/object/public/**", // Ruta estándar del Storage de Supabase
+        pathname: "/storage/v1/**",
       },
     ],
-    // Formatos modernos de imagen automáticos (los convierte según el navegador)
     formats: ["image/avif", "image/webp"],
   },
 
