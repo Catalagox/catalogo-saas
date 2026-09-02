@@ -102,13 +102,21 @@ export async function registrarParticipante(payload: RegistrarParticipantePayloa
   });
 
   if (error) {
-    console.error('❌ Error [registrarParticipante]:', error);
+    console.error('❌ Error [registrarParticipante]:', {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code,
+    });
 
-    if (error.message.includes('NUMEROS_OCUPADOS')) {
-      const nums = error.message.split(':')[1];
+    const mensajeError = error.message || error.details || '';
+
+    if (mensajeError.includes('NUMEROS_OCUPADOS')) {
+      const nums = mensajeError.split(':')[1] || '';
       throw new Error(`Los números elegidos ya se encuentran reservados u ocupados: ${nums}`);
     }
-    throw new Error(error.message || 'Ocurrió un error al procesar tu selección. Intenta nuevamente.');
+
+    throw new Error(mensajeError || 'Ocurrió un error al procesar tu selección. Intenta nuevamente.');
   }
 
   return data;
@@ -251,8 +259,6 @@ export async function subirImagenRifa(file: File, rifaId: string): Promise<strin
 
   return data.publicUrl;
 }
-
-
 
 /**
  * Iniciar sesión / Registro con OAuth Google
