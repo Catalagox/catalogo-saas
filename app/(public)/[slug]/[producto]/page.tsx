@@ -139,11 +139,9 @@ export default async function ProductoPage({ params }: PageProps) {
       <div className="max-w-6xl mx-auto px-0 sm:px-6 pt-0 sm:pt-10 pb-28">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 items-start">
           
-          {/* COLUMNA IZQUIERDA: IMAGEN RESPONSIVE BORDER-TO-BORDER */}
           <div className="lg:col-span-6 relative w-full">
             <div className="relative w-full aspect-square sm:rounded-3xl overflow-hidden bg-black/[0.02] dark:bg-white/[0.02] sm:border sm:border-black/5 dark:sm:border-white/10 flex items-center justify-center">
               
-              {/* BOTÓN VOLVER */}
               <div className="absolute top-4 left-4 z-20">
                 <BackButton />
               </div>
