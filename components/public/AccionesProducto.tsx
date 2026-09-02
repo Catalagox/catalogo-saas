@@ -29,7 +29,6 @@ export default function AccionesProducto({
   const handleAgregar = () => {
     if (producto.disponible === false) return;
 
-    // Agrega la cantidad de veces seleccionada al carrito
     for (let i = 0; i < cantidad; i++) {
       addToCart({
         id: producto.id,
@@ -44,27 +43,34 @@ export default function AccionesProducto({
   };
 
   return (
-    <div className="space-y-4 pt-4 border-t border-white/10">
+    <div className="space-y-4 pt-4 border-t border-black/10 dark:border-white/10">
       <div className="flex items-center gap-3">
-        {/* SELECTOR DE CANTIDAD (- / +) */}
-        <div className="flex items-center justify-between rounded-xl bg-white/5 border border-white/10 p-1.5 w-32 shrink-0">
+        {/* SELECTOR DE CANTIDAD USANDO EL COLOR PRIMARIO DEL CATÁLOGO */}
+        <div
+          style={{ borderColor: colorPrimario }}
+          className="flex items-center justify-between rounded-xl bg-black/5 dark:bg-white/10 border-2 p-1.5 w-32 shrink-0 shadow-sm"
+        >
           <button
             onClick={decrementar}
             disabled={cantidad <= 1}
-            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/10 disabled:opacity-30"
+            style={{ color: colorPrimario }}
+            className="w-8 h-8 rounded-lg flex items-center justify-center bg-black/5 hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/20 transition-all active:scale-95 disabled:opacity-25 disabled:pointer-events-none"
             aria-label="Reducir cantidad"
           >
-            <Minus size={16} />
+            <Minus size={16} strokeWidth={2.5} />
           </button>
-          <span className="font-bold text-base w-6 text-center">
+
+          <span className="font-black text-base w-6 text-center select-none">
             {cantidad}
           </span>
+
           <button
             onClick={incrementar}
-            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/10"
+            style={{ color: colorPrimario }}
+            className="w-8 h-8 rounded-lg flex items-center justify-center bg-black/5 hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/20 transition-all active:scale-95"
             aria-label="Aumentar cantidad"
           >
-            <Plus size={16} />
+            <Plus size={16} strokeWidth={2.5} />
           </button>
         </div>
 
