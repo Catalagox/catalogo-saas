@@ -68,10 +68,18 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/planes"
+                  href="/suscripcion"
                   className="hover:text-[var(--color-primary)] transition-colors"
                 >
                   Planes y Precios
+                </Link>
+              </li>
+               <li>
+                <Link
+                  href="/rifas"
+                  className="hover:text-[var(--color-primary)] transition-colors"
+                >
+                  Rifas
                 </Link>
               </li>
             </ul>

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient"; 
+import { supabase } from "@/lib/supabaseClient";
 import Logo from "@/components/marketing/ui/Logo";
 import { FaBars, FaTimes, FaUserPlus, FaSignOutAlt } from "react-icons/fa";
 
@@ -13,16 +13,23 @@ export default function Header() {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false); 
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+
     const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       setIsLoggedIn(!!user);
     };
     checkUser();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setIsLoggedIn(!!session);
     });
 
@@ -32,7 +39,7 @@ export default function Header() {
   }, []);
 
   const handleLogout = async () => {
-    setMenuOpen(false); 
+    setMenuOpen(false);
     await supabase.auth.signOut();
     window.location.href = "/";
   };
@@ -48,27 +55,31 @@ export default function Header() {
   // Forzamos que el header sea completamente sólido si el menú móvil está abierto
   const headerSolid = !isHome || scrolled || menuOpen;
 
-  const textColor = headerSolid ? "text-slate-900" : "text-white";
+  const textColor = mounted && headerSolid ? "text-slate-900" : "text-white";
 
-  const navHoverColor = headerSolid
-    ? "hover:text-emerald-600"
-    : "hover:text-[var(--color-primary)]";
+  const navHoverColor =
+    mounted && headerSolid
+      ? "hover:text-emerald-600"
+      : "hover:text-[var(--color-primary)]";
 
   return (
     <header
       className={`${
         isHome ? "fixed" : "sticky"
       } top-0 w-full z-[100] transition-all duration-300 border-b ${
-        headerSolid
+        mounted && headerSolid
           ? "bg-white border-gray-300 py-0.5 shadow-md" // RECORTE HACIA ABAJO (Antes py-3)
-          : "bg-transparent border-white/20 py-1"    // RECORTE HACIA ABAJO (Antes py-6)
+          : "bg-transparent border-white/20 py-1" // RECORTE HACIA ABAJO (Antes py-6)
       }`}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between px-6 relative z-[120]">
-        
         {/* LOGO (Se oculta suavemente al abrir el menú de hamburguesa) */}
-        <div className={`transition-opacity duration-300 ${menuOpen ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
-          <Logo scrolled={headerSolid} size="md" />
+        <div
+          className={`transition-opacity duration-300 ${
+            menuOpen ? "opacity-0 pointer-events-none" : "opacity-100"
+          }`}
+        >
+          <Logo scrolled={mounted && headerSolid} size="md" />
         </div>
 
         {/* NAV DESKTOP */}
@@ -85,6 +96,16 @@ export default function Header() {
               <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-[var(--color-primary)] transition-all group-hover:w-full" />
             </Link>
           ))}
+
+          <a
+            href="https://catalagox.com/rifas"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`relative transition-colors ${navHoverColor} group`}
+          >
+            Rifas
+            <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-[var(--color-primary)] transition-all group-hover:w-full" />
+          </a>
         </nav>
 
         {/* BUTTONS DESKTOP */}
@@ -104,7 +125,7 @@ export default function Header() {
                 className={`
                   px-6 py-2 rounded-full text-sm font-bold transition-all border
                   ${
-                    headerSolid
+                    mounted && headerSolid
                       ? "bg-white border-slate-200 text-slate-900 hover:bg-[var(--color-primary)] hover:border-[var(--color-primary)] hover:text-black"
                       : "bg-white/10 border-white/20 text-white backdrop-blur-sm hover:bg-[var(--color-primary)] hover:text-black hover:border-[var(--color-primary)]"
                   }
@@ -129,13 +150,17 @@ export default function Header() {
           className={`md:hidden p-2 rounded-xl transition-all active:scale-90 z-[130] cursor-pointer shadow-sm ${
             menuOpen
               ? "bg-slate-900 text-white hover:bg-slate-800"
-              : headerSolid
+              : mounted && headerSolid
               ? "bg-slate-100 text-slate-900 hover:bg-slate-200"
               : "bg-white/20 text-white backdrop-blur-md hover:bg-white/30"
           }`}
           onClick={() => setMenuOpen(!menuOpen)}
         >
-          {menuOpen ? <FaTimes className="text-xl" /> : <FaBars className="text-xl" />}
+          {menuOpen ? (
+            <FaTimes className="text-xl" />
+          ) : (
+            <FaBars className="text-xl" />
+          )}
         </button>
       </div>
 
@@ -169,6 +194,16 @@ export default function Header() {
                 {item}
               </Link>
             ))}
+
+            <a
+              href="https://catalagox.com/rifas"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setMenuOpen(false)}
+              className="text-xl font-extrabold text-slate-900 hover:text-emerald-600 transition-colors block py-2"
+            >
+              Rifas
+            </a>
           </nav>
         </div>
 
