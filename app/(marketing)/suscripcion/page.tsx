@@ -7,6 +7,13 @@ import { supabase } from "@/lib/supabaseClient";
 // 📥 Importamos el componente tipado de forma limpia
 import PricingCard from "@/components/marketing/PricingCard";
 
+// 🎯 Declaración para que TypeScript reconozca el objeto window.gtag de Google
+declare global {
+  interface Window {
+    gtag?: (...args: any[]) => void;
+  }
+}
+
 export default function SuscripcionPage() {
   const router = useRouter();
   
@@ -45,6 +52,11 @@ export default function SuscripcionPage() {
       const data = await response.json();
 
       if (data.url) {
+        // 🎯 DISPARO DEL EVENTO DE CONVERSIÓN DE GOOGLE ADS
+        if (typeof window !== "undefined" && window.gtag) {
+          window.gtag("event", "manual_event_SIGNUP", {});
+        }
+
         window.location.href = data.url;
       } else {
         alert(data.error || "Error iniciando el pago.");
