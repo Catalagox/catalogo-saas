@@ -20,11 +20,24 @@ export async function POST(req: Request) {
       );
     }
 
-  // 🎯 Decidir qué Price ID usar dinámicamente
+  console.log("🔍 DIAGNÓSTICO EN PRODUCCIÓN:");
+    console.log("planType recibido:", planType);
+    console.log("MONTHLY ID:", process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY);
+    console.log("ANNUAL ID:", process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANNUAL);
+
+    // 🎯 Decidir qué Price ID usar dinámicamente
     let priceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY!; 
 
     if (planType === "annual") {
       priceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANNUAL!; 
+    }
+
+    // 🚨 Si priceId está vacío, retornar error claro de servidor
+    if (!priceId) {
+      return NextResponse.json(
+        { error: `Price ID no configurado para el plan: ${planType}` },
+        { status: 500 }
+      );
     }
 
     let customerId: string;
