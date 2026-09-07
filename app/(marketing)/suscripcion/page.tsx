@@ -101,7 +101,7 @@ export default function SuscripcionPage() {
           {/* Formulario 1: Plan Mensual */}
           <PricingCard
             title="Plan Pro Mensual"
-            price="5"
+            price="10"
             period="/mes"
             badgeText="Recomendado"
             badgeColor="bg-[#1e261b] text-[#22c55e] border border-[#22c55e]/20"
@@ -113,12 +113,12 @@ export default function SuscripcionPage() {
           {/* Formulario 2: Plan Anual */}
           <PricingCard
             title="Plan Pro Anual"
-            price="54"
+            price="108"
             period="/año"
             badgeText="Ahorra 10% - Mejor Valor"
             badgeColor="bg-[#22c55e] text-[#050807]"
             isPopular={true}
-            subPriceText="Equivale a $4.50 al mes"
+            subPriceText="Equivale a $9.00 al mes"
             isLoading={loadingPlan === "annual"}
             isDisabled={loadingPlan !== ""}
             onSubmit={() => handleSuscribirse("annual")}

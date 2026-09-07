@@ -20,11 +20,11 @@ export async function POST(req: Request) {
       );
     }
 
-    // 🎯 Decidir qué Price ID usar dinámicamente
-    let priceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID!; 
+  // 🎯 Decidir qué Price ID usar dinámicamente
+    let priceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY!; 
 
     if (planType === "annual") {
-      priceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY!; 
+      priceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANNUAL!; 
     }
 
     let customerId: string;
