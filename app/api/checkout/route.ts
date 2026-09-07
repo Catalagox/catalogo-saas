@@ -1,48 +1,66 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
-const stripe = new Stripe(
-  process.env.STRIPE_SECRET_KEY || "sk_test_mockKeyForBuild",
-  {
-    apiVersion: "2026-04-22.dahlia" as any,
-  }
-);
-
 export async function POST(req: Request) {
   try {
-    // 👈 Ahora también recibimos el tipo de plan ("monthly" o "annual")
-    const { userId, email, planType } = await req.json();
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 
-    if (!userId || !email) {
+    // 🚨 1. Validar que la API Key de Stripe exista en las variables del servidor
+    if (!stripeSecretKey) {
+      console.error("❌ ERROR: La variable STRIPE_SECRET_KEY no está configurada.");
       return NextResponse.json(
-        { error: "Identificación de usuario no válida o sesión expirada" },
-        { status: 400 }
-      );
-    }
-
-  console.log("🔍 DIAGNÓSTICO EN PRODUCCIÓN:");
-    console.log("planType recibido:", planType);
-    console.log("MONTHLY ID:", process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY);
-    console.log("ANNUAL ID:", process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANNUAL);
-
-    // 🎯 Decidir qué Price ID usar dinámicamente
-    let priceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY!; 
-
-    if (planType === "annual") {
-      priceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANNUAL!; 
-    }
-
-    // 🚨 Si priceId está vacío, retornar error claro de servidor
-    if (!priceId) {
-      return NextResponse.json(
-        { error: `Price ID no configurado para el plan: ${planType}` },
+        { error: "Error de configuración en el servidor: Clave secreta de Stripe no encontrada." },
         { status: 500 }
       );
     }
 
-    let customerId: string;
+    // Instancia limpia dentro de la ejecución de la petición
+    const stripe = new Stripe(stripeSecretKey);
 
-    // Buscar customer existente
+    // 📩 2. Obtener datos enviados desde el frontend
+    const { userId, email, planType } = await req.json();
+
+    if (!userId || !email) {
+      return NextResponse.json(
+        { error: "Identificación de usuario no válida o sesión expirada." },
+        { status: 400 }
+      );
+    }
+
+    // 🔍 3. Logs de diagnóstico para consola de Vercel/Terminal local
+    console.log("🔍 DIAGNÓSTICO API CHECKOUT:");
+    console.log("-> planType recibido:", planType);
+    console.log("-> STRIPE_PRICE_ID_MONTHLY:", !!process.env.STRIPE_PRICE_ID_MONTHLY);
+    console.log("-> STRIPE_PRICE_ID_ANNUAL:", !!process.env.STRIPE_PRICE_ID_ANNUAL);
+
+    // 🎯 4. Selección dinámica de Price ID con fallbacks de compatibilidad
+    let priceId: string | undefined;
+
+    if (planType === "annual") {
+      priceId =
+        process.env.STRIPE_PRICE_ID_ANNUAL ||
+        process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANNUAL;
+    } else {
+      priceId =
+        process.env.STRIPE_PRICE_ID_MONTHLY ||
+        process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY ||
+        process.env.NEXT_PUBLIC_STRIPE_PRICE_ID; // Fallback a variable antigua si existe
+    }
+
+    // 🚨 5. Detener la ejecución si no hay Price ID cargado
+    if (!priceId) {
+      console.error(`❌ Error: Price ID no encontrado para el plan seleccionado: ${planType}`);
+      return NextResponse.json(
+        { error: `Price ID no configurado para el plan: ${planType || "monthly"}` },
+        { status: 500 }
+      );
+    }
+
+    // 🌐 6. Definir URL base con respaldo para evitar URLs relativas inválidas en Stripe
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://catalagox.com";
+
+    // 👤 7. Buscar o crear cliente en Stripe
+    let customerId: string;
     const existingCustomers = await stripe.customers.list({
       email,
       limit: 1,
@@ -52,60 +70,60 @@ export async function POST(req: Request) {
       const customer = existingCustomers.data[0];
       customerId = customer.id;
 
-      // 🔥 Asegurar metadata correcta
+      // Actualizar metadata del usuario existente
       await stripe.customers.update(customerId, {
         metadata: {
           supabaseUserId: userId,
         },
       });
     } else {
-      // Crear customer nuevo
+      // Crear cliente nuevo
       const customer = await stripe.customers.create({
         email,
         metadata: {
           supabaseUserId: userId,
         },
       });
-
       customerId = customer.id;
     }
 
-    // Crear Checkout Session
+    // 💳 8. Crear Checkout Session de Stripe
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: customerId,
       payment_method_types: ["card"],
       line_items: [
         {
-          price: priceId, // 👈 Ahora usa la variable dinámica según la selección del usuario
+          price: priceId,
           quantity: 1,
         },
       ],
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard?success=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/suscripcion?canceled=true`,
+      success_url: `${baseUrl}/dashboard?success=true`,
+      cancel_url: `${baseUrl}/suscripcion?canceled=true`,
       metadata: {
         supabaseUserId: userId,
-        planType: planType || "monthly" // 💡 Agregamos el tipo de plan al metadato por si lo necesitas en tus Webhooks
+        planType: planType || "monthly",
       },
       subscription_data: {
         metadata: {
           supabaseUserId: userId,
-          planType: planType || "monthly" // 💡 También en la suscripción
+          planType: planType || "monthly",
         },
       },
     });
 
+    // ✅ 9. Respuesta exitosa con la URL de Checkout
     return NextResponse.json({
       url: session.url,
     });
   } catch (error: any) {
-    console.error("Error crítico en la API de Checkout:", error);
+    console.error("❌ Error crítico en la API de Checkout:", error?.message || error);
 
     return NextResponse.json(
       {
         error:
           error?.message ||
-          "Fallo en el servidor al iniciar la pasarela de pago",
+          "Fallo interno en el servidor al iniciar la pasarela de pago",
       },
       { status: 500 }
     );
