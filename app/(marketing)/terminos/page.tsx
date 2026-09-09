@@ -1,70 +1,118 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Términos y Condiciones",
+  title: "Términos y Condiciones | Catalagox",
   description:
-    "Consulta los términos y condiciones de uso de CatalogoX, plataforma para crear catálogos digitales y menús QR en Argentina.",
+    "Consulta los términos y condiciones de uso de Catalagox, la plataforma para crear tiendas online, catálogos virtuales y gestionar ventas por WhatsApp.",
+  keywords: [
+    "términos y condiciones",
+    "tienda online",
+    "Catalagox",
+    "condiciones de uso",
+    "tienda virtual",
+  ],
+  openGraph: {
+    title: "Términos y Condiciones | Catalagox",
+    description:
+      "Términos y condiciones de uso del servicio de creación de tiendas online Catalagox.",
+    siteName: "Catalagox",
+    locale: "es_ES",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Términos y Condiciones | Catalagox",
+    description:
+      "Consulta los términos y condiciones de uso de la plataforma Catalagox.",
+  },
 };
 
 export default function TerminosPage() {
   return (
-    <section className="min-h-screen bg-gray-50 py-20 px-6">
-      <div className="max-w-4xl mx-auto bg-white p-10 rounded-2xl shadow-md">
+    <section className="min-h-screen bg-slate-50 text-slate-900 py-24 px-6 relative overflow-hidden">
+      {/* Resplandor ambiental sutil de fondo */}
+      <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-emerald-200/30 rounded-full blur-3xl pointer-events-none" />
 
-        <h1 className="text-3xl md:text-4xl font-bold mb-8 text-black">
-          Términos y Condiciones
-        </h1>
+      <div className="max-w-4xl mx-auto bg-white border border-slate-200 p-8 md:p-12 rounded-3xl shadow-xl relative z-10">
+        <div className="border-b border-slate-100 pb-6 mb-8">
+          <div className="inline-flex items-center rounded-full bg-emerald-100 border border-emerald-200 text-emerald-800 px-3 py-1 text-xs font-bold uppercase tracking-wider mb-4">
+            Aviso Legal
+          </div>
+          <h1 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight">
+            Términos y Condiciones
+          </h1>
+          <p className="text-slate-500 text-sm mt-3 font-medium">
+            Última actualización: 13 de febrero de 2026
+          </p>
+        </div>
 
-        <p className="text-gray-600 mb-6">
-          Última actualización: 13 de febrero de 2026
-        </p>
+        <div className="space-y-8 text-slate-600 leading-relaxed font-normal">
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 mb-3 flex items-center gap-2">
+              <span className="text-emerald-600">1.</span> Información del Servicio
+            </h2>
+            <p>
+              <strong className="text-slate-900">Catalagox</strong> es una plataforma digital que permite a comercios y emprendedores crear, gestionar y personalizar sus propias <strong className="text-slate-900">tiendas online</strong> y catálogos virtuales accesibles mediante enlace web o código QR, optimizados para la recepción de pedidos por WhatsApp. El servicio opera globalmente desde la República Argentina.
+            </p>
+          </div>
 
-        <h2 className="text-xl text-black font-semibold mt-8 mb-4">1. Información del Servicio</h2>
-        <p className="text-gray-700 mb-4">
-          CatalogPro es una plataforma digital que permite a negocios crear y gestionar
-          catálogos digitales accesibles mediante enlace o código QR.
-          El servicio opera desde la República Argentina.
-        </p>
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 mb-3 flex items-center gap-2">
+              <span className="text-emerald-600">2.</span> Aceptación de los Términos
+            </h2>
+            <p>
+              Al registrarse, acceder o utilizar la plataforma, el usuario acepta de manera plena y sin reservas los presentes Términos y Condiciones.
+            </p>
+          </div>
 
-        <h2 className="text-xl text-black font-semibold mt-8 mb-4">2. Aceptación de los términos</h2>
-        <p className="text-gray-700 mb-4">
-          Al registrarse o utilizar la plataforma, el usuario acepta los presentes
-          Términos y Condiciones.
-        </p>
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 mb-3 flex items-center gap-2">
+              <span className="text-emerald-600">3.</span> Uso del Servicio
+            </h2>
+            <ul className="list-disc pl-6 space-y-2 marker:text-emerald-600">
+              <li>Proporcionar información veraz, exacta y actualizada durante el registro y configuración de la tienda.</li>
+              <li>No utilizar la plataforma para comercializar productos o servicios de carácter ilícito, ilegal o prohibido.</li>
+              <li>No publicar contenido ofensivo, fraudulento o que infrinja derechos de propiedad intelectual de terceros.</li>
+              <li>Asumir total responsabilidad por los productos, precios, promociones y contenido ofertado dentro de su tienda online.</li>
+            </ul>
+          </div>
 
-        <h2 className="text-xl text-black font-semibold mt-8 mb-4">3. Uso del servicio</h2>
-        <ul className="list-disc pl-6 text-gray-700 space-y-2">
-          <li>Proporcionar información veraz y actualizada.</li>
-          <li>No utilizar el servicio para actividades ilícitas.</li>
-          <li>No publicar contenido ofensivo o que infrinja derechos de terceros.</li>
-          <li>Ser responsable del contenido publicado en su catálogo.</li>
-        </ul>
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 mb-3 flex items-center gap-2">
+              <span className="text-emerald-600">4.</span> Planes y Pagos
+            </h2>
+            <p>
+              Los planes de suscripción pueden ser de modalidad mensual o anual. Todos los precios están expresados en dólares estadounidenses (USD) o su equivalente en moneda local según el procesador de pagos. El usuario puede cancelar su suscripción en cualquier momento. No se realizan reembolsos por períodos ya facturados, salvo disposición legal o regulación aplicable.
+            </p>
+          </div>
 
-        <h2 className="text-xl text-black font-semibold mt-8 mb-4">4. Planes y pagos</h2>
-        <p className="text-gray-700 mb-4">
-          Los planes pueden ser mensuales o anuales. Los precios están expresados en
-          dólares estadounidenses (USD). El usuario puede cancelar su suscripción
-          en cualquier momento. No se realizan reembolsos por períodos ya facturados,
-          salvo disposición legal en contrario.
-        </p>
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 mb-3 flex items-center gap-2">
+              <span className="text-emerald-600">5.</span> Propiedad Intelectual
+            </h2>
+            <p>
+              El código fuente, diseño, marca, marcas registradas, logotipos y arquitectura del sistema de <strong className="text-slate-900">Catalagox</strong> son propiedad exclusiva del titular del servicio y están protegidos por las leyes de propiedad intelectual vigentes.
+            </p>
+          </div>
 
-        <h2 className="text-xl text-black font-semibold mt-8 mb-4">5. Propiedad intelectual</h2>
-        <p className="text-gray-700 mb-4">
-          El software, diseño y estructura de CatalogPro son propiedad del titular
-          y están protegidos por la legislación vigente.
-        </p>
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 mb-3 flex items-center gap-2">
+              <span className="text-emerald-600">6.</span> Limitación de Responsabilidad
+            </h2>
+            <p>
+              Catalagox actúa como un facilitador tecnológico. No participamos ni nos hacemos responsables por las transacciones comerciales, pagos externos, entregas, envíos ni reclamos de garantía efectuados entre el usuario vendedor y los compradores finales de sus tiendas online.
+            </p>
+          </div>
 
-        <h2 className="text-xl text-black font-semibold mt-8 mb-4">6. Limitación de responsabilidad</h2>
-        <p className="text-gray-700 mb-4">
-          CatalogPro no será responsable por pérdidas económicas derivadas del uso
-          del servicio ni por errores en la información publicada por los usuarios.
-        </p>
-
-        <h2 className="text-xl text-black font-semibold mt-8 mb-4">7. Modificaciones</h2>
-        <p className="text-gray-700">
-          Nos reservamos el derecho de modificar estos términos en cualquier momento.
-        </p>
-
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 mb-3 flex items-center gap-2">
+              <span className="text-emerald-600">7.</span> Modificaciones
+            </h2>
+            <p>
+              Nos reservamos el derecho de actualizar o modificar estos términos en cualquier momento para adaptarlos a novedades legislativas o mejoras del servicio. Notificaremos los cambios significativos a través de nuestros canales oficiales.
+            </p>
+          </div>
+        </div>
       </div>
     </section>
   );
