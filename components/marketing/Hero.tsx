@@ -35,10 +35,7 @@ export default function Hero() {
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             className="relative z-10 flex flex-col items-center"
           >
-            {/* Badge de Posicionamiento */}
-            <span className="inline-block px-4 py-1.5 mb-6 text-xs sm:text-sm font-bold tracking-widest text-emerald-400 uppercase bg-emerald-500/10 rounded-full border border-emerald-500/20">
-              Plataforma de E-Commerce Fácil y Rápida
-            </span>
+           
 
             {/* Título Principal Reorientado */}
             <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-[1.2] sm:leading-[1.15] tracking-tight max-w-5xl mx-auto text-center px-2 mb-6">
@@ -223,7 +220,7 @@ export default function Hero() {
             <div className="absolute inset-0 bg-emerald-500 opacity-15 blur-[100px] animate-pulse" />
             <div className="relative z-10 transform md:rotate-2 hover:rotate-0 transition-transform duration-700">
               <Image
-                src="/ChatGPT Image 17 abr 2026, 13_09_41.png"
+                src="/Imagen-telefono.png"
                 alt="Tienda Online Catalagox en Celular"
                 width={380}
                 height={760}
