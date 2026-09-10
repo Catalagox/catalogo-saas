@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     telephone: false,
   },
   alternates: {
-    canonical: siteUrl,
+    canonical: "./",
   },
   robots: {
     index: true,
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
     siteName: "Catalagox",
     images: [
       {
-        url: "/og image.png",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "Catalagox - Crea tu Tienda Online Profesional",
@@ -72,14 +72,14 @@ export const metadata: Metadata = {
     title: "Crea tu Tienda Online Profesional | Catalagox",
     description:
       "Crea tu tienda online en minutos. Vende por Internet, publica tus productos y recibe pedidos directamente en tu WhatsApp.",
-    images: ["/og image.png"],
+    images: ["/og-image.png"],
   },
   icons: {
     icon: [
       { url: "/favicon.ico" },
-      { url: "/favicon 96x96.png", sizes: "96x96", type: "image/png" },
+      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
     ],
-    apple: "/apple touch icon.png",
+    apple: "/apple-touch-icon.png",
   },
   manifest: "/site.webmanifest",
 };

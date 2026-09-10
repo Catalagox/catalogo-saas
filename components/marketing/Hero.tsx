@@ -9,6 +9,7 @@ import {
   FaShoppingBag,
 } from "react-icons/fa";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import CountUp from "react-countup";
 import { useInView } from "react-intersection-observer";
@@ -66,8 +67,8 @@ export default function Hero() {
                 <FaRocket className="animate-bounce flex-shrink-0 text-xl text-slate-950 relative z-10" />
               </Link>
 
-              <a
-                href="https://www.catalagox.com/prueba"
+              <Link
+                href="/prueba"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group relative inline-flex items-center justify-center gap-3 w-full max-w-[340px] sm:max-w-none sm:w-auto px-8 sm:px-12 py-4 sm:py-5 bg-white/5 text-white rounded-2xl font-black text-base sm:text-xl border border-white/10 backdrop-blur-md overflow-hidden transition-all duration-300 hover:bg-white/10 hover:border-emerald-500/30 hover:-translate-y-1 active:scale-95"
@@ -86,7 +87,7 @@ export default function Hero() {
                     clipRule="evenodd"
                   />
                 </svg>
-              </a>
+              </Link>
             </div>
 
             <p className="mt-6 text-xs sm:text-sm text-gray-400/80 font-medium tracking-wide flex items-center justify-center gap-2 flex-wrap">
@@ -221,10 +222,13 @@ export default function Hero() {
           <div className="relative flex justify-center md:justify-end order-1 md:order-2 mb-8 md:mb-0">
             <div className="absolute inset-0 bg-emerald-500 opacity-15 blur-[100px] animate-pulse" />
             <div className="relative z-10 transform md:rotate-2 hover:rotate-0 transition-transform duration-700">
-              <img
+              <Image
                 src="/ChatGPT Image 17 abr 2026, 13_09_41.png"
                 alt="Tienda Online Catalagox en Celular"
-                className="w-[260px] sm:w-[320px] md:w-[380px] drop-shadow-[0_35px_60px_rgba(0,0,0,0.6)]"
+                width={380}
+                height={760}
+                priority
+                className="w-[260px] sm:w-[320px] md:w-[380px] h-auto drop-shadow-[0_35px_60px_rgba(0,0,0,0.6)]"
               />
             </div>
           </div>
@@ -305,14 +309,14 @@ export default function Hero() {
                 ))}
               </ul>
 
-              <a
-                href="https://www.catalagox.com/prueba"
+              <Link
+                href="/prueba"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-auto w-full sm:w-fit px-6 py-3.5 bg-emerald-400 text-black rounded-xl font-bold hover:scale-105 transition-transform duration-300 block text-center"
               >
                 Ver Demo en Video
-              </a>
+              </Link>
             </div>
           </div>
         </div>
