@@ -6,9 +6,12 @@ const siteUrl = "https://catalagox.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
+
   title: "Crea tu Tienda Online Profesional | Catalagox",
+
   description:
     "Crea tu tienda online profesional en minutos. Publica tus productos, personaliza tu diseño, recibe pedidos por WhatsApp y vende por Internet con Catalagox.",
+
   keywords: [
     "Catalagox",
     "catalagox.com",
@@ -28,20 +31,26 @@ export const metadata: Metadata = {
     "menú QR",
     "pedidos por WhatsApp",
   ],
+
   authors: [{ name: "Catalagox" }],
   creator: "Catalagox",
   publisher: "Catalagox",
+
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
   },
+
+  // URL canónica de la página principal
   alternates: {
-    canonical: "./",
+    canonical: siteUrl,
   },
+
   robots: {
     index: true,
     follow: true,
+
     googleBot: {
       index: true,
       follow: true,
@@ -50,14 +59,19 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+
   openGraph: {
     type: "website",
     locale: "es_AR",
     url: siteUrl,
+
     title: "Crea tu Tienda Online Profesional | Catalagox",
+
     description:
       "Crea tu tienda online en minutos. Vende por Internet, gestiona tus productos, activa tu carrito de compras y recibe pedidos directo en tu WhatsApp.",
+
     siteName: "Catalagox",
+
     images: [
       {
         url: "/og-image.png",
@@ -67,30 +81,51 @@ export const metadata: Metadata = {
       },
     ],
   },
+
   twitter: {
     card: "summary_large_image",
+
     title: "Crea tu Tienda Online Profesional | Catalagox",
+
     description:
       "Crea tu tienda online en minutos. Vende por Internet, publica tus productos y recibe pedidos directamente en tu WhatsApp.",
+
     images: ["/og-image.png"],
   },
+
   icons: {
     icon: [
-      { url: "/favicon.ico" },
-      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+      {
+        url: "/favicon.ico",
+      },
+      {
+        url: "/favicon-96x96.png",
+        sizes: "96x96",
+        type: "image/png",
+      },
     ],
+
     apple: "/apple-touch-icon.png",
   },
+
   manifest: "/site.webmanifest",
 };
 
 export default function Home() {
   return (
     <>
+      {/* 
+        Si el usuario ya tiene una sesión activa,
+        RedirectIfLoggedIn lo llevará a /dashboard.
+        
+        Si NO tiene sesión, podrá ver normalmente la Home.
+      */}
       <RedirectIfLoggedIn />
+
       <main className="relative min-h-screen w-full overflow-hidden bg-white pb-0 mb-0">
         <Hero />
       </main>
     </>
   );
 }
+
