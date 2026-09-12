@@ -9,7 +9,6 @@ export default function PublicLayout({
 }) {
   return (
     <>
-      {/* Carga del script global de Google (gtag.js) */}
       <Script
         src="https://www.googletagmanager.com/gtag/js?id=G-181DBYJ8QZ"
         strategy="afterInteractive"

@@ -3,31 +3,31 @@ import Link from "next/link";
 import { FaRocket, FaEye, FaStore } from "react-icons/fa6";
 
 export const metadata: Metadata = {
-  title: "Sobre Nosotros | Crea tu Tienda Online con CatalagoX",
+  title: "Sobre Nosotros | Crea tu Tienda Online con Catalagox",
   description:
-    "Conoce la historia, misión y visión de CatalagoX, la plataforma líder para crear tiendas online profesionales, vender por Internet y recibir pedidos por WhatsApp.",
+    "Conoce la historia, misión y visión de Catalagox, la plataforma líder para crear tiendas online profesionales, vender por Internet y recibir pedidos por WhatsApp.",
   keywords: [
     "tienda online",
     "crear tienda online",
     "ecommerce latinoamerica",
     "vender por internet",
-    "CatalagoX",
+    "Catalagox",
     "tienda virtual",
     "catalogo digital",
   ],
   openGraph: {
-    title: "Sobre Nosotros | CatalagoX - Tu Tienda Online Profesional",
+    title: "Sobre Nosotros | Catalagox - Tu Tienda Online Profesional",
     description:
       "Impulsamos la transformación digital de emprendedores y negocios en Latinoamérica con herramientas simples y potentes para vender online.",
-    siteName: "CatalagoX",
+    siteName: "Catalagox",
     locale: "es_ES",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Sobre Nosotros | CatalagoX",
+    title: "Sobre Nosotros | Catalagox",
     description:
-      "Crea tu tienda online fácil, rápida y profesional con CatalagoX.",
+      "Crea tu tienda online fácil, rápida y profesional con Catalagox.",
   },
 };
 

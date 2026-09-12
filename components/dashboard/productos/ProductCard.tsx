@@ -2,7 +2,7 @@
 
 import ProductImage from "@/components/dashboard/productos/ProductImage";
 import Price from "@/components/ui/Price";
-import { Edit3, Trash2, Eye, EyeOff } from "lucide-react";
+import { Edit3, Trash2, Eye, EyeOff, Package } from "lucide-react";
 
 type Producto = {
   id: string;
@@ -11,12 +11,15 @@ type Producto = {
   descripcion?: string;
   disponible: boolean;
   imagen_url?: string;
+
+  // 📦 Stock
+  stock?: number | null;
 };
 
 type Props = {
   producto: Producto;
   categoria?: string;
-  paisCode: string; 
+  paisCode: string;
   onToggle: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -25,43 +28,59 @@ type Props = {
 export default function ProductCard({
   producto,
   categoria,
-  paisCode, // 👈 NUEVO: Desestructuramos la prop
+  paisCode,
   onToggle,
   onEdit,
   onDelete,
 }: Props) {
+  const tieneStockAdministrado =
+    producto.stock !== null && producto.stock !== undefined;
+
+  const agotado = tieneStockAdministrado && producto.stock === 0;
+
   return (
     <div
       className={`group relative bg-[var(--bg-card)] rounded-[2rem] border transition-all duration-300 overflow-hidden flex flex-col ${
-        producto.disponible
+        producto.disponible && !agotado
           ? "border-[var(--border-card)] hover:border-[var(--color-primary)] shadow-xl"
           : "border-[var(--border-card)] opacity-75 grayscale-[0.5]"
       }`}
     >
       {/* Imagen */}
       <div className="relative">
-        <ProductImage src={producto.imagen_url} alt={producto.nombre} />
+        <ProductImage
+          src={producto.imagen_url}
+          alt={producto.nombre}
+        />
 
+        {/* Estado */}
         <div
           className={`absolute top-4 left-4 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest backdrop-blur-md border ${
-            producto.disponible
+            producto.disponible && !agotado
               ? "bg-[var(--color-success)]/10 text-[var(--color-success)] border-[var(--color-success)]/20"
               : "bg-[var(--color-danger)]/10 text-[var(--color-danger)] border-[var(--color-danger)]/20"
           }`}
         >
-          {producto.disponible ? "Activo" : "Oculto"}
+          {!producto.disponible
+            ? "Oculto"
+            : agotado
+              ? "Agotado"
+              : "Activo"}
         </div>
       </div>
 
       <div className="p-5 flex-1 flex flex-col">
         <div className="mb-4">
-          <div className="flex justify-between items-start mb-1">
+          <div className="flex justify-between items-start mb-1 gap-3">
             <h3 className="text-lg font-bold text-[var(--text-primary)] leading-tight group-hover:text-[var(--color-primary)] transition-colors">
               {producto.nombre}
             </h3>
-           
-            <span className="text-[var(--color-primary)] font-black text-lg">
-              <Price amount={producto.precio} countryCode={paisCode} />
+
+            <span className="text-[var(--color-primary)] font-black text-lg whitespace-nowrap">
+              <Price
+                amount={producto.precio}
+                countryCode={paisCode}
+              />
             </span>
           </div>
 
@@ -76,9 +95,33 @@ export default function ProductCard({
           )}
         </div>
 
-      
+        {/* 📦 Información de stock */}
+        <div className="mb-4">
+          {!tieneStockAdministrado ? (
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--bg-tertiary)] text-[var(--text-secondary)] text-xs font-semibold">
+              <Package className="w-3.5 h-3.5" />
+              Stock no administrado
+            </div>
+          ) : agotado ? (
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--color-danger)]/10 text-[var(--color-danger)] text-xs font-bold">
+              <Package className="w-3.5 h-3.5" />
+              Sin stock
+            </div>
+          ) : producto.stock! <= 5 ? (
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-bold">
+              <Package className="w-3.5 h-3.5" />
+              Quedan {producto.stock} unidades
+            </div>
+          ) : (
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
+              <Package className="w-3.5 h-3.5" />
+              {producto.stock} unidades disponibles
+            </div>
+          )}
+        </div>
+
+        {/* Acciones */}
         <div className="mt-auto pt-4 border-t border-[var(--border-card)] flex items-center justify-between gap-2">
-          
           <div className="flex items-center gap-2">
             <button
               onClick={onToggle}
@@ -87,10 +130,17 @@ export default function ProductCard({
                   ? "bg-[var(--color-primary)]"
                   : "bg-[var(--bg-tertiary)]"
               }`}
+              aria-label={
+                producto.disponible
+                  ? "Ocultar producto"
+                  : "Mostrar producto"
+              }
             >
               <span
                 className={`inline-block h-4 w-4 transform rounded-full bg-[var(--color-text-inverse)] transition-transform duration-300 ${
-                  producto.disponible ? "translate-x-6" : "translate-x-1"
+                  producto.disponible
+                    ? "translate-x-6"
+                    : "translate-x-1"
                 }`}
               />
             </button>
@@ -104,7 +154,6 @@ export default function ProductCard({
             </span>
           </div>
 
-          
           <div className="flex gap-1">
             <button
               onClick={onEdit}

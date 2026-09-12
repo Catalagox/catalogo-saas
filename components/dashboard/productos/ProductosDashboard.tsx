@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -8,8 +9,15 @@ import { Loader2, Package, Search, Filter } from "lucide-react";
 import imageCompression from "browser-image-compression";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 
-// Tipos consistentes
-export type Categoria = { id: string; nombre: string };
+// ==================================================
+// TIPOS CONSISTENTES
+// ==================================================
+
+export type Categoria = {
+  id: string;
+  nombre: string;
+};
+
 export type Producto = {
   id: string;
   nombre: string;
@@ -18,18 +26,43 @@ export type Producto = {
   disponible: boolean;
   categoria_id: string;
   imagen_url?: string;
+
+  // Stock:
+  // null / undefined = inventario no administrado
+  // 0 = agotado
+  // > 0 = unidades disponibles
+  stock?: number | null;
 };
 
 export default function ProductosDashboard() {
   const [userId, setUserId] = useState<string | null>(null);
-  const [productos, setProductos] = useState<Producto[]>([]);
-  const [categorias, setCategorias] = useState<Categoria[]>([]);
-  const [paisCode, setPaisCode] = useState("PE"); // 👈 NUEVO: Estado maestro para el país del catálogo
+
+  const [productos, setProductos] = useState<Producto[]>(
+    []
+  );
+
+  const [categorias, setCategorias] = useState<
+    Categoria[]
+  >([]);
+
+  const [paisCode, setPaisCode] = useState("PE");
+
   const [loading, setLoading] = useState(true);
-  const [editingProduct, setEditingProduct] = useState<Producto | null>(null);
-  const [newImageFile, setNewImageFile] = useState<File | null>(null);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  const [editingProduct, setEditingProduct] =
+    useState<Producto | null>(null);
+
+  const [newImageFile, setNewImageFile] =
+    useState<File | null>(null);
+
+  const [previewImage, setPreviewImage] =
+    useState<string | null>(null);
+
   const [searchTerm, setSearchTerm] = useState("");
+
+  // ==================================================
+  // INICIALIZAR
+  // ==================================================
 
   useEffect(() => {
     iniciar();
@@ -39,14 +72,25 @@ export default function ProductosDashboard() {
     const {
       data: { user },
     } = await supabase.auth.getUser();
+
     if (!user) return;
+
     setUserId(user.id);
+
     await cargarDatos(user.id);
+
     setLoading(false);
   };
 
+  // ==================================================
+  // CARGAR DATOS
+  // ==================================================
+
   const cargarDatos = async (uid: string) => {
-    // 1. Consultamos el código de país guardado en el catálogo de este usuario
+    // ----------------------------------------------
+    // 1. CÓDIGO DE PAÍS
+    // ----------------------------------------------
+
     const { data: catData } = await supabase
       .from("catalogos")
       .select("pais_code")
@@ -54,37 +98,80 @@ export default function ProductosDashboard() {
       .single();
 
     if (catData?.pais_code) {
-      setPaisCode(catData.pais_code); // 👈 Seteamos el código encontrado (ej: "MX", "AR")
+      setPaisCode(catData.pais_code);
     }
 
-    // 2. Traer productos y categorías (Tu lógica original intacta)
-    const { data: prod } = await supabase
-      .from("productos")
-      .select("*")
-      .eq("user_id", uid)
-      .order("nombre", { ascending: true });
+    // ----------------------------------------------
+    // 2. PRODUCTOS
+    // ----------------------------------------------
 
-    const { data: cat } = await supabase
-      .from("categorias")
-      .select("*")
-      .eq("user_id", uid)
-      .order("nombre", { ascending: true });
+    const { data: prod, error: productosError } =
+      await supabase
+        .from("productos")
+        .select("*")
+        .eq("user_id", uid)
+        .order("nombre", {
+          ascending: true,
+        });
+
+    if (productosError) {
+      console.error(
+        "Error cargando productos:",
+        productosError
+      );
+    }
+
+    // ----------------------------------------------
+    // 3. CATEGORÍAS
+    // ----------------------------------------------
+
+    const { data: cat, error: categoriasError } =
+      await supabase
+        .from("categorias")
+        .select("*")
+        .eq("user_id", uid)
+        .order("nombre", {
+          ascending: true,
+        });
+
+    if (categoriasError) {
+      console.error(
+        "Error cargando categorías:",
+        categoriasError
+      );
+    }
 
     setProductos(prod || []);
     setCategorias(cat || []);
   };
 
-  // 🛠️ FUNCIÓN AUXILIAR: Extrae la ruta interna (ej: "id_user/archivo.webp") de una URL pública
-  const obtenerPathDesdeUrl = (url?: string): string | null => {
+  // ==================================================
+  // OBTENER PATH DE STORAGE DESDE URL
+  // ==================================================
+
+  const obtenerPathDesdeUrl = (
+    url?: string
+  ): string | null => {
     if (!url) return null;
-    const splitKey = "/storage/v1/object/public/productos/";
+
+    const splitKey =
+      "/storage/v1/object/public/productos/";
+
     const parts = url.split(splitKey);
+
     return parts.length > 1 ? parts[1] : null;
   };
 
-  // 🛠️ FUNCIÓN AUXILIAR: Elimina un archivo físicamente de Supabase Storage
-  const borrarArchivoStorage = async (urlCompleta?: string) => {
-    const pathArchivo = obtenerPathDesdeUrl(urlCompleta);
+  // ==================================================
+  // BORRAR ARCHIVO DEL STORAGE
+  // ==================================================
+
+  const borrarArchivoStorage = async (
+    urlCompleta?: string
+  ) => {
+    const pathArchivo =
+      obtenerPathDesdeUrl(urlCompleta);
+
     if (!pathArchivo) return;
 
     const { error } = await supabase.storage
@@ -92,159 +179,300 @@ export default function ProductosDashboard() {
       .remove([pathArchivo]);
 
     if (error) {
-      console.error("Error al eliminar archivo del Storage:", error.message);
+      console.error(
+        "Error al eliminar archivo del Storage:",
+        error.message
+      );
     } else {
       console.log(
         "✅ Archivo eliminado con éxito de Supabase Storage:",
-        pathArchivo,
+        pathArchivo
       );
     }
   };
 
-  // 🔥 MODIFICADO: Ahora elimina también la foto física de la carpeta Supabase
+  // ==================================================
+  // ELIMINAR PRODUCTO
+  // ==================================================
+
   const eliminarProducto = async (id: string) => {
     if (
       !confirm(
-        "¿Estás seguro de eliminar este producto? Esta acción no se puede deshacer.",
+        "¿Estás seguro de eliminar este producto? Esta acción no se puede deshacer."
       )
-    )
+    ) {
       return;
+    }
 
     try {
-      // 1. Buscar el producto localmente para conocer su URL actual de imagen
-      const productoAEliminar = productos.find((p) => p.id === id);
+      // 1. Buscar producto localmente
+      const productoAEliminar =
+        productos.find((p) => p.id === id);
 
-      // 2. Si tiene imagen asociada, borrarla de Supabase Storage primero
+      // 2. Borrar imagen si existe
       if (productoAEliminar?.imagen_url) {
-        await borrarArchivoStorage(productoAEliminar.imagen_url);
+        await borrarArchivoStorage(
+          productoAEliminar.imagen_url
+        );
       }
 
-      // 3. Eliminar el registro en la base de datos PostgreSQL
-      const { error } = await supabase.from("productos").delete().eq("id", id);
+      // 3. Eliminar producto
+      const { error } = await supabase
+        .from("productos")
+        .delete()
+        .eq("id", id);
 
       if (!error) {
-        setProductos(productos.filter((p) => p.id !== id));
-        alert("Producto eliminado correctamente");
+        setProductos(
+          productos.filter((p) => p.id !== id)
+        );
+
+        alert(
+          "Producto eliminado correctamente"
+        );
       } else {
         throw error;
       }
     } catch (err) {
       console.error(err);
-      alert("Error al eliminar el producto de la base de datos");
+
+      alert(
+        "Error al eliminar el producto de la base de datos"
+      );
     }
   };
 
-  const cambiarDisponibilidad = async (producto: Producto) => {
-    const nuevoEstado = !producto.disponible;
+  // ==================================================
+  // CAMBIAR DISPONIBILIDAD
+  // ==================================================
+
+  const cambiarDisponibilidad = async (
+    producto: Producto
+  ) => {
+    const nuevoEstado =
+      !producto.disponible;
+
     setProductos(
       productos.map((p) =>
-        p.id === producto.id ? { ...p, disponible: nuevoEstado } : p,
-      ),
+        p.id === producto.id
+          ? {
+              ...p,
+              disponible: nuevoEstado,
+            }
+          : p
+      )
     );
 
     const { error } = await supabase
       .from("productos")
-      .update({ disponible: nuevoEstado })
+      .update({
+        disponible: nuevoEstado,
+      })
       .eq("id", producto.id);
 
     if (error) {
       cargarDatos(userId!);
-      alert("Error al actualizar disponibilidad");
+
+      alert(
+        "Error al actualizar disponibilidad"
+      );
     }
   };
 
-  // ⚡ MODIFICADO: Comprime con tu librería y convierte a .webp de manera automática
-  const subirImagen = async (): Promise<string | null> => {
-    if (!newImageFile) return editingProduct?.imagen_url || null;
+  // ==================================================
+  // SUBIR / COMPRIMIR IMAGEN
+  // ==================================================
 
-    // Configuración de compresión óptima
+  const subirImagen = async (): Promise<
+    string | null
+  > => {
+    if (!newImageFile) {
+      return (
+        editingProduct?.imagen_url || null
+      );
+    }
+
     const opciones = {
-      maxSizeMB: 0.8, // Tamaño máximo ~800KB
-      maxWidthOrHeight: 1000, // Max 1000px de ancho/alto
+      maxSizeMB: 0.8,
+      maxWidthOrHeight: 1000,
       useWebWorker: true,
-      fileType: "image/webp", // Fuerza la compresión a formato WebP moderno
+      fileType: "image/webp",
     };
 
     try {
       console.log(
-        `📸 [Original] Peso: ${(newImageFile.size / (1024 * 1024)).toFixed(2)} MB`,
+        `📸 [Original] Peso: ${(
+          newImageFile.size /
+          (1024 * 1024)
+        ).toFixed(2)} MB`
       );
 
-      // 1. Ejecutar compresión
-      const imagenComprimidaFile = await imageCompression(
-        newImageFile,
-        opciones,
-      );
+      // 1. Comprimir
+      const imagenComprimidaFile =
+        await imageCompression(
+          newImageFile,
+          opciones
+        );
+
       console.log(
-        `⚡ [Comprimido WebP] Peso: ${(imagenComprimidaFile.size / 1024).toFixed(2)} KB`,
+        `⚡ [Comprimido WebP] Peso: ${(
+          imagenComprimidaFile.size / 1024
+        ).toFixed(2)} KB`
       );
 
-      // 2. Generar nombre de archivo único siempre con extensión .webp
-      const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(2, 7)}.webp`;
+      // 2. Nombre único
+      const fileName = `${userId}/${Date.now()}-${Math.random()
+        .toString(36)
+        .substring(2, 7)}.webp`;
 
-      // 3. Subir el blob optimizado
-      const { error: uploadError } = await supabase.storage
-        .from("productos")
-        .upload(fileName, imagenComprimidaFile, {
-          cacheControl: "public, max-age=31536000, immutable",
-          contentType: "image/webp",
-        });
+      // 3. Subir
+      const { error: uploadError } =
+        await supabase.storage
+          .from("productos")
+          .upload(
+            fileName,
+            imagenComprimidaFile,
+            {
+              cacheControl:
+                "public, max-age=31536000, immutable",
+              contentType: "image/webp",
+            }
+          );
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        throw uploadError;
+      }
 
       const { data } = supabase.storage
         .from("productos")
         .getPublicUrl(fileName);
+
       return data.publicUrl;
     } catch (error) {
-      console.error("Error al procesar/subir imagen:", error);
-      alert("No se pudo procesar la nueva imagen");
-      return editingProduct?.imagen_url || null;
+      console.error(
+        "Error al procesar/subir imagen:",
+        error
+      );
+
+      alert(
+        "No se pudo procesar la nueva imagen"
+      );
+
+      return (
+        editingProduct?.imagen_url || null
+      );
     }
   };
 
-  // 🔥 MODIFICADO: Controla si hay foto vieja para eliminarla tras subir la nueva
+  // ==================================================
+  // GUARDAR EDICIÓN
+  // ==================================================
+
   const guardarEdicion = async () => {
     if (!editingProduct) return;
 
     try {
       setLoading(true);
 
-      const fotoViejaUrl = productos.find(
-        (p) => p.id === editingProduct.id,
-      )?.imagen_url;
+      // ----------------------------------------------
+      // FOTO ANTERIOR
+      // ----------------------------------------------
 
-      // 1. Subir y comprimir la nueva imagen (si es que se seleccionó una)
-      const imagen_url = await subirImagen();
+      const fotoViejaUrl =
+        productos.find(
+          (p) =>
+            p.id === editingProduct.id
+        )?.imagen_url;
 
-      // 2. Si cambió la foto con éxito (la URL nueva es distinta a la vieja), borrar el archivo viejo
-      if (newImageFile && fotoViejaUrl && imagen_url !== fotoViejaUrl) {
-        await borrarArchivoStorage(fotoViejaUrl);
+      // ----------------------------------------------
+      // SUBIR NUEVA IMAGEN
+      // ----------------------------------------------
+
+      const imagen_url =
+        await subirImagen();
+
+      // ----------------------------------------------
+      // BORRAR FOTO ANTERIOR
+      // ----------------------------------------------
+
+      if (
+        newImageFile &&
+        fotoViejaUrl &&
+        imagen_url !== fotoViejaUrl
+      ) {
+        await borrarArchivoStorage(
+          fotoViejaUrl
+        );
       }
+
+      // ----------------------------------------------
+      // GUARDAR PRODUCTO EN SUPABASE
+      // ----------------------------------------------
 
       const { error } = await supabase
         .from("productos")
         .update({
           nombre: editingProduct.nombre,
-          precio: Number(editingProduct.precio),
-          descripcion: editingProduct.descripcion,
-          categoria_id: editingProduct.categoria_id,
-          imagen_url: imagen_url || "",
+
+          precio: Number(
+            editingProduct.precio
+          ),
+
+          descripcion:
+            editingProduct.descripcion,
+
+          categoria_id:
+            editingProduct.categoria_id,
+
+          imagen_url:
+            imagen_url || "",
+
+          // ==========================================
+          // NUEVO: STOCK
+          // ==========================================
+          //
+          // null significa que este producto no
+          // administra inventario.
+          //
+          stock:
+            editingProduct.stock ??
+            null,
         })
         .eq("id", editingProduct.id);
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
+
+      // ----------------------------------------------
+      // CERRAR MODAL
+      // ----------------------------------------------
 
       cerrarModal();
+
+      // ----------------------------------------------
+      // RECARGAR PRODUCTOS
+      // ----------------------------------------------
+
       await cargarDatos(userId!);
-      alert("Producto editado exitosamente");
+
+      alert(
+        "Producto editado exitosamente"
+      );
     } catch (err) {
       console.error(err);
-      alert("Error al guardar los cambios");
+
+      alert(
+        "Error al guardar los cambios"
+      );
     } finally {
       setLoading(false);
     }
   };
+
+  // ==================================================
+  // CERRAR MODAL
+  // ==================================================
 
   const cerrarModal = () => {
     setEditingProduct(null);
@@ -252,64 +480,91 @@ export default function ProductosDashboard() {
     setPreviewImage(null);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // ==================================================
+  // CAMBIAR IMAGEN
+  // ==================================================
+
+  const handleFileChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = e.target.files?.[0];
+
     if (!file) return;
+
     setNewImageFile(file);
-    setPreviewImage(URL.createObjectURL(file));
+
+    setPreviewImage(
+      URL.createObjectURL(file)
+    );
   };
 
-  const productosFiltrados = productos.filter((p) =>
-    p.nombre.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  // ==================================================
+  // FILTRAR PRODUCTOS
+  // ==================================================
 
-// 🔄 LOADING (SKELETON GRID DE PRODUCTOS)
-  if (loading && productos.length === 0) {
+  const productosFiltrados =
+    productos.filter((p) =>
+      p.nombre
+        .toLowerCase()
+        .includes(
+          searchTerm.toLowerCase()
+        )
+    );
+
+  // ==================================================
+  // LOADING
+  // ==================================================
+
+  if (
+    loading &&
+    productos.length === 0
+  ) {
     return (
       <div className="min-h-screen text-white pb-20 animate-pulse">
-        {/* 🟢 HEADER Y BUSCADOR SKELETON */}
         <div className="max-w-7xl mx-auto px-6 pt-6 md:px-10 md:pt-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-6 border-b border-[var(--border-card)]">
-            
-            {/* Título e Icono */}
+
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-card)]" />
+
               <div className="space-y-2">
                 <div className="h-3 w-20 rounded bg-white/10" />
+
                 <div className="h-6 w-40 rounded-lg bg-white/10" />
               </div>
             </div>
 
-            {/* Simulación del buscador */}
             <div className="h-10 w-full sm:w-80 rounded-xl bg-[var(--bg-card)] border border-[var(--border-card)]" />
           </div>
         </div>
 
-        {/* 🟢 GRID SKELETON DE TARJETAS (Simula 8 productos) */}
         <main className="max-w-7xl mx-auto p-6 md:p-10">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
+            {[
+              1, 2, 3, 4, 5, 6, 7, 8,
+            ].map((item) => (
               <div
                 key={item}
                 className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl overflow-hidden flex flex-col justify-between p-4 space-y-4"
               >
-                {/* Imagen del producto */}
                 <div className="w-full h-44 rounded-xl bg-white/5 border border-white/5" />
 
-                {/* Info del producto (Nombre, Categoría, Precio) */}
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <div className="h-4 w-2/3 rounded bg-white/10" />
+
                     <div className="h-4 w-12 rounded bg-emerald-500/20" />
                   </div>
+
                   <div className="h-3 w-1/3 rounded bg-white/5" />
                 </div>
 
-                {/* Botones / Switches inferiores de la tarjeta */}
                 <div className="pt-2 border-t border-[var(--border-card)] flex items-center justify-between">
                   <div className="h-6 w-16 rounded-full bg-white/10" />
+
                   <div className="flex gap-2">
                     <div className="h-8 w-8 rounded-lg bg-white/5" />
+
                     <div className="h-8 w-8 rounded-lg bg-white/5" />
                   </div>
                 </div>
@@ -321,9 +576,15 @@ export default function ProductosDashboard() {
     );
   }
 
+  // ==================================================
+  // DASHBOARD
+  // ==================================================
+
   return (
     <div className="min-h-screen text-white pb-20">
-      {/* 🟢 NUEVO HEADER INTEGRADO */}
+
+      {/* HEADER */}
+
       <div className="max-w-7xl mx-auto px-6 pt-6 md:px-10 md:pt-8">
         <PageHeader
           title="Mis Productos"
@@ -331,19 +592,25 @@ export default function ProductosDashboard() {
           icon={Package}
           showBackButton={true}
         >
-          {/* El buscador se pasa como hijo (children) a la derecha */}
           <div className="relative w-full sm:w-80">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+
             <input
               type="text"
               placeholder="Buscar producto..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) =>
+                setSearchTerm(
+                  e.target.value
+                )
+              }
               className="w-full bg-[var(--bg-card)] border border-[var(--border-card)] rounded-xl py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
             />
           </div>
         </PageHeader>
       </div>
+
+      {/* PRODUCTOS */}
 
       <main className="max-w-7xl mx-auto p-6 md:p-10">
         {productosFiltrados.length > 0 ? (
@@ -352,21 +619,28 @@ export default function ProductosDashboard() {
             categorias={categorias}
             paisCode={paisCode}
             onToggle={cambiarDisponibilidad}
-            onEdit={(p) => setEditingProduct(p)}
+            onEdit={(p) =>
+              setEditingProduct(p)
+            }
             onDelete={eliminarProducto}
           />
         ) : (
           <div className="text-center py-20 bg-gray-900/30 rounded-3xl border border-dashed border-gray-800">
             <Package className="w-12 h-12 text-gray-700 mx-auto mb-4" />
+
             <h3 className="text-lg font-medium text-gray-400">
               No se encontraron productos
             </h3>
+
             <p className="text-gray-600">
-              Prueba ajustando tu búsqueda o agrega uno nuevo.
+              Prueba ajustando tu búsqueda o
+              agrega uno nuevo.
             </p>
           </div>
         )}
       </main>
+
+      {/* MODAL DE EDICIÓN */}
 
       {editingProduct && (
         <ProductEditModal

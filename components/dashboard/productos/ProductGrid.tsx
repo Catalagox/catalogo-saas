@@ -16,12 +16,15 @@ type Producto = {
   disponible: boolean;
   categoria_id: string;
   imagen_url?: string;
+
+  // 📦 Stock
+  stock?: number | null;
 };
 
 type Props = {
   productos: Producto[];
   categorias: Categoria[];
-  paisCode: string; // 👈 NUEVO: Recibimos el código del país desde el Dashboard
+  paisCode: string;
   onToggle: (p: Producto) => void;
   onEdit: (p: Producto) => void;
   onDelete: (id: string) => void;
@@ -30,7 +33,7 @@ type Props = {
 export default function ProductGrid({
   productos,
   categorias,
-  paisCode, // 👈 NUEVO: Desestructuramos la prop
+  paisCode,
   onToggle,
   onEdit,
   onDelete,
@@ -58,6 +61,7 @@ export default function ProductGrid({
 
             <h2 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">
               {cat.nombre}
+
               <span className="ml-3 text-sm font-normal text-[var(--text-secondary)]">
                 ({cat.prods.length})
               </span>
@@ -70,7 +74,7 @@ export default function ProductGrid({
                 key={producto.id}
                 producto={producto}
                 categoria={cat.nombre}
-                paisCode={paisCode} // 👈 NUEVO: Se lo inyectamos a la tarjeta
+                paisCode={paisCode}
                 onToggle={() => onToggle(producto)}
                 onEdit={() => onEdit(producto)}
                 onDelete={() => onDelete(producto.id)}
@@ -99,7 +103,7 @@ export default function ProductGrid({
                 key={producto.id}
                 producto={producto}
                 categoria="General"
-                paisCode={paisCode} // 👈 NUEVO: Se lo inyectamos también aquí
+                paisCode={paisCode}
                 onToggle={() => onToggle(producto)}
                 onEdit={() => onEdit(producto)}
                 onDelete={() => onDelete(producto.id)}

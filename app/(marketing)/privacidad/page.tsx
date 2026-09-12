@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Política de Privacidad | catalagox",
   description:
-    "Consulta la Política de Privacidad de catalagox y cómo protegemos los datos personales de tu tienda online conforme a la Ley 25.326 de Argentina.",
+    "Consulta la Política de Privacidad de catalagox y cómo protegemos los datos personales de tu tienda online.",
   keywords: [
     "política de privacidad",
     "protección de datos",

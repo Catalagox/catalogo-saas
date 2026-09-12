@@ -1,6 +1,10 @@
 "use client";
 
-import { PackageCheck, PackageX, AlertTriangle } from "lucide-react";
+import {
+  PackageCheck,
+  PackageX,
+  AlertTriangle,
+} from "lucide-react";
 
 interface StockBadgeProps {
   stock?: number | null;
@@ -15,45 +19,77 @@ export default function StockBadge({
   limiteStockBajo = 5,
   mostrarTextoCompleto = true,
 }: StockBadgeProps) {
-  // Si está deshabilitado manualmente o stock es 0
-  if (!disponible || stock === 0) {
+  // Producto oculto o agotado
+  if (
+    !disponible ||
+    (stock !== null && stock !== undefined && stock <= 0)
+  ) {
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20">
-        <PackageX size={14} />
-        {mostrarTextoCompleto ? "Agotado" : "Sin stock"}
-      </span>
+      <div className="flex items-center gap-2 text-sm font-medium text-[var(--color-text)] opacity-70">
+        <PackageX
+          size={16}
+          strokeWidth={2}
+          className="shrink-0"
+        />
+
+        <span>
+          {mostrarTextoCompleto ? "Agotado" : "Sin stock"}
+        </span>
+      </div>
     );
   }
 
-  // Si no se gestiona stock numérico (stock es null o undefined) pero está disponible
+  // Stock no administrado
   if (stock === null || stock === undefined) {
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-        <PackageCheck size={14} />
-        {mostrarTextoCompleto ? "Disponible" : "En stock"}
-      </span>
+      <div className="flex items-center gap-2 text-sm font-medium text-[var(--color-text)] opacity-70">
+        <PackageCheck
+          size={16}
+          strokeWidth={2}
+          className="shrink-0"
+        />
+
+        <span>
+          {mostrarTextoCompleto ? "Disponible" : "En stock"}
+        </span>
+      </div>
     );
   }
 
-  // Quedan pocas unidades
+  // Pocas unidades
   if (stock <= limiteStockBajo) {
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 animate-pulse">
-        <AlertTriangle size={14} />
-        {mostrarTextoCompleto
-          ? `¡Últimas ${stock} unidades!`
-          : `${stock} dispon.`}
-      </span>
+      <div className="flex items-center gap-2 text-sm font-semibold text-[var(--color-text)]">
+        <AlertTriangle
+          size={16}
+          strokeWidth={2}
+          className="shrink-0 opacity-70"
+        />
+
+        <span>
+          {mostrarTextoCompleto
+            ? `Últimas ${stock} unidades`
+            : `${stock} disponibles`}
+        </span>
+      </div>
     );
   }
 
-  // Stock normal disponible
+  // Stock normal
   return (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-      <PackageCheck size={14} />
-      {mostrarTextoCompleto
-        ? `${stock} unidades disponibles`
-        : `${stock} en stock`}
-    </span>
+    <div className="flex items-center gap-2 text-sm font-medium text-[var(--color-text)] opacity-70">
+      <PackageCheck
+        size={16}
+        strokeWidth={2}
+        className="shrink-0"
+      />
+
+      <span>
+        {mostrarTextoCompleto
+          ? `${stock} unidades disponibles`
+          : `${stock} en stock`}
+      </span>
+    </div>
   );
 }
+

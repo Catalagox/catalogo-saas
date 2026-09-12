@@ -80,7 +80,7 @@ export default function SuscripcionPage() {
         {/* Encabezado Principal adaptado al nuevo posicionamiento de Tiendas Online */}
         <div className="text-center mb-16">
           <div className="inline-flex items-center rounded-full bg-emerald-100 border border-emerald-200 text-emerald-800 px-4 py-1.5 text-xs font-bold uppercase tracking-wider mb-6 shadow-xs">
-            Crea tu Tienda Online • CatalagoX
+            Crea tu Tienda Online • Catalagox
           </div>
 
           <h1 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 mb-6">
