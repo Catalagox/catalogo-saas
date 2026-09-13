@@ -1,10 +1,5 @@
-"use client";
 
-import {
-  PackageCheck,
-  PackageX,
-  AlertTriangle,
-} from "lucide-react";
+"use client";
 
 interface StockBadgeProps {
   stock?: number | null;
@@ -25,13 +20,7 @@ export default function StockBadge({
     (stock !== null && stock !== undefined && stock <= 0)
   ) {
     return (
-      <div className="flex items-center gap-2 text-sm font-medium text-[var(--color-text)] opacity-70">
-        <PackageX
-          size={16}
-          strokeWidth={2}
-          className="shrink-0"
-        />
-
+      <div className="text-sm font-medium text-[var(--color-text)] opacity-70">
         <span>
           {mostrarTextoCompleto ? "Agotado" : "Sin stock"}
         </span>
@@ -42,13 +31,7 @@ export default function StockBadge({
   // Stock no administrado
   if (stock === null || stock === undefined) {
     return (
-      <div className="flex items-center gap-2 text-sm font-medium text-[var(--color-text)] opacity-70">
-        <PackageCheck
-          size={16}
-          strokeWidth={2}
-          className="shrink-0"
-        />
-
+      <div className="text-sm font-medium text-[var(--color-text)] opacity-70">
         <span>
           {mostrarTextoCompleto ? "Disponible" : "En stock"}
         </span>
@@ -59,16 +42,10 @@ export default function StockBadge({
   // Pocas unidades
   if (stock <= limiteStockBajo) {
     return (
-      <div className="flex items-center gap-2 text-sm font-semibold text-[var(--color-text)]">
-        <AlertTriangle
-          size={16}
-          strokeWidth={2}
-          className="shrink-0 opacity-70"
-        />
-
+      <div className="text-sm font-semibold text-[var(--color-text)]">
         <span>
           {mostrarTextoCompleto
-            ? `Últimas ${stock} unidades`
+            ? `Últimas unidades (${stock})`
             : `${stock} disponibles`}
         </span>
       </div>
@@ -77,19 +54,15 @@ export default function StockBadge({
 
   // Stock normal
   return (
-    <div className="flex items-center gap-2 text-sm font-medium text-[var(--color-text)] opacity-70">
-      <PackageCheck
-        size={16}
-        strokeWidth={2}
-        className="shrink-0"
-      />
-
+    <div className="text-sm font-medium text-[var(--color-text)] opacity-70">
       <span>
         {mostrarTextoCompleto
-          ? `${stock} unidades disponibles`
-          : `${stock} en stock`}
+          ? `Stock disponible (${stock})`
+          : `${stock} disponibles`}
       </span>
     </div>
   );
 }
+
+
 
