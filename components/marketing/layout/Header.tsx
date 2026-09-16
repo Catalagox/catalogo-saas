@@ -184,15 +184,17 @@ export default function Header() {
     ${
       headerSolid
         ? `
-          border-gray-200
+          border-gray-300
           bg-[var(--marketing-bg-white)]
           py-2
           shadow-sm
+          md:border-gray-200
         `
         : `
-          border-white/10
+          border-gray-300
           bg-transparent
           py-3
+          md:border-white/10
         `
     }
   `}

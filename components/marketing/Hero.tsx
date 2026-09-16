@@ -1409,26 +1409,26 @@ export default function Hero() {
               </ul>
 
               <Link
-                href="/auth"
-                className="
-                  mt-auto
-                  w-full
-                  sm:w-fit
-                  px-7
-                  py-3.5
-                  bg-[var(--marketing-text-dark)]
-                  text-[var(--marketing-text-dark)]
-                  rounded-xl
-                  font-bold
-                  hover:bg-[var(--marketing-primary)]
-                  hover:text-[var(--marketing-text-dark)]
-                  transition-colors
-                  duration-300
-                  text-center
-                "
-              >
-                Crear mi tienda
-              </Link>
+  href="/auth"
+  className="
+    mt-auto
+    w-full
+    rounded-xl
+    bg-[var(--marketing-text-dark)]
+    px-7
+    py-3.5
+    text-center
+    font-bold
+    text-[var(--marketing-bg-white)]
+    transition-colors
+    duration-300
+    hover:bg-[var(--marketing-primary)]
+    hover:text-[var(--marketing-text-dark)]
+    sm:w-fit
+  "
+>
+  Crear mi tienda
+</Link>
             </div>
 
             {/* LOCAL FÍSICO */}
@@ -1738,302 +1738,253 @@ export default function Hero() {
           SIN DEGRADADO
           ========================================================= */}
       <div
+  className="
+    w-full
+    bg-[var(--marketing-bg-white)]
+    py-20
+    sm:py-28
+  "
+>
+  <div
+    className="
+      mx-auto
+      max-w-6xl
+      px-4
+      sm:px-6
+    "
+  >
+    <div
+      className="
+        relative
+        overflow-hidden
+        rounded-[2rem]
+        bg-[var(--marketing-primary)]
+        sm:rounded-[3rem]
+      "
+    >
+      <div
         className="
-          w-full
-          bg-[var(--marketing-bg-white)]
-          py-20
-          sm:py-28
+          relative
+          p-8
+          text-center
+          text-[var(--marketing-text-dark)]
+          sm:p-14
+          lg:p-16
         "
       >
         <div
           className="
-            max-w-6xl
             mx-auto
-            px-4
-            sm:px-6
+            mb-12
+            max-w-2xl
           "
         >
-          <div
+          <h2
             className="
-              relative
-              bg-[var(--marketing-primary)]
-              rounded-[2rem]
-              sm:rounded-[3rem]
-              overflow-hidden
+              text-3xl
+              font-black
+              tracking-tight
+              sm:text-4xl
+              lg:text-5xl
             "
           >
-            {/* DECORACIÓN SIMPLE */}
-            <div
-              className="
-                absolute
-                top-8
-                left-8
-                w-20
-                h-20
-                rounded-full
-                border
-                border-[var(--marketing-bg-white)]/20
-              "
-            />
+            Una plataforma creada para vender
+          </h2>
 
-            <div
-              className="
-                absolute
-                bottom-8
-                right-8
-                w-28
-                h-28
-                rounded-full
-                border
-                border-[var(--marketing-bg-white)]/20
-              "
-            />
+          <p
+            className="
+              mt-4
+              text-base
+              text-[var(--marketing-text-dark)]/85
+              sm:text-lg
+            "
+          >
+            Crea tu tienda, muestra tus productos y empieza a recibir
+            pedidos por Internet.
+          </p>
+        </div>
 
-            <div
-              className="
-                relative
-                p-8
-                sm:p-14
-                lg:p-16
-                text-[var(--marketing-text-dark)]
-                text-center
-              "
-            >
+        {/* ESTADÍSTICAS */}
+        <div
+          className="
+            grid
+            grid-cols-1
+            gap-8
+            md:grid-cols-3
+            md:gap-4
+          "
+        >
+          {[
+            {
+              Icon: FaStore,
+              end: 500,
+              suffix: "+",
+              label: "Tiendas creadas",
+            },
+            {
+              Icon: FaUsers,
+              end: 10,
+              suffix: "K+",
+              label: "Clientes felices",
+            },
+            {
+              Icon: FaGlobe,
+              end: 100,
+              suffix: "%",
+              label: "Optimizado",
+            },
+          ].map((item, i) => {
+            const { ref, inView } = useInView({
+              triggerOnce: true,
+              threshold: 0.5,
+            });
+
+            return (
               <div
+                key={item.label}
+                ref={ref}
                 className="
-                  max-w-2xl
-                  mx-auto
-                  mb-12
-                "
-              >
-                <span
-                  className="
-                    inline-flex
-                    items-center
-                    px-4
-                    py-2
-                    mb-5
-                    text-xs
-                    font-bold
-                    tracking-widest
-                    text-[var(--marketing-text-dark)]
-                    uppercase
-                    bg-[var(--marketing-bg-white)]/10
-                    rounded-full
-                    border
-                    border-[var(--marketing-bg-white)]/20
-                  "
-                >
-                  CatalagoX
-                </span>
-
-                <h2
-                  className="
-                    text-3xl
-                    sm:text-4xl
-                    lg:text-5xl
-                    font-black
-                    tracking-tight
-                  "
-                >
-                  Una plataforma creada para vender
-                </h2>
-
-                <p
-                  className="
-                    mt-4
-                    text-[var(--marketing-text-dark)]/85
-                    text-base
-                    sm:text-lg
-                  "
-                >
-                  Crea tu tienda, muestra tus productos y empieza a recibir
-                  pedidos por Internet.
-                </p>
-              </div>
-
-              {/* ESTADÍSTICAS */}
-              <div
-                className="
-                  grid
-                  grid-cols-1
-                  md:grid-cols-3
-                  gap-8
-                  md:gap-4
-                "
-              >
-                {[
-                  {
-                    Icon: FaStore,
-                    end: 500,
-                    suffix: "+",
-                    label: "Tiendas creadas",
-                  },
-                  {
-                    Icon: FaUsers,
-                    end: 10,
-                    suffix: "K+",
-                    label: "Clientes felices",
-                  },
-                  {
-                    Icon: FaGlobe,
-                    end: 100,
-                    suffix: "%",
-                    label: "Optimizado",
-                  },
-                ].map((item, i) => {
-                  const { ref, inView } = useInView({
-                    triggerOnce: true,
-                    threshold: 0.5,
-                  });
-
-                  return (
-                    <div
-                      key={i}
-                      ref={ref}
-                      className="
-                        px-4
-                        py-6
-                        md:py-4
-                      "
-                    >
-                      <motion.div
-                        initial={{
-                          opacity: 0,
-                          y: 20,
-                        }}
-                        animate={
-                          inView
-                            ? {
-                                opacity: 1,
-                                y: 0,
-                              }
-                            : {}
-                        }
-                        transition={{
-                          duration: 0.6,
-                          delay: i * 0.2,
-                        }}
-                      >
-                        <item.Icon
-                          className="
-                            text-3xl
-                            mx-auto
-                            mb-4
-                            text-[var(--marketing-text-dark)]
-                          "
-                        />
-
-                        <div
-                          className="
-                            text-4xl
-                            sm:text-5xl
-                            font-black
-                            mb-2
-                            tracking-tight
-                            text-[var(--marketing-text-dark)]
-                          "
-                        >
-                          {inView ? (
-                            <CountUp
-                              end={item.end}
-                              duration={2.5}
-                              suffix={item.suffix}
-                            />
-                          ) : (
-                            "0"
-                          )}
-                        </div>
-
-                        <p
-                          className="
-                            text-[var(--marketing-text-dark)]
-                            font-bold
-                            uppercase
-                            tracking-widest
-                            text-xs
-                          "
-                        >
-                          {item.label}
-                        </p>
-                      </motion.div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* CTA FINAL */}
-              <motion.div
-                className="
-                  mt-12
-                  flex
-                  justify-center
                   px-4
+                  py-6
+                  md:py-4
                 "
-                initial={{
-                  opacity: 0,
-                  y: 10,
-                }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                }}
-                transition={{
-                  delay: 0.8,
-                  duration: 0.5,
-                }}
               >
-                <Link
-                  href="/auth"
-                  className="
-                    group
-                    relative
-                    inline-flex
-                    items-center
-                    justify-center
-                    gap-3
-                    w-full
-                    max-w-[340px]
-                    sm:max-w-none
-                    sm:w-auto
-                    px-7
-                    sm:px-10
-                    py-4
-                    bg-[var(--marketing-bg-white)]
-                    text-[var(--marketing-text-dark)]
-                    rounded-2xl
-                    font-black
-                    text-sm
-                    sm:text-lg
-                    hover:bg-[var(--marketing-text-dark)]
-                    hover:text-[var(--marketing-bg-white)]
-                    transition-all
-                    duration-300
-                    shadow-[0_10px_30px_rgba(0,0,0,0.15)]
-                    hover:-translate-y-1
-                    active:scale-95
-                  "
+                <motion.div
+                  initial={{
+                    opacity: 0,
+                    y: 20,
+                  }}
+                  animate={
+                    inView
+                      ? {
+                          opacity: 1,
+                          y: 0,
+                        }
+                      : {}
+                  }
+                  transition={{
+                    duration: 0.6,
+                    delay: i * 0.2,
+                  }}
                 >
-                  <span className="text-center leading-tight">
-                    ¡Crear mi tienda online gratis!
-                  </span>
-
-                  <FaRocket
+                  <item.Icon
                     className="
-                      flex-shrink-0
-                      text-xl
-                      transition-transform
-                      duration-300
-                      group-hover:translate-x-1
+                      mx-auto
+                      mb-4
+                      text-3xl
+                      text-[var(--marketing-text-dark)]
                     "
                   />
-                </Link>
-              </motion.div>
-            </div>
-          </div>
-        </div>
-      </div>
 
+                  <div
+                    className="
+                      mb-2
+                      text-4xl
+                      font-black
+                      tracking-tight
+                      text-[var(--marketing-text-dark)]
+                      sm:text-5xl
+                    "
+                  >
+                    {inView ? (
+                      <CountUp
+                        end={item.end}
+                        duration={2.5}
+                        suffix={item.suffix}
+                      />
+                    ) : (
+                      "0"
+                    )}
+                  </div>
+
+                  <p
+                    className="
+                      text-xs
+                      font-bold
+                      uppercase
+                      tracking-widest
+                      text-[var(--marketing-text-dark)]
+                    "
+                  >
+                    {item.label}
+                  </p>
+                </motion.div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* CTA FINAL */}
+        <motion.div
+          initial={{
+            opacity: 0,
+            y: 10,
+          }}
+          animate={{
+            opacity: 1,
+            y: 0,
+          }}
+          transition={{
+            delay: 0.8,
+            duration: 0.5,
+          }}
+          className="
+            mt-12
+            flex
+            justify-center
+            px-4
+          "
+        >
+          <Link
+            href="/auth"
+            className="
+              group
+              relative
+              inline-flex
+              w-full
+              max-w-[340px]
+              items-center
+              justify-center
+              gap-3
+              rounded-2xl
+              bg-[var(--marketing-bg-white)]
+              px-7
+              py-4
+              text-sm
+              font-black
+              text-[var(--marketing-text-dark)]
+              shadow-[0_10px_30px_rgba(0,0,0,0.15)]
+              transition-all
+              duration-300
+              hover:-translate-y-1
+              hover:bg-[var(--marketing-text-dark)]
+              hover:text-[var(--marketing-bg-white)]
+              active:scale-95
+              sm:w-auto
+              sm:max-w-none
+              sm:px-10
+              sm:text-lg
+            "
+          >
+            <span className="text-center leading-tight">
+              ¡Crear mi tienda online gratis!
+            </span>
+
+            <FaRocket
+              className="
+                shrink-0
+                text-xl
+                transition-transform
+                duration-300
+                group-hover:translate-x-1
+              "
+            />
+          </Link>
+        </motion.div>
+      </div>
+    </div>
+  </div>
+</div>
       {/* =========================================================
           WHATSAPP FLOTANTE
           ========================================================= */}
