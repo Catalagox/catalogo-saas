@@ -1,11 +1,40 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import Logo from "@/components/marketing/ui/Logo";
-import { FaBars, FaTimes, FaUserPlus, FaSignOutAlt, FaTachometerAlt } from "react-icons/fa";
+
+import {
+  FaBars,
+  FaTimes,
+  FaUserPlus,
+  FaSignOutAlt,
+  FaTachometerAlt,
+  FaHome,
+  FaEnvelope,
+  FaCreditCard,
+  FaSignInAlt,
+} from "react-icons/fa";
+
+const NAVIGATION_ITEMS = [
+  {
+    label: "Inicio",
+    href: "/",
+    icon: FaHome,
+  },
+  {
+    label: "Contacto",
+    href: "/contacto",
+    icon: FaEnvelope,
+  },
+  {
+    label: "Suscripción",
+    href: "/suscripcion",
+    icon: FaCreditCard,
+  },
+];
 
 export default function Header() {
   const pathname = usePathname();
@@ -14,216 +43,615 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [mounted, setMounted] = useState(false);
 
+  const isHome = pathname === "/";
+
+  // El header tendrá fondo sólido cuando:
+  // 1. No estamos en Inicio.
+  // 2. El usuario hizo scroll.
+  // 3. El menú móvil está abierto.
+  const headerSolid = !isHome || scrolled || menuOpen;
+
+  // ---------------------------------------------------------
+  // AUTENTICACIÓN
+  // ---------------------------------------------------------
   useEffect(() => {
-    setMounted(true);
+    let isMounted = true;
 
-    const checkUser = async () => {
+    const checkSession = async () => {
       const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setIsLoggedIn(!!user);
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (isMounted) {
+        setIsLoggedIn(Boolean(session?.user));
+      }
     };
-    checkUser();
+
+    checkSession();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsLoggedIn(!!session);
+      if (isMounted) {
+        setIsLoggedIn(Boolean(session?.user));
+      }
     });
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);
 
-  const handleLogout = async () => {
-    setMenuOpen(false);
-    await supabase.auth.signOut();
-    router.push("/");
-  };
-
-  const isHome = pathname === "/";
-
+  // ---------------------------------------------------------
+  // DETECTAR SCROLL
+  // ---------------------------------------------------------
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+
+    // Comprueba la posición inicial.
+    handleScroll();
+
+    window.addEventListener("scroll", handleScroll, {
+      passive: true,
+    });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
-  // Determinar si el fondo del header debe ser sólido
-  const headerSolid = !isHome || scrolled || menuOpen;
+  // ---------------------------------------------------------
+  // CERRAR MENÚ AL CAMBIAR DE PÁGINA
+  // ---------------------------------------------------------
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
 
-  const textColor = mounted && headerSolid ? "text-slate-900" : "text-white";
+  // ---------------------------------------------------------
+  // BLOQUEAR SCROLL CUANDO EL MENÚ ESTÁ ABIERTO
+  // ---------------------------------------------------------
+  useEffect(() => {
+    if (!menuOpen) {
+      return;
+    }
 
-  const navHoverColor =
-    mounted && headerSolid
-      ? "hover:text-emerald-600"
-      : "hover:text-emerald-400";
+    const previousOverflow = document.body.style.overflow;
+
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [menuOpen]);
+
+  // ---------------------------------------------------------
+  // CERRAR MENÚ CON ESCAPE
+  // ---------------------------------------------------------
+  useEffect(() => {
+    if (!menuOpen) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [menuOpen]);
+
+  // ---------------------------------------------------------
+  // CERRAR SESIÓN
+  // ---------------------------------------------------------
+  const handleLogout = async () => {
+    setMenuOpen(false);
+
+    try {
+      const { error } = await supabase.auth.signOut();
+
+      if (error) {
+        console.error("Error al cerrar sesión:", error);
+        return;
+      }
+
+      router.push("/");
+      router.refresh();
+    } catch (error) {
+      console.error("Error inesperado al cerrar sesión:", error);
+    }
+  };
 
   return (
     <header
-      className={`${
-        isHome ? "fixed" : "sticky"
-      } top-0 w-full z-[100] transition-all duration-300 border-b ${
-        mounted && headerSolid
-          ? "bg-white/95 backdrop-blur-md border-gray-200 py-2 shadow-sm"
-          : "bg-transparent border-white/10 py-3"
-      }`}
-    >
-      <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 relative z-[120]">
+  className={`
+    ${isHome ? "fixed" : "sticky"}
+    left-0
+    top-0
+    z-[100]
+    w-full
+    border-b
+    transition-all
+    duration-300
+    ${
+      headerSolid
+        ? `
+          border-gray-200
+          bg-[var(--marketing-bg-white)]
+          py-2
+          shadow-sm
+        `
+        : `
+          border-white/10
+          bg-transparent
+          py-3
+        `
+    }
+  `}
+>
+      <div
+        className="
+          relative
+          z-[120]
+          mx-auto
+          flex
+          w-full
+          max-w-7xl
+          items-center
+          justify-between
+          px-4
+          sm:px-6
+          lg:px-8
+        "
+      >
         {/* LOGO */}
-        <div className="flex items-center">
-          <Logo scrolled={mounted && headerSolid} size="md" />
+        <div className="flex shrink-0 items-center">
+          <Logo scrolled={true} size="md" />
         </div>
 
-        {/* NAV DESKTOP */}
+        {/* NAVEGACIÓN DESKTOP */}
         <nav
-          className={`hidden md:flex items-center gap-8 text-sm font-bold transition-colors ${textColor}`}
+          aria-label="Navegación principal"
+          className="
+            hidden
+            items-center
+            gap-6
+            text-sm
+            font-bold
+            text-[var(--marketing-text-dark)]
+            md:flex
+            lg:gap-8
+          "
         >
-          {["Inicio", "Contacto", "Suscripcion"].map((item) => (
-            <Link
-              key={item}
-              href={item === "Inicio" ? "/" : `/${item.toLowerCase()}`}
-              className={`relative transition-colors ${navHoverColor} group py-1`}
-            >
-              {item}
-              <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-emerald-500 transition-all duration-300 group-hover:w-full" />
-            </Link>
-          ))}
+          {NAVIGATION_ITEMS.map((item) => {
+            const Icon = item.icon;
 
-          <a
-            href="https://catalagox.com/rifas"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`relative transition-colors ${navHoverColor} group py-1`}
-          >
-            Rifas
-            <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-emerald-500 transition-all duration-300 group-hover:w-full" />
-          </a>
+            const isActive =
+              item.href === "/"
+                ? pathname === "/"
+                : pathname.startsWith(item.href);
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={isActive ? "page" : undefined}
+                className={`
+                  group
+                  relative
+                  flex
+                  items-center
+                  gap-2
+                  py-2
+                  text-[var(--marketing-text-dark)]
+                  transition-colors
+                  hover:text-[var(--marketing-primary)]
+                  ${
+                    isActive
+                      ? "text-[var(--marketing-primary)]"
+                      : ""
+                  }
+                `}
+              >
+                <Icon
+                  aria-hidden="true"
+                  className="shrink-0 text-base"
+                />
+
+                <span>{item.label}</span>
+
+                <span
+                  className={`
+                    absolute
+                    bottom-0
+                    left-0
+                    h-[2px]
+                    bg-[var(--marketing-primary)]
+                    transition-all
+                    duration-300
+                    ${
+                      isActive
+                        ? "w-full"
+                        : "w-0 group-hover:w-full"
+                    }
+                  `}
+                />
+              </Link>
+            );
+          })}
         </nav>
 
         {/* BOTONES DESKTOP */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden items-center gap-3 md:flex">
           {isLoggedIn ? (
             <>
               <Link
                 href="/admin"
-                className="flex items-center gap-2 px-5 py-2 rounded-full text-sm font-bold bg-emerald-500 text-black shadow-lg shadow-emerald-500/20 hover:bg-emerald-400 transition-all active:scale-95"
+                className="
+                  flex
+                  items-center
+                  gap-2
+                  rounded-full
+                  bg-[var(--marketing-primary)]
+                  px-5
+                  py-2.5
+                  text-sm
+                  font-bold
+                  text-[var(--marketing-text-dark)]
+                  shadow-lg
+                  shadow-black/10
+                  transition-all
+                  hover:-translate-y-0.5
+                  hover:brightness-95
+                  active:scale-95
+                "
               >
-                <FaTachometerAlt />
-                Mi Panel
+                <FaTachometerAlt aria-hidden="true" />
+
+                <span>Mi panel</span>
               </Link>
+
               <button
+                type="button"
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-5 py-2 rounded-full text-sm font-bold bg-rose-500/10 text-rose-600 hover:bg-rose-500 hover:text-white transition-all active:scale-95 cursor-pointer"
+                className="
+                  flex
+                  cursor-pointer
+                  items-center
+                  gap-2
+                  rounded-full
+                  bg-rose-500/10
+                  px-5
+                  py-2.5
+                  text-sm
+                  font-bold
+                  text-rose-600
+                  transition-all
+                  hover:bg-rose-500
+                  hover:text-[var(--marketing-bg-white)]
+                  active:scale-95
+                "
               >
-                <FaSignOutAlt />
-                Salir
+                <FaSignOutAlt aria-hidden="true" />
+
+                <span>Salir</span>
               </button>
             </>
           ) : (
             <>
               <Link
                 href="/auth"
-                className={`
-                  px-5 py-2 rounded-full text-sm font-bold transition-all border
-                  ${
-                    mounted && headerSolid
-                      ? "bg-white border-slate-200 text-slate-900 hover:border-emerald-500 hover:text-emerald-600"
-                      : "bg-white/10 border-white/20 text-white backdrop-blur-sm hover:bg-white/20"
-                  }
-                `}
+                className="
+                  flex
+                  items-center
+                  gap-2
+                  rounded-full
+                  border
+                  border-black/15
+                  bg-[var(--marketing-bg-white)]/80
+                  px-5
+                  py-2.5
+                  text-sm
+                  font-bold
+                  text-[var(--marketing-text-dark)]
+                  backdrop-blur-md
+                  transition-all
+                  hover:border-[var(--marketing-primary)]
+                  hover:text-[var(--marketing-primary)]
+                  active:scale-95
+                "
               >
-                Ingresar
+                <FaSignInAlt aria-hidden="true" />
+
+                <span>Ingresar</span>
               </Link>
 
               <Link
                 href="/auth"
-                className="flex items-center gap-2 px-5 py-2 rounded-full text-sm font-bold bg-emerald-500 text-black shadow-lg shadow-emerald-500/20 hover:bg-emerald-400 transition-all active:scale-95"
+                className="
+                  flex
+                  items-center
+                  gap-2
+                  rounded-full
+                  bg-[var(--marketing-text-dark)]
+                  px-5
+                  py-2.5
+                  text-sm
+                  font-bold
+                  text-[var(--marketing-bg-white)]
+                  shadow-lg
+                  shadow-black/20
+                  transition-all
+                  hover:-translate-y-0.5
+                  hover:bg-black
+                  active:scale-95
+                "
               >
-                <FaUserPlus />
-                Crear tienda
+                <FaUserPlus aria-hidden="true" />
+
+                <span>Crear tienda</span>
               </Link>
             </>
           )}
         </div>
 
-        {/* BOTÓN MÓVIL HAMBURGUESA */}
+        {/* BOTÓN HAMBURGUESA */}
         <button
-          className={`md:hidden p-2 rounded-xl transition-all active:scale-90 z-[130] cursor-pointer shadow-sm ${
-            menuOpen
-              ? "bg-slate-900 text-white hover:bg-slate-800"
-              : mounted && headerSolid
-              ? "bg-slate-100 text-slate-900 hover:bg-slate-200"
-              : "bg-white/20 text-white backdrop-blur-md hover:bg-white/30"
-          }`}
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Abrir menú"
+          type="button"
+          onClick={() => setMenuOpen((current) => !current)}
+          aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
+          aria-expanded={menuOpen}
+          aria-controls="mobile-navigation"
+          className="
+            z-[130]
+            flex
+            h-11
+            w-11
+            cursor-pointer
+            items-center
+            justify-center
+            rounded-xl
+            border
+            border-black/10
+            bg-[var(--marketing-bg-white)]
+            text-[var(--marketing-text-dark)]
+            shadow-sm
+            transition-all
+            hover:bg-gray-100
+            active:scale-90
+            md:hidden
+          "
         >
-          {menuOpen ? <FaTimes className="text-xl" /> : <FaBars className="text-xl" />}
+          {menuOpen ? (
+            <FaTimes aria-hidden="true" className="text-xl" />
+          ) : (
+            <FaBars aria-hidden="true" className="text-xl" />
+          )}
         </button>
       </div>
 
       {/* OVERLAY MÓVIL */}
       <div
+        aria-hidden="true"
         onClick={() => setMenuOpen(false)}
-        className={`fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 md:hidden z-[105] ${
-          menuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-        }`}
+        className={`
+          fixed
+          inset-0
+          z-[105]
+          bg-black/60
+          backdrop-blur-sm
+          transition-opacity
+          duration-300
+          md:hidden
+          ${
+            menuOpen
+              ? "pointer-events-auto opacity-100"
+              : "pointer-events-none opacity-0"
+          }
+        `}
       />
 
-      {/* MENÚ DESPLEGABLE MÓVIL */}
-      <div
-        className={`fixed top-0 right-0 h-screen w-[85%] max-w-sm bg-white p-6 sm:p-8 shadow-2xl flex flex-col justify-between transform transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] md:hidden z-[110] ${
-          menuOpen ? "translate-x-0" : "translate-x-full"
-        }`}
+      {/* MENÚ MÓVIL */}
+      <aside
+        id="mobile-navigation"
+        aria-hidden={!menuOpen}
+        className={`
+          fixed
+          right-0
+          top-0
+          z-[110]
+          flex
+          h-dvh
+          w-[88%]
+          max-w-sm
+          flex-col
+          justify-between
+          overflow-y-auto
+          overscroll-contain
+          bg-[var(--marketing-bg-white)]
+          px-6
+          pb-[max(1.5rem,env(safe-area-inset-bottom))]
+          pt-[max(5rem,env(safe-area-inset-top))]
+          shadow-2xl
+          transition-transform
+          duration-500
+          ease-[cubic-bezier(0.32,0.72,0,1)]
+          md:hidden
+          sm:w-[82%]
+          sm:px-8
+          ${
+            menuOpen
+              ? "translate-x-0"
+              : "translate-x-full"
+          }
+        `}
       >
-        <div className="relative z-[120] pt-12">
-          {/* Navegación Móvil */}
-          <nav className="flex flex-col gap-5">
-            {["Inicio", "Contacto", "Suscripcion"].map((item) => (
-              <Link
-                key={item}
-                href={item === "Inicio" ? "/" : `/${item.toLowerCase()}`}
-                onClick={() => setMenuOpen(false)}
-                className="text-lg font-extrabold text-slate-900 hover:text-emerald-600 transition-colors block py-1"
-              >
-                {item}
-              </Link>
-            ))}
+        {/* NAVEGACIÓN MÓVIL */}
+        <div className="relative z-[120]">
+          <p
+            className="
+              mb-5
+              text-xs
+              font-bold
+              uppercase
+              tracking-[0.18em]
+              text-[var(--marketing-text-dark)]/50
+            "
+          >
+            Navegación
+          </p>
 
-            <a
-              href="https://catalagox.com/rifas"
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setMenuOpen(false)}
-              className="text-lg font-extrabold text-slate-900 hover:text-emerald-600 transition-colors block py-1"
-            >
-              Rifas
-            </a>
+          <nav
+            aria-label="Navegación móvil"
+            className="flex flex-col gap-2"
+          >
+            {NAVIGATION_ITEMS.map((item) => {
+              const Icon = item.icon;
+
+              const isActive =
+                item.href === "/"
+                  ? pathname === "/"
+                  : pathname.startsWith(item.href);
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMenuOpen(false)}
+                  aria-current={isActive ? "page" : undefined}
+                  className={`
+                    flex
+                    min-h-14
+                    items-center
+                    gap-4
+                    rounded-2xl
+                    px-4
+                    py-3
+                    text-base
+                    font-extrabold
+                    text-[var(--marketing-text-dark)]
+                    transition-all
+                    active:scale-[0.98]
+                    ${
+                      isActive
+                        ? `
+                          bg-[var(--marketing-primary)]
+                          text-[var(--marketing-text-dark)]
+                        `
+                        : `
+                          hover:bg-black/5
+                          hover:text-[var(--marketing-primary)]
+                        `
+                    }
+                  `}
+                >
+                  <span
+                    className={`
+                      flex
+                      h-10
+                      w-10
+                      shrink-0
+                      items-center
+                      justify-center
+                      rounded-xl
+                      ${
+                        isActive
+                          ? "bg-[var(--marketing-bg-white)]/50"
+                          : "bg-black/5"
+                      }
+                    `}
+                  >
+                    <Icon
+                      aria-hidden="true"
+                      className="text-lg"
+                    />
+                  </span>
+
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
           </nav>
         </div>
 
-        {/* Botones Móvil (Parte Inferior) */}
-        <div className="flex flex-col gap-3 mt-auto relative z-[120] pt-6 border-t border-slate-100">
+        {/* BOTONES MÓVILES */}
+        <div
+          className="
+            relative
+            z-[120]
+            mt-10
+            flex
+            flex-col
+            gap-3
+            border-t
+            border-black/10
+            pt-6
+          "
+        >
           {isLoggedIn ? (
             <>
               <Link
                 href="/admin"
                 onClick={() => setMenuOpen(false)}
-                className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-bold bg-emerald-500 text-black shadow-lg shadow-emerald-500/20 active:scale-95"
+                className="
+                  flex
+                  min-h-12
+                  w-full
+                  items-center
+                  justify-center
+                  gap-2
+                  rounded-xl
+                  bg-[var(--marketing-primary)]
+                  px-6
+                  py-3.5
+                  text-sm
+                  font-bold
+                  text-[var(--marketing-text-dark)]
+                  shadow-lg
+                  shadow-black/10
+                  transition-all
+                  active:scale-95
+                "
               >
-                <FaTachometerAlt />
-                Ir a Mi Panel
+                <FaTachometerAlt aria-hidden="true" />
+
+                <span>Ir a mi panel</span>
               </Link>
+
               <button
+                type="button"
                 onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-bold bg-rose-50 text-rose-600 hover:bg-rose-100 transition-all cursor-pointer"
+                className="
+                  flex
+                  min-h-12
+                  w-full
+                  cursor-pointer
+                  items-center
+                  justify-center
+                  gap-2
+                  rounded-xl
+                  bg-rose-50
+                  px-6
+                  py-3.5
+                  text-sm
+                  font-bold
+                  text-rose-600
+                  transition-all
+                  hover:bg-rose-100
+                  active:scale-95
+                "
               >
-                <FaSignOutAlt />
-                Cerrar sesión
+                <FaSignOutAlt aria-hidden="true" />
+
+                <span>Cerrar sesión</span>
               </button>
             </>
           ) : (
@@ -231,23 +659,64 @@ export default function Header() {
               <Link
                 href="/auth"
                 onClick={() => setMenuOpen(false)}
-                className="w-full text-center px-6 py-3.5 rounded-xl text-sm font-bold border border-slate-200 text-slate-900 bg-slate-50 hover:bg-slate-100 transition-all"
+                className="
+                  flex
+                  min-h-12
+                  w-full
+                  items-center
+                  justify-center
+                  gap-2
+                  rounded-xl
+                  border
+                  border-black/15
+                  bg-black/[0.03]
+                  px-6
+                  py-3.5
+                  text-sm
+                  font-bold
+                  text-[var(--marketing-text-dark)]
+                  transition-all
+                  hover:bg-black/[0.06]
+                  active:scale-95
+                "
               >
-                Iniciar sesión
+                <FaSignInAlt aria-hidden="true" />
+
+                <span>Iniciar sesión</span>
               </Link>
 
               <Link
                 href="/auth"
                 onClick={() => setMenuOpen(false)}
-                className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-bold bg-emerald-500 text-black shadow-lg shadow-emerald-500/20 active:scale-95"
+                className="
+                  flex
+                  min-h-12
+                  w-full
+                  items-center
+                  justify-center
+                  gap-2
+                  rounded-xl
+                  bg-[var(--marketing-text-dark)]
+                  px-6
+                  py-3.5
+                  text-sm
+                  font-bold
+                  text-[var(--marketing-bg-white)]
+                  shadow-lg
+                  shadow-black/20
+                  transition-all
+                  hover:bg-black
+                  active:scale-95
+                "
               >
-                <FaUserPlus />
-                Crear tienda gratis
+                <FaUserPlus aria-hidden="true" />
+
+                <span>Crear tienda gratis</span>
               </Link>
             </>
           )}
         </div>
-      </div>
+      </aside>
     </header>
   );
 }

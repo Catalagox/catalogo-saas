@@ -1,34 +1,235 @@
-/* Tailwind base, componentes y utilidades */ 
-
+/* Tailwind base, componentes y utilidades */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* 🌿 VARIABLES GLOBALES */
+
+/* =======================================================
+   🌿 VARIABLES GLOBALES
+======================================================= */
+
 :root {
+
   /* =======================================================
-     🎨 BRAND COLORS
+     🎨 VARIABLES DE MARKETING
+     
+     Estas variables son EXCLUSIVAMENTE para:
+     - Homepage
+     - Hero
+     - Secciones comerciales
+     - CTA
+     - Beneficios
+     - Estadísticas
+     - Elementos visuales de marketing
+
+     👉 Cambiando estas variables puedes cambiar la
+        identidad visual del sitio de marketing sin
+        afectar Dashboard ni la tienda pública.
+  ======================================================= */
+/* =========================================================
+   🌿 MARKETING - IDENTIDAD VISUAL
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   🎨 COLORES PRINCIPALES DE MARCA
+   --------------------------------------------------------- */
+
+
+
+
+
+
+
+
+/* =========================================================
+   MARKETING - VERDE CATALAGOX
+   ========================================================= */
+
+
+
+  /* Verde principal de CatalagoX */
+  --marketing-primary: #1db954;
+
+  /* Títulos y textos sobre fondo verde */
+  --marketing-text-dark: #111827;
+
+  /* Fondos y elementos blancos */
+  --marketing-bg-white: #ffffff;
+
+
+/* ---------------------------------------------------------
+   🟢 HERO PRINCIPAL
+   --------------------------------------------------------- */
+
+/* Fondo principal del Hero */
+--marketing-hero-bg: #075e54;
+
+/* Brillo ambiental del Hero */
+--marketing-hero-glow: #25d366;
+
+/* Texto oscuro para elementos sobre fondo blanco */
+--marketing-hero-dark: #064e3b;
+
+
+/* ---------------------------------------------------------
+   📝 TEXTOS
+   --------------------------------------------------------- */
+
+/* Texto principal sobre fondos claros */
+--marketing-text-primary: #111827;
+
+/* Texto secundario */
+--marketing-text-secondary: #64748b;
+
+/* Texto suave / descriptivo */
+--marketing-text-muted: #94a3b8;
+
+/* Texto blanco */
+--marketing-text-white: #ffffff;
+
+
+/* ---------------------------------------------------------
+   ⚪ FONDOS
+   --------------------------------------------------------- */
+
+/* Fondo principal de las secciones */
+--marketing-bg-light: #ffffff;
+
+/* Fondo blanco ligeramente gris */
+--marketing-bg-soft: #f8fafc;
+
+/* Fondo verde muy suave */
+--marketing-bg-soft-green: #f0fdf4;
+
+/* Fondo verde claro para tarjetas y destacados */
+--marketing-green-soft: #e8f8ef;
+
+
+/* ---------------------------------------------------------
+   🟩 COLORES DE APOYO VERDE
+   --------------------------------------------------------- */
+
+/* Verde de borde suave */
+--marketing-green-border: rgba(37, 211, 102, 0.18);
+
+/* Verde para sombras */
+--marketing-green-shadow: rgba(37, 211, 102, 0.22);
+
+/* Verde para brillos */
+--marketing-green-glow: rgba(37, 211, 102, 0.25);
+
+
+/* ---------------------------------------------------------
+   🃏 TARJETAS
+   --------------------------------------------------------- */
+
+/* Tarjetas claras */
+--marketing-card-light: #ffffff;
+
+/* Texto de tarjetas claras */
+--marketing-card-light-text: #111827;
+
+/* Texto secundario de tarjetas claras */
+--marketing-card-light-secondary: #64748b;
+
+/* Tarjeta oscura */
+--marketing-card-dark: #0f172a;
+
+/* Texto de tarjeta oscura */
+--marketing-card-dark-text: #ffffff;
+
+/* Texto secundario de tarjeta oscura */
+--marketing-card-dark-secondary: #cbd5e1;
+
+
+/* ---------------------------------------------------------
+   🔲 BORDES
+   --------------------------------------------------------- */
+
+/* Borde general sobre fondos claros */
+--marketing-border-light: #e5e7eb;
+
+/* Borde muy suave */
+--marketing-border-soft-light: #f1f5f9;
+
+/* Borde verde */
+--marketing-border-primary: rgba(37, 211, 102, 0.20);
+
+/* Bordes sobre fondos oscuros */
+--marketing-border: rgba(255, 255, 255, 0.12);
+
+--marketing-border-soft: rgba(255, 255, 255, 0.07);
+
+
+/* ---------------------------------------------------------
+   ✨ EFECTOS Y BRILLOS
+   --------------------------------------------------------- */
+
+/* Glow principal */
+--marketing-primary-glow: rgba(37, 211, 102, 0.25);
+
+/* Glow fuerte */
+--marketing-primary-glow-strong: rgba(37, 211, 102, 0.40);
+
+/* Sombra principal */
+--marketing-primary-shadow: rgba(37, 211, 102, 0.22);
+
+
+/* ---------------------------------------------------------
+   🌑 SOMBRAS
+   --------------------------------------------------------- */
+
+/* Sombra normal de tarjetas */
+--marketing-shadow-card: 0 10px 40px rgba(15, 23, 42, 0.06);
+
+/* Sombra al pasar el mouse */
+--marketing-shadow-card-hover: 0 20px 60px rgba(15, 23, 42, 0.10);
+
+/* Sombra profunda */
+--marketing-shadow-dark: 0 35px 60px rgba(0, 0, 0, 0.22);
+
+
+/* ---------------------------------------------------------
+   🪟 GLASS / TRANSPARENCIAS
+   --------------------------------------------------------- */
+
+/* Fondo glass */
+--marketing-glass-bg: rgba(255, 255, 255, 0.10);
+
+/* Borde glass */
+--marketing-glass-border: rgba(255, 255, 255, 0.18);
+
+/* Desenfoque */
+--marketing-glass-blur: 16px;
+
+
+  /* =======================================================
+     🎨 VARIABLES GENERALES DE MARCA
+     
+     Estas sí pueden ser compartidas por toda la aplicación.
   ======================================================= */
 
-  /* 🌿 PRIMARY */
   --color-primary: #22c55e;
   --color-primary-hover: #16a34a;
   --color-primary-light: #dcfce7;
   --color-primary-dark: #052e16;
 
-  /* ✨ NUEVOS TONOS PREMIUM */
   --color-primary-soft: #4ade80;
   --color-primary-glow: rgba(34, 197, 94, 0.25);
 
+
   /* =======================================================
-     ⚫ BASE
+     ⚫ BASE GLOBAL
+     
+     Usadas por la aplicación en general.
   ======================================================= */
 
   --background: #050807;
   --foreground: #ffffff;
 
+
   /* =======================================================
-     🧾 TEXTOS
+     🧾 TEXTOS GLOBALES
   ======================================================= */
 
   --color-text: #ffffff;
@@ -40,51 +241,62 @@
   --text-secondary: #c4c7c4;
   --text-muted: #7b8a81;
 
+
   /* =======================================================
      🟢 ACCENTS
   ======================================================= */
 
   --color-accent: #22c55e;
 
+
   /* =======================================================
      🔴 ESTADOS
+     
+     Estos NO deberían pertenecer a Marketing.
+     Son variables generales de la aplicación.
   ======================================================= */
 
   --color-danger: #ef4444;
   --color-warning: #f59e0b;
   --color-success: #22c55e;
 
+
   /* =======================================================
-     📦 BORDES
+     📦 BORDES GLOBALES
   ======================================================= */
 
   --color-border: #1e261b;
   --border-card: #1e261b;
   --border-soft: rgba(255, 255, 255, 0.06);
 
+
   /* =======================================================
      🌑 DASHBOARD / APP
+     
+     Estas variables son del Dashboard.
+     NO mezclarlas con Marketing.
   ======================================================= */
 
   --bg-main: #050807;
   --bg-secondary: #0b1210;
   --bg-tertiary: #101915;
-
   --bg-card: #0e1412;
   --bg-card-hover: #131d19;
-
   --bg-overlay: rgba(0, 0, 0, 0.7);
 
+
   /* =======================================================
-     🍔 MENÚ / CATALOGO
+     🍔 MENÚ / TIENDA PÚBLICA / CATÁLOGO
+     
+     Estas variables pertenecen a la experiencia de la tienda.
   ======================================================= */
 
   --menu-header: #0b1210;
   --menu-footer: #050807;
   --menu-card: rgba(255, 255, 255, 0.04);
-
   --menu-category: #ffffff;
   --menu-category-active: #22c55e;
+
 
   /* =======================================================
      💳 SUSCRIPCIÓN
@@ -94,8 +306,9 @@
   --color-subscription-title: #ffffff;
   --color-subscription-muted: #7f8781;
 
+
   /* =======================================================
-     🌫️ EFECTOS
+     🌫️ EFECTOS GLOBALES
   ======================================================= */
 
   --shadow-primary: 0 10px 30px rgba(34, 197, 94, 0.15);
@@ -103,12 +316,15 @@
   --blur-glass: blur(16px);
 }
 
+
 /* =======================================================
    🌙 DARK MODE
 ======================================================= */
 
 @media (prefers-color-scheme: dark) {
+
   :root {
+
     --background: #050807;
     --foreground: #ffffff;
 
@@ -120,11 +336,13 @@
   }
 }
 
+
 /* =======================================================
    🧱 BASE
 ======================================================= */
 
 @layer base {
+
   * {
     border-color: var(--color-border);
   }
@@ -143,6 +361,7 @@
   }
 }
 
+
 /* =======================================================
    🔥 SCROLLBAR HIDE
 ======================================================= */
@@ -155,6 +374,7 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
 
 /* =======================================================
    📱 PHONE INPUT
@@ -231,6 +451,7 @@
   border-radius: 10px !important;
 }
 
+
 /* =======================================================
    ✨ GLASS EFFECT
 ======================================================= */
@@ -241,6 +462,7 @@
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
+
 
 /* =======================================================
    ✨ ANIMACIONES
@@ -299,6 +521,7 @@
   }
 }
 
+
 /* =======================================================
    📝 FORMULARIOS LIGHT / DARK
 ======================================================= */
@@ -343,11 +566,13 @@
   transition: background-color 5000s ease-in-out 0s;
 }
 
+
 /* =======================================================
-   🎴 COMPONENTES DE TARJETA DASHBOARD (NUEVO)
+   🎴 COMPONENTES DE TARJETA DASHBOARD
 ======================================================= */
 
 @layer components {
+
   .card-dashboard {
     background-color: var(--bg-card);
     border: 1px solid var(--border-card);
@@ -374,10 +599,3 @@
     box-shadow: var(--shadow-primary);
   }
 }
-
-@keyframes shimmer {
-  100% {
-    transform: translateX(100%);
-  }
-}
-
