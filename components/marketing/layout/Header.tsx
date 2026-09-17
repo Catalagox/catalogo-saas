@@ -49,7 +49,7 @@ export default function Header() {
   // El header tendrá fondo sólido cuando:
   // 1. No estamos en Inicio.
   // 2. El usuario hizo scroll.
-  // 3. El menú móvil está abierto.
+  // 3. El menú responsive está abierto.
   const headerSolid = !isHome || scrolled || menuOpen;
 
   // ---------------------------------------------------------
@@ -92,7 +92,6 @@ export default function Header() {
       setScrolled(window.scrollY > 20);
     };
 
-    // Comprueba la posición inicial.
     handleScroll();
 
     window.addEventListener("scroll", handleScroll, {
@@ -110,6 +109,28 @@ export default function Header() {
   useEffect(() => {
     setMenuOpen(false);
   }, [pathname]);
+
+  // ---------------------------------------------------------
+  // CERRAR MENÚ AL LLEGAR A 1024PX
+  // ---------------------------------------------------------
+  useEffect(() => {
+    const desktopMediaQuery = window.matchMedia("(min-width: 1024px)");
+
+    const handleDesktopChange = (event: MediaQueryListEvent) => {
+      if (event.matches) {
+        setMenuOpen(false);
+      }
+    };
+
+    desktopMediaQuery.addEventListener("change", handleDesktopChange);
+
+    return () => {
+      desktopMediaQuery.removeEventListener(
+        "change",
+        handleDesktopChange
+      );
+    };
+  }, []);
 
   // ---------------------------------------------------------
   // BLOQUEAR SCROLL CUANDO EL MENÚ ESTÁ ABIERTO
@@ -172,37 +193,38 @@ export default function Header() {
 
   return (
     <header
-  className={`
-    ${isHome ? "fixed" : "sticky"}
-    left-0
-    top-0
-    z-[100]
-    w-full
-    border-b
-    transition-all
-    duration-300
-    ${
-      headerSolid
-        ? `
-          border-gray-300
-          bg-[var(--marketing-bg-white)]
-          py-2
-          shadow-sm
-          md:border-gray-200
-        `
-        : `
-          border-gray-300
-          bg-transparent
-          py-3
-          md:border-white/10
-        `
-    }
-  `}
->
+      className={`
+        ${isHome ? "fixed" : "sticky"}
+        left-0
+        top-0
+        z-[100]
+        w-full
+        border-b
+        transition-all
+        duration-300
+        ${
+          headerSolid
+            ? `
+              border-gray-200
+              bg-[var(--marketing-bg-white)]
+              py-2
+              shadow-sm
+            `
+            : `
+              border-white/10
+              bg-transparent
+              py-3
+            `
+        }
+      `}
+    >
+      {/* =====================================================
+          BARRA PRINCIPAL
+      ====================================================== */}
       <div
         className="
           relative
-          z-[120]
+          z-[100]
           mx-auto
           flex
           w-full
@@ -214,23 +236,38 @@ export default function Header() {
           lg:px-8
         "
       >
-        {/* LOGO */}
-        <div className="flex shrink-0 items-center">
-          <Logo scrolled={true} size="md" />
+        {/* LOGO PRINCIPAL */}
+        <div className="flex min-w-0 shrink items-center">
+          <Link
+            href="/"
+            aria-label="Ir al inicio"
+            className="
+              inline-flex
+              max-w-full
+              items-center
+              transition-opacity
+              hover:opacity-90
+            "
+          >
+            <Logo scrolled={true} size="md" />
+          </Link>
         </div>
 
-        {/* NAVEGACIÓN DESKTOP */}
+        {/* ===================================================
+            NAVEGACIÓN DESKTOP
+            Visible desde 1024px
+        ==================================================== */}
         <nav
           aria-label="Navegación principal"
           className="
             hidden
             items-center
-            gap-6
+            gap-5
             text-sm
             font-bold
             text-[var(--marketing-text-dark)]
-            md:flex
-            lg:gap-8
+            lg:flex
+            xl:gap-8
           "
         >
           {NAVIGATION_ITEMS.map((item) => {
@@ -253,13 +290,12 @@ export default function Header() {
                   items-center
                   gap-2
                   py-2
-                  text-[var(--marketing-text-dark)]
                   transition-colors
                   hover:text-[var(--marketing-primary)]
                   ${
                     isActive
                       ? "text-[var(--marketing-primary)]"
-                      : ""
+                      : "text-[var(--marketing-text-dark)]"
                   }
                 `}
               >
@@ -271,6 +307,7 @@ export default function Header() {
                 <span>{item.label}</span>
 
                 <span
+                  aria-hidden="true"
                   className={`
                     absolute
                     bottom-0
@@ -291,16 +328,20 @@ export default function Header() {
           })}
         </nav>
 
-        {/* BOTONES DESKTOP */}
-        <div className="hidden items-center gap-3 md:flex">
+        {/* ===================================================
+            BOTONES DESKTOP
+            Visibles desde 1024px
+        ==================================================== */}
+        <div className="hidden items-center gap-3 lg:flex">
           {isLoggedIn ? (
             <>
               <Link
-                href="/admin"
+                href="/dashboard"
                 className="
                   flex
                   items-center
                   gap-2
+                  whitespace-nowrap
                   rounded-full
                   bg-[var(--marketing-primary)]
                   px-5
@@ -329,6 +370,7 @@ export default function Header() {
                   cursor-pointer
                   items-center
                   gap-2
+                  whitespace-nowrap
                   rounded-full
                   bg-rose-500/10
                   px-5
@@ -338,7 +380,7 @@ export default function Header() {
                   text-rose-600
                   transition-all
                   hover:bg-rose-500
-                  hover:text-[var(--marketing-bg-white)]
+                  hover:text-white
                   active:scale-95
                 "
               >
@@ -355,6 +397,7 @@ export default function Header() {
                   flex
                   items-center
                   gap-2
+                  whitespace-nowrap
                   rounded-full
                   border
                   border-black/15
@@ -382,6 +425,7 @@ export default function Header() {
                   flex
                   items-center
                   gap-2
+                  whitespace-nowrap
                   rounded-full
                   bg-[var(--marketing-text-dark)]
                   px-5
@@ -405,18 +449,21 @@ export default function Header() {
           )}
         </div>
 
-        {/* BOTÓN HAMBURGUESA */}
+        {/* ===================================================
+            BOTÓN HAMBURGUESA
+            Visible hasta 1023px
+        ==================================================== */}
         <button
           type="button"
-          onClick={() => setMenuOpen((current) => !current)}
-          aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
+          onClick={() => setMenuOpen(true)}
+          aria-label="Abrir menú"
           aria-expanded={menuOpen}
-          aria-controls="mobile-navigation"
+          aria-controls="responsive-navigation"
           className="
-            z-[130]
             flex
             h-11
             w-11
+            shrink-0
             cursor-pointer
             items-center
             justify-center
@@ -427,20 +474,19 @@ export default function Header() {
             text-[var(--marketing-text-dark)]
             shadow-sm
             transition-all
+            hover:border-[var(--marketing-primary)]/40
             hover:bg-gray-100
             active:scale-90
-            md:hidden
+            lg:hidden
           "
         >
-          {menuOpen ? (
-            <FaTimes aria-hidden="true" className="text-xl" />
-          ) : (
-            <FaBars aria-hidden="true" className="text-xl" />
-          )}
+          <FaBars aria-hidden="true" className="text-xl" />
         </button>
       </div>
 
-      {/* OVERLAY MÓVIL */}
+      {/* =====================================================
+          OVERLAY RESPONSIVE
+      ====================================================== */}
       <div
         aria-hidden="true"
         onClick={() => setMenuOpen(false)}
@@ -448,22 +494,27 @@ export default function Header() {
           fixed
           inset-0
           z-[105]
-          bg-black/60
-          backdrop-blur-sm
-          transition-opacity
+          bg-black/55
+          backdrop-blur-[2px]
+          transition-all
           duration-300
-          md:hidden
+          lg:hidden
           ${
             menuOpen
-              ? "pointer-events-auto opacity-100"
-              : "pointer-events-none opacity-0"
+              ? "pointer-events-auto visible opacity-100"
+              : "pointer-events-none invisible opacity-0"
           }
         `}
       />
 
-      {/* MENÚ MÓVIL */}
+      {/* =====================================================
+          MENÚ LATERAL RESPONSIVE
+      ====================================================== */}
       <aside
-        id="mobile-navigation"
+        id="responsive-navigation"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Menú de navegación"
         aria-hidden={!menuOpen}
         className={`
           fixed
@@ -473,250 +524,327 @@ export default function Header() {
           flex
           h-dvh
           w-[88%]
-          max-w-sm
+          max-w-[390px]
           flex-col
-          justify-between
-          overflow-y-auto
-          overscroll-contain
+          overflow-hidden
           bg-[var(--marketing-bg-white)]
-          px-6
-          pb-[max(1.5rem,env(safe-area-inset-bottom))]
-          pt-[max(5rem,env(safe-area-inset-top))]
           shadow-2xl
           transition-transform
           duration-500
           ease-[cubic-bezier(0.32,0.72,0,1)]
-          md:hidden
-          sm:w-[82%]
-          sm:px-8
+          sm:w-[78%]
+          md:w-[55%]
+          lg:hidden
           ${
             menuOpen
               ? "translate-x-0"
-              : "translate-x-full"
+              : "pointer-events-none translate-x-full"
           }
         `}
       >
-        {/* NAVEGACIÓN MÓVIL */}
-        <div className="relative z-[120]">
-          <p
+        {/* ENCABEZADO DEL MENÚ */}
+        <div
+          className="
+            flex
+            shrink-0
+            items-center
+            justify-between
+            gap-4
+            border-b
+            border-black/10
+            px-5
+            pb-4
+            pt-[max(1rem,env(safe-area-inset-top))]
+            sm:px-6
+          "
+        >
+          {/* LOGO DENTRO DEL MENÚ */}
+          <Link
+            href="/"
+            onClick={() => setMenuOpen(false)}
+            aria-label="Ir al inicio"
             className="
-              mb-5
-              text-xs
-              font-bold
-              uppercase
-              tracking-[0.18em]
-              text-[var(--marketing-text-dark)]/50
+              flex
+              min-w-0
+              items-center
+              transition-opacity
+              hover:opacity-90
             "
           >
-            Navegación
-          </p>
+            <Logo scrolled={true} size="md" />
+          </Link>
 
-          <nav
-            aria-label="Navegación móvil"
-            className="flex flex-col gap-2"
+          {/* BOTÓN CERRAR */}
+          <button
+            type="button"
+            onClick={() => setMenuOpen(false)}
+            aria-label="Cerrar menú"
+            className="
+              flex
+              h-11
+              w-11
+              shrink-0
+              cursor-pointer
+              items-center
+              justify-center
+              rounded-xl
+              border
+              border-black/10
+              bg-black/[0.04]
+              text-[var(--marketing-text-dark)]
+              transition-all
+              hover:bg-black/[0.08]
+              active:scale-90
+            "
           >
-            {NAVIGATION_ITEMS.map((item) => {
-              const Icon = item.icon;
+            <FaTimes aria-hidden="true" className="text-xl" />
+          </button>
+        </div>
 
-              const isActive =
-                item.href === "/"
-                  ? pathname === "/"
-                  : pathname.startsWith(item.href);
+        {/* CONTENIDO CON SCROLL */}
+        <div
+          className="
+            flex
+            min-h-0
+            flex-1
+            flex-col
+            overflow-y-auto
+            overscroll-contain
+            px-5
+            pb-[max(1.5rem,env(safe-area-inset-bottom))]
+            pt-6
+            sm:px-6
+          "
+        >
+          {/* NAVEGACIÓN RESPONSIVE */}
+          <div>
+            <p
+              className="
+                mb-4
+                text-xs
+                font-bold
+                uppercase
+                tracking-[0.18em]
+                text-[var(--marketing-text-dark)]/50
+              "
+            >
+              Navegación
+            </p>
 
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMenuOpen(false)}
-                  aria-current={isActive ? "page" : undefined}
-                  className={`
-                    flex
-                    min-h-14
-                    items-center
-                    gap-4
-                    rounded-2xl
-                    px-4
-                    py-3
-                    text-base
-                    font-extrabold
-                    text-[var(--marketing-text-dark)]
-                    transition-all
-                    active:scale-[0.98]
-                    ${
-                      isActive
-                        ? `
-                          bg-[var(--marketing-primary)]
-                          text-[var(--marketing-text-dark)]
-                        `
-                        : `
-                          hover:bg-black/5
-                          hover:text-[var(--marketing-primary)]
-                        `
-                    }
-                  `}
-                >
-                  <span
+            <nav
+              aria-label="Navegación responsive"
+              className="flex flex-col gap-2"
+            >
+              {NAVIGATION_ITEMS.map((item) => {
+                const Icon = item.icon;
+
+                const isActive =
+                  item.href === "/"
+                    ? pathname === "/"
+                    : pathname.startsWith(item.href);
+
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMenuOpen(false)}
+                    aria-current={isActive ? "page" : undefined}
                     className={`
                       flex
-                      h-10
-                      w-10
-                      shrink-0
+                      min-h-14
                       items-center
-                      justify-center
-                      rounded-xl
+                      gap-4
+                      rounded-2xl
+                      px-3
+                      py-2.5
+                      text-base
+                      font-extrabold
+                      transition-all
+                      active:scale-[0.98]
+                      sm:px-4
+                      sm:py-3
                       ${
                         isActive
-                          ? "bg-[var(--marketing-bg-white)]/50"
-                          : "bg-black/5"
+                          ? `
+                            bg-[var(--marketing-primary)]
+                            text-[var(--marketing-text-dark)]
+                          `
+                          : `
+                            text-[var(--marketing-text-dark)]
+                            hover:bg-black/5
+                            hover:text-[var(--marketing-primary)]
+                          `
                       }
                     `}
                   >
-                    <Icon
-                      aria-hidden="true"
-                      className="text-lg"
-                    />
-                  </span>
+                    <span
+                      className={`
+                        flex
+                        h-10
+                        w-10
+                        shrink-0
+                        items-center
+                        justify-center
+                        rounded-xl
+                        transition-colors
+                        ${
+                          isActive
+                            ? "bg-[var(--marketing-bg-white)]/55"
+                            : "bg-black/5"
+                        }
+                      `}
+                    >
+                      <Icon
+                        aria-hidden="true"
+                        className="text-lg"
+                      />
+                    </span>
 
-                  <span>{item.label}</span>
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* SEPARADOR FLEXIBLE */}
+          <div className="min-h-8 flex-1" />
+
+          {/* BOTONES RESPONSIVE */}
+          <div
+            className="
+              mt-6
+              flex
+              shrink-0
+              flex-col
+              gap-3
+              border-t
+              border-black/10
+              pt-6
+            "
+          >
+            {isLoggedIn ? (
+              <>
+                <Link
+                  href="/dashboard"
+                  onClick={() => setMenuOpen(false)}
+                  className="
+                    flex
+                    min-h-12
+                    w-full
+                    items-center
+                    justify-center
+                    gap-2
+                    rounded-xl
+                    bg-[var(--marketing-primary)]
+                    px-6
+                    py-3.5
+                    text-sm
+                    font-bold
+                    text-[var(--marketing-text-dark)]
+                    shadow-lg
+                    shadow-black/10
+                    transition-all
+                    hover:brightness-95
+                    active:scale-95
+                  "
+                >
+                  <FaTachometerAlt aria-hidden="true" />
+
+                  <span>Ir a mi panel</span>
                 </Link>
-              );
-            })}
-          </nav>
-        </div>
 
-        {/* BOTONES MÓVILES */}
-        <div
-          className="
-            relative
-            z-[120]
-            mt-10
-            flex
-            flex-col
-            gap-3
-            border-t
-            border-black/10
-            pt-6
-          "
-        >
-          {isLoggedIn ? (
-            <>
-              <Link
-                href="/admin"
-                onClick={() => setMenuOpen(false)}
-                className="
-                  flex
-                  min-h-12
-                  w-full
-                  items-center
-                  justify-center
-                  gap-2
-                  rounded-xl
-                  bg-[var(--marketing-primary)]
-                  px-6
-                  py-3.5
-                  text-sm
-                  font-bold
-                  text-[var(--marketing-text-dark)]
-                  shadow-lg
-                  shadow-black/10
-                  transition-all
-                  active:scale-95
-                "
-              >
-                <FaTachometerAlt aria-hidden="true" />
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="
+                    flex
+                    min-h-12
+                    w-full
+                    cursor-pointer
+                    items-center
+                    justify-center
+                    gap-2
+                    rounded-xl
+                    bg-rose-50
+                    px-6
+                    py-3.5
+                    text-sm
+                    font-bold
+                    text-rose-600
+                    transition-all
+                    hover:bg-rose-100
+                    active:scale-95
+                  "
+                >
+                  <FaSignOutAlt aria-hidden="true" />
 
-                <span>Ir a mi panel</span>
-              </Link>
+                  <span>Cerrar sesión</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/auth"
+                  onClick={() => setMenuOpen(false)}
+                  className="
+                    flex
+                    min-h-12
+                    w-full
+                    items-center
+                    justify-center
+                    gap-2
+                    rounded-xl
+                    border
+                    border-black/15
+                    bg-black/[0.03]
+                    px-6
+                    py-3.5
+                    text-sm
+                    font-bold
+                    text-[var(--marketing-text-dark)]
+                    transition-all
+                    hover:border-[var(--marketing-primary)]/40
+                    hover:bg-black/[0.06]
+                    active:scale-95
+                  "
+                >
+                  <FaSignInAlt aria-hidden="true" />
 
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="
-                  flex
-                  min-h-12
-                  w-full
-                  cursor-pointer
-                  items-center
-                  justify-center
-                  gap-2
-                  rounded-xl
-                  bg-rose-50
-                  px-6
-                  py-3.5
-                  text-sm
-                  font-bold
-                  text-rose-600
-                  transition-all
-                  hover:bg-rose-100
-                  active:scale-95
-                "
-              >
-                <FaSignOutAlt aria-hidden="true" />
+                  <span>Iniciar sesión</span>
+                </Link>
 
-                <span>Cerrar sesión</span>
-              </button>
-            </>
-          ) : (
-            <>
-              <Link
-                href="/auth"
-                onClick={() => setMenuOpen(false)}
-                className="
-                  flex
-                  min-h-12
-                  w-full
-                  items-center
-                  justify-center
-                  gap-2
-                  rounded-xl
-                  border
-                  border-black/15
-                  bg-black/[0.03]
-                  px-6
-                  py-3.5
-                  text-sm
-                  font-bold
-                  text-[var(--marketing-text-dark)]
-                  transition-all
-                  hover:bg-black/[0.06]
-                  active:scale-95
-                "
-              >
-                <FaSignInAlt aria-hidden="true" />
+                <Link
+                  href="/auth"
+                  onClick={() => setMenuOpen(false)}
+                  className="
+                    flex
+                    min-h-12
+                    w-full
+                    items-center
+                    justify-center
+                    gap-2
+                    rounded-xl
+                    bg-[var(--marketing-text-dark)]
+                    px-6
+                    py-3.5
+                    text-sm
+                    font-bold
+                    text-[var(--marketing-bg-white)]
+                    shadow-lg
+                    shadow-black/20
+                    transition-all
+                    hover:bg-black
+                    active:scale-95
+                  "
+                >
+                  <FaUserPlus aria-hidden="true" />
 
-                <span>Iniciar sesión</span>
-              </Link>
-
-              <Link
-                href="/auth"
-                onClick={() => setMenuOpen(false)}
-                className="
-                  flex
-                  min-h-12
-                  w-full
-                  items-center
-                  justify-center
-                  gap-2
-                  rounded-xl
-                  bg-[var(--marketing-text-dark)]
-                  px-6
-                  py-3.5
-                  text-sm
-                  font-bold
-                  text-[var(--marketing-bg-white)]
-                  shadow-lg
-                  shadow-black/20
-                  transition-all
-                  hover:bg-black
-                  active:scale-95
-                "
-              >
-                <FaUserPlus aria-hidden="true" />
-
-                <span>Crear tienda gratis</span>
-              </Link>
-            </>
-          )}
+                  <span>Crear tienda gratis</span>
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       </aside>
     </header>
