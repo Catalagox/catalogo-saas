@@ -125,10 +125,7 @@ export default function Header() {
     desktopMediaQuery.addEventListener("change", handleDesktopChange);
 
     return () => {
-      desktopMediaQuery.removeEventListener(
-        "change",
-        handleDesktopChange
-      );
+      desktopMediaQuery.removeEventListener("change", handleDesktopChange);
     };
   }, []);
 
@@ -192,32 +189,35 @@ export default function Header() {
   };
 
   return (
-    <header
-      className={`
-        ${isHome ? "fixed" : "sticky"}
-        left-0
-        top-0
-        z-[100]
-        w-full
-        border-b
-        transition-all
-        duration-300
-        ${
-          headerSolid
-            ? `
-              border-gray-200
-              bg-[var(--marketing-bg-white)]
-              py-2
-              shadow-sm
-            `
-            : `
-              border-white/10
-              bg-transparent
-              py-3
-            `
-        }
-      `}
-    >
+  <header
+  className={`
+    ${isHome ? "fixed" : "sticky"}
+    left-0
+    top-0
+    z-[100]
+    w-full
+    border-b
+    transition-all
+    duration-300
+
+    max-[480px]:border-gray-300
+
+    ${
+      headerSolid
+        ? `
+          border-gray-200
+          bg-[var(--marketing-bg-white)]
+          py-2
+          shadow-sm
+        `
+        : `
+          border-white/10
+          bg-transparent
+          py-3
+        `
+    }
+  `}
+>
       {/* =====================================================
           BARRA PRINCIPAL
       ====================================================== */}
@@ -237,38 +237,25 @@ export default function Header() {
         "
       >
         {/* LOGO PRINCIPAL */}
-        <div className="flex min-w-0 shrink items-center">
-          <Link
-            href="/"
-            aria-label="Ir al inicio"
-            className="
-              inline-flex
-              max-w-full
-              items-center
-              transition-opacity
-              hover:opacity-90
-            "
-          >
-            <Logo scrolled={true} size="md" />
-          </Link>
+        <div className="flex min-w-0 shrink items-center max-w-full">
+          <Logo scrolled={true} size="md" />
         </div>
 
         {/* ===================================================
-            NAVEGACIÓN DESKTOP
-            Visible desde 1024px
-        ==================================================== */}
+    NAVEGACIÓN DESKTOP
+    Visible desde 1024px
+==================================================== */}
         <nav
           aria-label="Navegación principal"
           className="
-            hidden
-            items-center
-            gap-5
-            text-sm
-            font-bold
-            text-[var(--marketing-text-dark)]
-            lg:flex
-            xl:gap-8
-          "
+    hidden
+    items-center
+    gap-5
+    text-sm
+    font-bold
+    lg:flex
+    xl:gap-8
+  "
         >
           {NAVIGATION_ITEMS.map((item) => {
             const Icon = item.icon;
@@ -283,45 +270,35 @@ export default function Header() {
                 key={item.href}
                 href={item.href}
                 aria-current={isActive ? "page" : undefined}
-                className={`
-                  group
-                  relative
-                  flex
-                  items-center
-                  gap-2
-                  py-2
-                  transition-colors
-                  hover:text-[var(--marketing-primary)]
-                  ${
-                    isActive
-                      ? "text-[var(--marketing-primary)]"
-                      : "text-[var(--marketing-text-dark)]"
-                  }
-                `}
+                className="
+          group
+          relative
+          flex
+          items-center
+          gap-2
+          py-2
+          text-[var(--marketing-text-dark)]
+          transition-colors
+          duration-200
+          hover:text-[var(--marketing-nav-hover)]
+        "
               >
-                <Icon
-                  aria-hidden="true"
-                  className="shrink-0 text-base"
-                />
+                <Icon aria-hidden="true" className="shrink-0 text-base" />
 
                 <span>{item.label}</span>
 
                 <span
                   aria-hidden="true"
                   className={`
-                    absolute
-                    bottom-0
-                    left-0
-                    h-[2px]
-                    bg-[var(--marketing-primary)]
-                    transition-all
-                    duration-300
-                    ${
-                      isActive
-                        ? "w-full"
-                        : "w-0 group-hover:w-full"
-                    }
-                  `}
+            absolute
+            bottom-0
+            left-0
+            h-[2px]
+            bg-[var(--marketing-nav-hover)]
+            transition-all
+            duration-300
+            ${isActive ? "w-full" : "w-0 group-hover:w-full"}
+          `}
                 />
               </Link>
             );
@@ -394,25 +371,28 @@ export default function Header() {
               <Link
                 href="/auth"
                 className="
-                  flex
-                  items-center
-                  gap-2
-                  whitespace-nowrap
-                  rounded-full
-                  border
-                  border-black/15
-                  bg-[var(--marketing-bg-white)]/80
-                  px-5
-                  py-2.5
-                  text-sm
-                  font-bold
-                  text-[var(--marketing-text-dark)]
-                  backdrop-blur-md
-                  transition-all
-                  hover:border-[var(--marketing-primary)]
-                  hover:text-[var(--marketing-primary)]
-                  active:scale-95
-                "
+    flex
+    items-center
+    gap-2
+    whitespace-nowrap
+    rounded-full
+    border
+    border-black/15
+    bg-[var(--marketing-bg-white)]/80
+    px-5
+    py-2.5
+    text-sm
+    font-bold
+    text-[var(--marketing-text-dark)]
+    backdrop-blur-md
+    transition-all
+    duration-200
+    hover:border-[var(--marketing-nav-hover)]
+    hover:bg-[var(--marketing-bg-white)]
+    hover:text-[var(--marketing-nav-hover)]
+    hover:shadow-md
+    active:scale-95
+  "
               >
                 <FaSignInAlt aria-hidden="true" />
 
@@ -535,11 +515,7 @@ export default function Header() {
           sm:w-[78%]
           md:w-[55%]
           lg:hidden
-          ${
-            menuOpen
-              ? "translate-x-0"
-              : "pointer-events-none translate-x-full"
-          }
+          ${menuOpen ? "translate-x-0" : "pointer-events-none translate-x-full"}
         `}
       >
         {/* ENCABEZADO DEL MENÚ */}
@@ -559,20 +535,18 @@ export default function Header() {
           "
         >
           {/* LOGO DENTRO DEL MENÚ */}
-          <Link
-            href="/"
+          <div
             onClick={() => setMenuOpen(false)}
-            aria-label="Ir al inicio"
             className="
-              flex
-              min-w-0
-              items-center
-              transition-opacity
-              hover:opacity-90
-            "
+    flex
+    min-w-0
+    items-center
+    transition-opacity
+    hover:opacity-90
+  "
           >
             <Logo scrolled={true} size="md" />
-          </Link>
+          </div>
 
           {/* BOTÓN CERRAR */}
           <button
@@ -694,10 +668,7 @@ export default function Header() {
                         }
                       `}
                     >
-                      <Icon
-                        aria-hidden="true"
-                        className="text-lg"
-                      />
+                      <Icon aria-hidden="true" className="text-lg" />
                     </span>
 
                     <span>{item.label}</span>

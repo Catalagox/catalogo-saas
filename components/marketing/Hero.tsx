@@ -240,73 +240,89 @@ export default function Hero() {
               lg:pb-0
             "
           >
-           
+           {/* ===================================================
+    TÍTULO
+==================================================== */}
+<motion.h1
+  initial={{
+    opacity: 0,
+    y: 18,
+  }}
+  animate={{
+    opacity: 1,
+    y: 0,
+  }}
+  transition={{
+    delay: 0.25,
+    duration: 0.7,
+  }}
+  className="
+    mt-0
+    mx-auto
+    w-fit
+    max-w-full
+    text-left
+    text-[var(--marketing-text-dark)]
+    font-black
+    tracking-[-0.035em]
+    leading-[1.02]
+
+    text-[2.45rem]
+    sm:text-[3.4rem]
+    md:text-[3.8rem]
+
+    lg:mx-0
+    lg:max-w-[620px]
+    lg:text-[4rem]
+
+    xl:text-[4.35rem]
+  "
+>
+  <span className="block">
+    Crea tu tienda online
+  </span>
+
+  <span className="block">
+    y empieza a vender
+  </span>
+</motion.h1>
 
             {/* ===================================================
-                TÍTULO
-                =================================================== */}
-            <motion.h1
-              initial={{
-                opacity: 0,
-                y: 18,
-              }}
-              animate={{
-                opacity: 1,
-                y: 0,
-              }}
-              transition={{
-                delay: 0.25,
-                duration: 0.7,
-              }}
-              className="
-                mt-0
-                max-w-[620px]
-                text-[var(--marketing-text-dark)]
-                font-black
-                tracking-[-0.035em]
-                leading-[1.02]
-                text-[2.65rem]
-                sm:text-[3.4rem]
-                md:text-[3.8rem]
-                lg:text-[4rem]
-                xl:text-[4.35rem]
-              "
-            >
-              Crea tu tienda online
-              <span className="block text-[var(--marketing-text-dark)]">y empieza a vender</span>
-            </motion.h1>
+    SUBTÍTULO
+==================================================== */}
+<motion.p
+  initial={{
+    opacity: 0,
+    y: 15,
+  }}
+  animate={{
+    opacity: 1,
+    y: 0,
+  }}
+  transition={{
+    delay: 0.4,
+    duration: 0.6,
+  }}
+  className="
+    mx-auto
+    mt-6
+    max-w-xl
+    text-left
+    text-base
+    font-medium
+    leading-relaxed
+    text-[var(--marketing-text-dark)]
 
-            {/* ===================================================
-                SUBTÍTULO
-                =================================================== */}
-            <motion.p
-              initial={{
-                opacity: 0,
-                y: 15,
-              }}
-              animate={{
-                opacity: 1,
-                y: 0,
-              }}
-              transition={{
-                delay: 0.4,
-                duration: 0.6,
-              }}
-              className="
-                mt-6
-                sm:mt-7
-                max-w-xl
-                text-base
-                sm:text-lg
-                lg:text-xl
-                text-[var(--marketing-text-dark)]
-                leading-relaxed
-                font-medium
-              "
-            >
-              Lanza una tienda profesional en minutos, muestra tus productos y
-              convierte visitas en pedidos directamente por WhatsApp.
-            </motion.p>
+    sm:mt-7
+    sm:text-lg
+
+    lg:mx-0
+    lg:text-xl
+  "
+>
+  Lanza una tienda profesional en minutos, muestra tus productos y convierte
+  visitas en pedidos directamente por WhatsApp.
+</motion.p>
 
             <motion.ul
               initial={{ opacity: 0, y: 15 }}
@@ -528,20 +544,17 @@ export default function Hero() {
           </motion.div>
 
           {/* DEMOSTRACIÓN VISUAL DE LA TIENDA */}
-  
 
-
-
-  {/* ILUSTRACIÓN PRINCIPAL */}
-<motion.div
-  initial={{ opacity: 0 }}
-  animate={{ opacity: 1 }}
-  transition={{
-    delay: 0.35,
-    duration: 0.8,
-    ease: [0.16, 1, 0.3, 1],
-  }}
-  className="
+          {/* ILUSTRACIÓN PRINCIPAL */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{
+              delay: 0.35,
+              duration: 0.8,
+              ease: [0.16, 1, 0.3, 1],
+            }}
+            className="
     absolute
     bottom-[-10px]
     left-1/2
@@ -569,10 +582,10 @@ export default function Hero() {
     2xl:right-[1%]
     2xl:w-[720px]
   "
->
-  {/* Sombra inferior */}
-  <div
-    className="
+          >
+            {/* Sombra inferior */}
+            <div
+              className="
       absolute
       bottom-0
       left-1/2
@@ -589,11 +602,11 @@ export default function Hero() {
       xl:h-16
       xl:w-[42%]
     "
-  />
+            />
 
-  {/* Puntos decorativos */}
-  <div
-    className="
+            {/* Puntos decorativos */}
+            <div
+              className="
       absolute
       bottom-[10%]
       left-[15%]
@@ -609,18 +622,16 @@ export default function Hero() {
       xl:w-24
       xl:opacity-30
     "
-    style={{
-      backgroundImage:
-        "radial-gradient(color-mix(in srgb, var(--marketing-bg-white) 90%, transparent) 2px, transparent 2px)",
-      backgroundSize: "14px 14px",
-    }}
-  />
+              style={{
+                backgroundImage:
+                  "radial-gradient(color-mix(in srgb, var(--marketing-bg-white) 90%, transparent) 2px, transparent 2px)",
+                backgroundSize: "14px 14px",
+              }}
+            />
 
-  
-  
-  {/* MUJER COMO ELEMENTO PRINCIPAL */}
-  <div
-    className="
+            {/* MUJER COMO ELEMENTO PRINCIPAL */}
+            <div
+              className="
       relative
       z-20
       mx-auto
@@ -641,14 +652,14 @@ export default function Hero() {
 
       2xl:w-[410px]
     "
-  >
-    <Image
-      src="/Yelimar4.png"
-      alt="Yelimar Mejia Pulido"
-      width={720}
-      height={1440}
-      priority
-      sizes="
+            >
+              <Image
+                src="/Yelimar4.png"
+                alt="Yelimar Mejia Pulido"
+                width={720}
+                height={1440}
+                priority
+                sizes="
         (max-width: 640px) 245px,
         (max-width: 768px) 260px,
         (max-width: 1024px) 285px,
@@ -656,19 +667,19 @@ export default function Hero() {
         (max-width: 1536px) 380px,
         410px
       "
-      className="
+                className="
         h-auto
         w-full
         drop-shadow-[0_22px_26px_rgba(0,0,0,0.23)]
 
         xl:drop-shadow-[0_26px_30px_rgba(0,0,0,0.25)]
       "
-    />
-  </div>
+              />
+            </div>
 
-  {/* Base inferior */}
-  <div
-    className="
+            {/* Base inferior */}
+            <div
+              className="
       absolute
       bottom-0
       left-1/2
@@ -683,10 +694,8 @@ export default function Hero() {
       md:h-3
       xl:w-[35%]
     "
-  />
-</motion.div>
-
-
+            />
+          </motion.div>
         </div>
 
         {/* =======================================================
@@ -799,7 +808,9 @@ export default function Hero() {
             >
               Tu tienda online.
               <br />
-              <span className="text-[var(--marketing-primary)]">Tus clientes. Tus ventas.</span>
+              <span className="text-[var(--marketing-primary)]">
+                Tus clientes. Tus ventas.
+              </span>
             </h3>
 
             <p
@@ -895,7 +906,8 @@ export default function Hero() {
             >
               Recibe pedidos
               <br />
-              organizados en tu <span className="text-[var(--marketing-primary)]">WhatsApp</span>
+              organizados en tu{" "}
+              <span className="text-[var(--marketing-primary)]">WhatsApp</span>
             </h2>
 
             <p
@@ -1048,7 +1060,9 @@ export default function Hero() {
             >
               Tu tienda online
               <br />
-              <span className="text-[var(--marketing-primary)]">siempre accesible</span>
+              <span className="text-[var(--marketing-primary)]">
+                siempre accesible
+              </span>
             </h2>
 
             <p
@@ -1275,7 +1289,9 @@ export default function Hero() {
               "
             >
               Una plataforma para{" "}
-              <span className="text-[var(--marketing-primary)]">hacer crecer tu negocio</span>
+              <span className="text-[var(--marketing-primary)]">
+                hacer crecer tu negocio
+              </span>
             </h2>
 
             <p
@@ -1351,7 +1367,9 @@ export default function Hero() {
               >
                 Tu Tienda Online
                 <br />
-                <span className="text-[var(--marketing-primary)]">lista para vender</span>
+                <span className="text-[var(--marketing-primary)]">
+                  lista para vender
+                </span>
               </h2>
 
               <p
@@ -1409,8 +1427,8 @@ export default function Hero() {
               </ul>
 
               <Link
-  href="/auth"
-  className="
+                href="/auth"
+                className="
     mt-auto
     w-full
     rounded-xl
@@ -1426,9 +1444,9 @@ export default function Hero() {
     hover:text-[var(--marketing-text-dark)]
     sm:w-fit
   "
->
-  Crear mi tienda
-</Link>
+              >
+                Crear mi tienda
+              </Link>
             </div>
 
             {/* LOCAL FÍSICO */}
@@ -1479,7 +1497,9 @@ export default function Hero() {
               >
                 También funciona
                 <br />
-                <span className="text-[var(--marketing-text-dark)]">para tu local físico</span>
+                <span className="text-[var(--marketing-text-dark)]">
+                  para tu local físico
+                </span>
               </h2>
 
               <p
@@ -1624,7 +1644,9 @@ export default function Hero() {
               "
             >
               Todo lo necesario para hacer crecer tu{" "}
-              <span className="text-[var(--marketing-primary)]">tienda online</span>
+              <span className="text-[var(--marketing-primary)]">
+                tienda online
+              </span>
             </h2>
 
             <p
@@ -1738,32 +1760,32 @@ export default function Hero() {
           SIN DEGRADADO
           ========================================================= */}
       <div
-  className="
+        className="
     w-full
     bg-[var(--marketing-bg-white)]
     py-20
     sm:py-28
   "
->
-  <div
-    className="
+      >
+        <div
+          className="
       mx-auto
       max-w-6xl
       px-4
       sm:px-6
     "
-  >
-    <div
-      className="
+        >
+          <div
+            className="
         relative
         overflow-hidden
         rounded-[2rem]
         bg-[var(--marketing-primary)]
         sm:rounded-[3rem]
       "
-    >
-      <div
-        className="
+          >
+            <div
+              className="
           relative
           p-8
           text-center
@@ -1771,113 +1793,113 @@ export default function Hero() {
           sm:p-14
           lg:p-16
         "
-      >
-        <div
-          className="
+            >
+              <div
+                className="
             mx-auto
             mb-12
             max-w-2xl
           "
-        >
-          <h2
-            className="
+              >
+                <h2
+                  className="
               text-3xl
               font-black
               tracking-tight
               sm:text-4xl
               lg:text-5xl
             "
-          >
-            Una plataforma creada para vender
-          </h2>
+                >
+                  Una plataforma creada para vender
+                </h2>
 
-          <p
-            className="
+                <p
+                  className="
               mt-4
               text-base
               text-[var(--marketing-text-dark)]/85
               sm:text-lg
             "
-          >
-            Crea tu tienda, muestra tus productos y empieza a recibir
-            pedidos por Internet.
-          </p>
-        </div>
+                >
+                  Crea tu tienda, muestra tus productos y empieza a recibir
+                  pedidos por Internet.
+                </p>
+              </div>
 
-        {/* ESTADÍSTICAS */}
-        <div
-          className="
+              {/* ESTADÍSTICAS */}
+              <div
+                className="
             grid
             grid-cols-1
             gap-8
             md:grid-cols-3
             md:gap-4
           "
-        >
-          {[
-            {
-              Icon: FaStore,
-              end: 500,
-              suffix: "+",
-              label: "Tiendas creadas",
-            },
-            {
-              Icon: FaUsers,
-              end: 10,
-              suffix: "K+",
-              label: "Clientes felices",
-            },
-            {
-              Icon: FaGlobe,
-              end: 100,
-              suffix: "%",
-              label: "Optimizado",
-            },
-          ].map((item, i) => {
-            const { ref, inView } = useInView({
-              triggerOnce: true,
-              threshold: 0.5,
-            });
+              >
+                {[
+                  {
+                    Icon: FaStore,
+                    end: 500,
+                    suffix: "+",
+                    label: "Tiendas creadas",
+                  },
+                  {
+                    Icon: FaUsers,
+                    end: 10,
+                    suffix: "K+",
+                    label: "Clientes felices",
+                  },
+                  {
+                    Icon: FaGlobe,
+                    end: 100,
+                    suffix: "%",
+                    label: "Optimizado",
+                  },
+                ].map((item, i) => {
+                  const { ref, inView } = useInView({
+                    triggerOnce: true,
+                    threshold: 0.5,
+                  });
 
-            return (
-              <div
-                key={item.label}
-                ref={ref}
-                className="
+                  return (
+                    <div
+                      key={item.label}
+                      ref={ref}
+                      className="
                   px-4
                   py-6
                   md:py-4
                 "
-              >
-                <motion.div
-                  initial={{
-                    opacity: 0,
-                    y: 20,
-                  }}
-                  animate={
-                    inView
-                      ? {
-                          opacity: 1,
-                          y: 0,
+                    >
+                      <motion.div
+                        initial={{
+                          opacity: 0,
+                          y: 20,
+                        }}
+                        animate={
+                          inView
+                            ? {
+                                opacity: 1,
+                                y: 0,
+                              }
+                            : {}
                         }
-                      : {}
-                  }
-                  transition={{
-                    duration: 0.6,
-                    delay: i * 0.2,
-                  }}
-                >
-                  <item.Icon
-                    className="
+                        transition={{
+                          duration: 0.6,
+                          delay: i * 0.2,
+                        }}
+                      >
+                        <item.Icon
+                          className="
                       mx-auto
                       mb-4
                       text-3xl
                       text-[var(--marketing-text-dark)]
                     "
-                  />
+                        />
 
-                  <div
-                    className="
+                        <div
+                          className="
                       mb-2
                       text-4xl
                       font-black
@@ -1885,59 +1907,59 @@ export default function Hero() {
                       text-[var(--marketing-text-dark)]
                       sm:text-5xl
                     "
-                  >
-                    {inView ? (
-                      <CountUp
-                        end={item.end}
-                        duration={2.5}
-                        suffix={item.suffix}
-                      />
-                    ) : (
-                      "0"
-                    )}
-                  </div>
+                        >
+                          {inView ? (
+                            <CountUp
+                              end={item.end}
+                              duration={2.5}
+                              suffix={item.suffix}
+                            />
+                          ) : (
+                            "0"
+                          )}
+                        </div>
 
-                  <p
-                    className="
+                        <p
+                          className="
                       text-xs
                       font-bold
                       uppercase
                       tracking-widest
                       text-[var(--marketing-text-dark)]
                     "
-                  >
-                    {item.label}
-                  </p>
-                </motion.div>
+                        >
+                          {item.label}
+                        </p>
+                      </motion.div>
+                    </div>
+                  );
+                })}
               </div>
-            );
-          })}
-        </div>
 
-        {/* CTA FINAL */}
-        <motion.div
-          initial={{
-            opacity: 0,
-            y: 10,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            delay: 0.8,
-            duration: 0.5,
-          }}
-          className="
+              {/* CTA FINAL */}
+              <motion.div
+                initial={{
+                  opacity: 0,
+                  y: 10,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                transition={{
+                  delay: 0.8,
+                  duration: 0.5,
+                }}
+                className="
             mt-12
             flex
             justify-center
             px-4
           "
-        >
-          <Link
-            href="/auth"
-            className="
+              >
+                <Link
+                  href="/auth"
+                  className="
               group
               relative
               inline-flex
@@ -1965,26 +1987,26 @@ export default function Hero() {
               sm:px-10
               sm:text-lg
             "
-          >
-            <span className="text-center leading-tight">
-              ¡Crear mi tienda online gratis!
-            </span>
+                >
+                  <span className="text-center leading-tight">
+                    ¡Crear mi tienda online gratis!
+                  </span>
 
-            <FaRocket
-              className="
+                  <FaRocket
+                    className="
                 shrink-0
                 text-xl
                 transition-transform
                 duration-300
                 group-hover:translate-x-1
               "
-            />
-          </Link>
-        </motion.div>
+                  />
+                </Link>
+              </motion.div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-</div>
       {/* =========================================================
           WHATSAPP FLOTANTE
           ========================================================= */}
