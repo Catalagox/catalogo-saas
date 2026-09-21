@@ -7,6 +7,7 @@ import {
   SetStateAction,
   useRef,
 } from "react";
+
 import {
   X,
   Upload,
@@ -14,7 +15,11 @@ import {
   Camera,
   Package,
 } from "lucide-react";
-import { countriesRegistry } from "@/lib/Countries";
+
+import {
+  countriesRegistry,
+  isCountryCode,
+} from "@/lib/countries";
 
 type Producto = {
   id: string;
@@ -65,10 +70,11 @@ export default function ProductEditModal({
   const fileInputRef =
     useRef<HTMLInputElement>(null);
 
-  const countryData =
-    countriesRegistry[
-      (paisCode || "PE").toUpperCase()
-    ] || countriesRegistry["PE"];
+  const normalizedCountryCode = (paisCode || "PE").toUpperCase();
+
+const countryData = isCountryCode(normalizedCountryCode)
+  ? countriesRegistry[normalizedCountryCode]
+  : countriesRegistry.PE;
 
   const handleChange = (
     cambios: Partial<Producto>

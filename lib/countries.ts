@@ -1,9 +1,11 @@
-"use client";
+export type Country = {
+  name: string;
+  phoneCode: string;
+  currency: string;
+  symbol: string;
+};
 
-import React from "react";
-
-// Registro de todos los países de América con sus monedas y prefijos
-export const countriesRegistry: Record<string, { name: string; phoneCode: string; currency: string; symbol: string }> = {
+export const countriesRegistry = {
   AR: { name: "Argentina", phoneCode: "54", currency: "ARS", symbol: "$" },
   BO: { name: "Bolivia", phoneCode: "591", currency: "BOB", symbol: "Bs" },
   BR: { name: "Brasil", phoneCode: "55", currency: "BRL", symbol: "R$" },
@@ -23,36 +25,30 @@ export const countriesRegistry: Record<string, { name: string; phoneCode: string
   PY: { name: "Paraguay", phoneCode: "595", currency: "PYG", symbol: "₲" },
   PE: { name: "Perú", phoneCode: "51", currency: "PEN", symbol: "S/" },
   PR: { name: "Puerto Rico", phoneCode: "1", currency: "USD", symbol: "$" },
-  DO: { name: "República Dominicana", phoneCode: "1", currency: "DOP", symbol: "RD$" },
+  DO: {
+    name: "República Dominicana",
+    phoneCode: "1",
+    currency: "DOP",
+    symbol: "RD$",
+  },
   UY: { name: "Uruguay", phoneCode: "598", currency: "UYU", symbol: "$U" },
   VE: { name: "Venezuela", phoneCode: "58", currency: "VES", symbol: "Bs.S" },
   JM: { name: "Jamaica", phoneCode: "1876", currency: "JMD", symbol: "J$" },
   HT: { name: "Haití", phoneCode: "509", currency: "HTG", symbol: "G" },
-};
+} as const satisfies Record<string, Country>;
 
-interface SelectorPaisesProps {
-  value: string;
-  onChange: (codigo: string) => void;
-}
+export type CountryCode = keyof typeof countriesRegistry;
 
-// Componente Selector reutilizable para tus formularios
-export default function SelectorPaises({ value, onChange }: SelectorPaisesProps) {
-  // Ordenamos los países alfabéticamente por nombre para que sea más fácil de buscar para el usuario
-  const paisesOrdenados = Object.entries(countriesRegistry).sort((a, b) =>
-    a[1].name.localeCompare(b[1].name)
-  );
+export const countriesList = Object.entries(countriesRegistry)
+  .map(([code, country]) => ({
+    code: code as CountryCode,
+    ...country,
+  }))
+  .sort((a, b) => a.name.localeCompare(b.name, "es"));
 
-  return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-card)] rounded-lg p-3 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--color-primario)] transition-colors"
-    >
-      {paisesOrdenados.map(([code, country]) => (
-        <option key={code} value={code}>
-          {country.name} ({country.symbol})
-        </option>
-      ))}
-    </select>
+export function isCountryCode(value: string): value is CountryCode {
+  return Object.prototype.hasOwnProperty.call(
+    countriesRegistry,
+    value.toUpperCase(),
   );
 }

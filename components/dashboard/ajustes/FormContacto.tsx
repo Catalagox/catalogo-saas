@@ -3,7 +3,11 @@
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 // Importamos tanto el Selector como el registro para sacar los prefijos telefónicos
-import SelectorPaises, { countriesRegistry } from "@/lib/Countries";
+import SelectorPaises from "@/components/ui/SelectorPaises";
+import {
+  countriesRegistry,
+  isCountryCode,
+} from "@/lib/countries";
 
 interface FormContactoProps {
   paisCode: string;
@@ -37,21 +41,26 @@ export default function FormContacto({
   guardarContacto,
 }: FormContactoProps) {
   // Si paisCode no existe por alguna razón, usamos "PE" por defecto antes de aplicar toUpperCase()
-  const currentCountryData =
-    countriesRegistry[(paisCode || "PE").toUpperCase()] ||
-    countriesRegistry["PE"];
+  const normalizedCountryCode = (paisCode || "PE").toUpperCase();
+
+const currentCountryData = isCountryCode(normalizedCountryCode)
+  ? countriesRegistry[normalizedCountryCode]
+  : countriesRegistry.PE;
 
   // Manejador cuando el usuario cambia el país desde el SELECT grande
-  const handlePaisChange = (nuevoCodigo: string) => {
-    setPaisCode(nuevoCodigo);
+const handlePaisChange = (nuevoCodigo: string) => {
+  const normalizedCode = nuevoCodigo.toUpperCase();
 
-    // Buscamos el prefijo telefónico del nuevo país (ej: "52" para México)
-    const datosNuevoPais = countriesRegistry[nuevoCodigo.toUpperCase()];
-    if (datosNuevoPais) {
-      // Le pre-configuramos el prefijo al input de WhatsApp de forma automática
-      setWhatsapp(datosNuevoPais.phoneCode);
-    }
-  };
+  if (!isCountryCode(normalizedCode)) {
+    return;
+  }
+
+  setPaisCode(normalizedCode);
+
+  const datosNuevoPais = countriesRegistry[normalizedCode];
+
+  setWhatsapp(datosNuevoPais.phoneCode);
+};
 
   return (
     <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 space-y-5">
