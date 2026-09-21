@@ -246,10 +246,29 @@ const resolveAuthenticatedDestination = async (
     if (error) throw error;
 
     if (!data.user) {
-      throw new Error("No se pudo crear la cuenta.");
-    }
+  throw new Error("No se pudo crear la cuenta.");
+}
 
-    if (!data.session) {
+/*
+ * Supabase puede devolver un usuario sin identidades cuando
+ * intentan registrar nuevamente un correo que ya existe.
+ */
+if (
+  Array.isArray(data.user.identities) &&
+  data.user.identities.length === 0
+) {
+  setMode("login");
+  setSuccessMsg("");
+  setErrorMsg(
+    "Este correo ya está registrado. Inicia sesión o recupera tu contraseña.",
+  );
+
+  setPassword("");
+  setConfirmPassword("");
+  return;
+}
+
+if (!data.session) {
       setSuccessMsg(
         "Cuenta creada. Revisa tu correo y confirma tu cuenta para continuar.",
       );

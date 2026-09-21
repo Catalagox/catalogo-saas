@@ -58,12 +58,10 @@ export default function NewPasswordForm() {
       setPassword("");
       setConfirmPassword("");
 
-      window.setTimeout(() => {
-        router.replace(
-          "/onboarding?next=%2Fdashboard",
-        );
-        router.refresh();
-      }, 1200);
+     window.setTimeout(() => {
+  router.replace("/dashboard");
+  router.refresh();
+}, 1200);
     } catch (error: unknown) {
       const message =
         error instanceof Error
