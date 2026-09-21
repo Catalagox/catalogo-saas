@@ -1,13 +1,10 @@
-import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { updateSession } from "@/lib/supabase/proxy";
 
-// Solo se aplica a las rutas privadas
+export async function proxy(request: NextRequest) {
+  return updateSession(request);
+}
+
 export const config = {
   matcher: ["/dashboard/:path*"],
 };
-
-export function proxy(req: NextRequest) {
-  // Por ahora no hacemos nada, solo dejamos pasar
-  // La autenticación se maneja en tu página /auth o en tu lógica de frontend
-  return NextResponse.next();
-}
