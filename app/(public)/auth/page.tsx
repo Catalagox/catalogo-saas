@@ -283,32 +283,32 @@ if (!data.session) {
   };
 
   const handleRecovery = async () => {
-    const normalizedEmail = email.trim().toLowerCase();
+  const normalizedEmail = email.trim().toLowerCase();
 
-    const callbackUrl = new URL(
-      "/auth/callback",
-      window.location.origin,
+  const callbackUrl = new URL(
+    "/auth/callback",
+    "https://www.catalagox.com",
+  );
+
+  callbackUrl.searchParams.set(
+    "next",
+    "/auth/nueva-password",
+  );
+
+  const { error } =
+    await supabase.auth.resetPasswordForEmail(
+      normalizedEmail,
+      {
+        redirectTo: callbackUrl.toString(),
+      },
     );
 
-    callbackUrl.searchParams.set(
-      "next",
-      "/auth/nueva-password",
-    );
+  if (error) throw error;
 
-    const { error } =
-      await supabase.auth.resetPasswordForEmail(
-        normalizedEmail,
-        {
-          redirectTo: callbackUrl.toString(),
-        },
-      );
-
-    if (error) throw error;
-
-    setSuccessMsg(
-      "Si existe una cuenta con ese correo, recibirás un enlace para cambiar tu contraseña.",
-    );
-  };
+  setSuccessMsg(
+    "Si existe una cuenta con ese correo, recibirás un enlace para cambiar tu contraseña.",
+  );
+};
 
   const handleSubmit = async (
     event: FormEvent<HTMLFormElement>,
