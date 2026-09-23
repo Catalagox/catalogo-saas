@@ -1,43 +1,45 @@
 "use client";
 
+import { useState } from "react";
 import { CreditCard } from "lucide-react";
 
-// Enlace real de producción para Catalogox
-const ENLACE_PORTAL_STRIPE = "https://billing.stripe.com/p/login/4gM5kE6sV3EP57Zck16sw00";
-
 export default function BotonSuscripcionPortal() {
-  
-  const handleOpenPortal = () => {
-    // Te redirige directamente al portal seguro de Stripe
-    window.location.href = ENLACE_PORTAL_STRIPE;
+  const [loading, setLoading] = useState(false);
+
+  const handleOpenPortal = async () => {
+    setLoading(true);
+
+    try {
+      const response = await fetch("/api/stripe/portal", {
+        method: "POST",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.url) {
+        throw new Error(data.error || "No se pudo abrir el portal.");
+      }
+
+      window.location.assign(data.url);
+    } catch (error) {
+      alert(
+        error instanceof Error
+          ? error.message
+          : "No se pudo abrir el portal.",
+      );
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="pt-2">
-      <button
-        onClick={handleOpenPortal}
-        className="
-          inline-flex 
-          items-center 
-          gap-2 
-          bg-gray-800 
-          hover:bg-gray-700 
-          border 
-          border-gray-700 
-          text-gray-200 
-          px-5 
-          py-2.5 
-          rounded-lg 
-          font-semibold 
-          text-sm 
-          transition 
-          duration-200 
-          hover:scale-[1.01]
-        "
-      >
-        <CreditCard className="w-4 h-4 text-gray-400" />
-        Gestionar o cancelar suscripción
-      </button>
-    </div>
+    <button
+      type="button"
+      onClick={handleOpenPortal}
+      disabled={loading}
+      className="inline-flex items-center gap-2 rounded-lg border border-gray-700 bg-gray-800 px-5 py-2.5 text-sm font-semibold text-gray-200 transition hover:bg-gray-700 disabled:cursor-wait disabled:opacity-60"
+    >
+      <CreditCard className="h-4 w-4" />
+      {loading ? "Abriendo portal..." : "Gestionar o cancelar suscripción"}
+    </button>
   );
 }
