@@ -21,6 +21,7 @@ import {
 
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { supabase } from "@/lib/supabaseClient";
+import ComprarDominioVercel from "@/components/dashboard/dominios/ComprarDominioVercel";
 
 type EstadoDominio =
   | "pendiente"
@@ -493,6 +494,7 @@ export default function DominiosPage() {
         )}
 
         {!dominioGuardado ? (
+          <>
           <form
             onSubmit={conectarDominio}
             className="space-y-5 rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] p-5 sm:p-6"
@@ -558,6 +560,8 @@ export default function DominiosPage() {
               )}
             </button>
           </form>
+           <ComprarDominioVercel />
+        </>
         ) : (
           <>
             <div className="rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] p-5 sm:p-6">
