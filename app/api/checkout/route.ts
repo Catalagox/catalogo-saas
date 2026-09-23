@@ -1,131 +1,260 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
+import { createClient } from "@/lib/supabase/server";
+
+type PlanType = "monthly" | "annual";
+
+const ESTADOS_FINALIZADOS = new Set([
+  "canceled",
+  "incomplete_expired",
+]);
+
+async function obtenerCuenta() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user || !user.email) {
+    return { supabase, user: null, catalogo: null };
+  }
+
+  const { data: catalogo, error: catalogoError } = await supabase
+    .from("catalogos")
+    .select("id, stripe_customer_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (catalogoError) throw catalogoError;
+
+  return { supabase, user, catalogo };
+}
+
+async function tieneSuscripcionEnCurso(
+  stripe: Stripe,
+  customerId: string,
+) {
+  // Stripe devuelve aquí las suscripciones que aún no están canceladas.
+  const subscriptions = await stripe.subscriptions.list({
+    customer: customerId,
+    status: "all",
+    limit: 100,
+  });
+
+  return subscriptions.data.some(
+    (subscription) =>
+      !ESTADOS_FINALIZADOS.has(subscription.status),
+  );
+}
+
+// La página /suscripcion consulta este estado para decidir qué mostrar.
+export async function GET() {
+  try {
+    const { user, catalogo } = await obtenerCuenta();
+
+    if (!user) {
+      return NextResponse.json({
+        tieneClienteStripe: false,
+        tieneSuscripcionEnCurso: false,
+      });
+    }
+
+    const customerId = catalogo?.stripe_customer_id;
+
+    if (!customerId) {
+      return NextResponse.json({
+        tieneClienteStripe: false,
+        tieneSuscripcionEnCurso: false,
+      });
+    }
+
+    const secretKey = process.env.STRIPE_SECRET_KEY;
+    if (!secretKey) throw new Error("Falta STRIPE_SECRET_KEY");
+
+    const stripe = new Stripe(secretKey);
+
+    return NextResponse.json({
+      tieneClienteStripe: true,
+      tieneSuscripcionEnCurso: await tieneSuscripcionEnCurso(
+        stripe,
+        customerId,
+      ),
+    });
+  } catch (error) {
+    console.error("Error consultando suscripción:", error);
+
+    return NextResponse.json(
+      { error: "No pudimos comprobar tu suscripción." },
+      { status: 500 },
+    );
+  }
+}
 
 export async function POST(req: Request) {
   try {
-    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    const secretKey = process.env.STRIPE_SECRET_KEY;
 
-    // 🚨 1. Validar que la API Key de Stripe exista en las variables del servidor
-    if (!stripeSecretKey) {
-      console.error("❌ ERROR: La variable STRIPE_SECRET_KEY no está configurada.");
+    if (!secretKey) {
+      throw new Error("Falta STRIPE_SECRET_KEY");
+    }
+
+    const { supabase, user, catalogo } = await obtenerCuenta();
+
+    if (!user) {
       return NextResponse.json(
-        { error: "Error de configuración en el servidor: Clave secreta de Stripe no encontrada." },
-        { status: 500 }
+        { error: "Inicia sesión para contratar un plan." },
+        { status: 401 },
       );
     }
 
-    // Instancia limpia dentro de la ejecución de la petición
-    const stripe = new Stripe(stripeSecretKey);
-
-    // 📩 2. Obtener datos enviados desde el frontend
-    const { userId, email, planType } = await req.json();
-
-    if (!userId || !email) {
+    if (!catalogo) {
       return NextResponse.json(
-        { error: "Identificación de usuario no válida o sesión expirada." },
-        { status: 400 }
+        { error: "Primero completa el registro de tu tienda." },
+        { status: 409 },
       );
     }
 
-    // 🔍 3. Logs de diagnóstico para consola de Vercel/Terminal local
-    console.log("🔍 DIAGNÓSTICO API CHECKOUT:");
-    console.log("-> planType recibido:", planType);
-    console.log("-> STRIPE_PRICE_ID_MONTHLY:", !!process.env.STRIPE_PRICE_ID_MONTHLY);
-    console.log("-> STRIPE_PRICE_ID_ANNUAL:", !!process.env.STRIPE_PRICE_ID_ANNUAL);
+    const body = await req.json().catch(() => null);
+    const planType = body?.planType as PlanType | undefined;
 
-    // 🎯 4. Selección dinámica de Price ID con fallbacks de compatibilidad
-    let priceId: string | undefined;
-
-    if (planType === "annual") {
-      priceId =
-        process.env.STRIPE_PRICE_ID_ANNUAL ||
-        process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANNUAL;
-    } else {
-      priceId =
-        process.env.STRIPE_PRICE_ID_MONTHLY ||
-        process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY ||
-        process.env.NEXT_PUBLIC_STRIPE_PRICE_ID; // Fallback a variable antigua si existe
+    if (planType !== "monthly" && planType !== "annual") {
+      return NextResponse.json(
+        { error: "Selecciona un plan válido." },
+        { status: 400 },
+      );
     }
 
-    // 🚨 5. Detener la ejecución si no hay Price ID cargado
+    const priceId =
+      planType === "annual"
+        ? process.env.STRIPE_PRICE_ID_ANNUAL ||
+          process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANNUAL
+        : process.env.STRIPE_PRICE_ID_MONTHLY ||
+          process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY ||
+          process.env.NEXT_PUBLIC_STRIPE_PRICE_ID;
+
     if (!priceId) {
-      console.error(`❌ Error: Price ID no encontrado para el plan seleccionado: ${planType}`);
       return NextResponse.json(
-        { error: `Price ID no configurado para el plan: ${planType || "monthly"}` },
-        { status: 500 }
+        { error: "El precio de este plan no está configurado." },
+        { status: 500 },
       );
     }
 
-    // 🌐 6. Definir URL base con respaldo para evitar URLs relativas inválidas en Stripe
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://catalagox.com";
+    const stripe = new Stripe(secretKey);
+    const baseUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      "https://www.catalagox.com";
 
-    // 👤 7. Buscar o crear cliente en Stripe
     let customerId: string;
-    const existingCustomers = await stripe.customers.list({
-      email,
-      limit: 1,
+
+    if (catalogo.stripe_customer_id) {
+      customerId = catalogo.stripe_customer_id;
+    } else {
+      const customer = await stripe.customers.create({
+        email: user.email!,
+        metadata: {
+          supabaseUserId: user.id,
+        },
+      });
+
+      /*
+       * Guardamos el ID solamente si continúa vacío.
+       * Si otra solicitud lo guardó primero, usamos ese cliente.
+       */
+      const { data: actualizado, error: updateError } =
+        await supabase
+          .from("catalogos")
+          .update({ stripe_customer_id: customer.id })
+          .eq("id", catalogo.id)
+          .eq("user_id", user.id)
+          .is("stripe_customer_id", null)
+          .select("stripe_customer_id")
+          .maybeSingle();
+
+      if (updateError) throw updateError;
+
+      if (actualizado?.stripe_customer_id) {
+        customerId = actualizado.stripe_customer_id;
+      } else {
+        const { data: vigente, error: readError } =
+          await supabase
+            .from("catalogos")
+            .select("stripe_customer_id")
+            .eq("id", catalogo.id)
+            .eq("user_id", user.id)
+            .single();
+
+        if (readError || !vigente?.stripe_customer_id) {
+          throw readError || new Error("No se pudo guardar el cliente");
+        }
+
+        customerId = vigente.stripe_customer_id;
+      }
+    }
+
+    if (await tieneSuscripcionEnCurso(stripe, customerId)) {
+      return NextResponse.json(
+        {
+          error:
+            "Ya tienes una suscripción en curso. Usa «Gestionar suscripción» para revisar tu pago o cancelarla.",
+        },
+        { status: 409 },
+      );
+    }
+
+    /*
+     * Si había un Checkout abierto para este cliente, reutilizamos su URL.
+     * Esto evita dejar dos páginas de pago abiertas para la misma cuenta.
+     */
+    const sesionesAbiertas = await stripe.checkout.sessions.list({
+      customer: customerId,
+      status: "open",
+      limit: 100,
     });
 
-    if (existingCustomers.data.length > 0) {
-      const customer = existingCustomers.data[0];
-      customerId = customer.id;
+    const sesionExistente = sesionesAbiertas.data.find(
+      (session) =>
+        session.mode === "subscription" &&
+        session.metadata?.supabaseUserId === user.id &&
+        session.metadata?.planType === planType &&
+        session.url,
+    );
 
-      // Actualizar metadata del usuario existente
-      await stripe.customers.update(customerId, {
-        metadata: {
-          supabaseUserId: userId,
-        },
-      });
-    } else {
-      // Crear cliente nuevo
-      const customer = await stripe.customers.create({
-        email,
-        metadata: {
-          supabaseUserId: userId,
-        },
-      });
-      customerId = customer.id;
+    if (sesionExistente?.url) {
+      return NextResponse.json({ url: sesionExistente.url });
     }
 
-    // 💳 8. Crear Checkout Session de Stripe
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: customerId,
       payment_method_types: ["card"],
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
+      line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${baseUrl}/dashboard?success=true`,
       cancel_url: `${baseUrl}/suscripcion?canceled=true`,
       metadata: {
-        supabaseUserId: userId,
-        planType: planType || "monthly",
+        supabaseUserId: user.id,
+        planType,
       },
       subscription_data: {
         metadata: {
-          supabaseUserId: userId,
-          planType: planType || "monthly",
+          supabaseUserId: user.id,
+          planType,
         },
       },
     });
 
-    // ✅ 9. Respuesta exitosa con la URL de Checkout
-    return NextResponse.json({
-      url: session.url,
-    });
-  } catch (error: any) {
-    console.error("❌ Error crítico en la API de Checkout:", error?.message || error);
+    if (!session.url) {
+      throw new Error("Stripe no devolvió la URL de Checkout");
+    }
+
+    return NextResponse.json({ url: session.url });
+  } catch (error) {
+    console.error("Error al crear Checkout:", error);
 
     return NextResponse.json(
-      {
-        error:
-          error?.message ||
-          "Fallo interno en el servidor al iniciar la pasarela de pago",
-      },
-      { status: 500 }
+      { error: "No pudimos iniciar el pago. Inténtalo nuevamente." },
+      { status: 500 },
     );
   }
 }
