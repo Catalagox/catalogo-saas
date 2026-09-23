@@ -1,30 +1,58 @@
 "use client";
 
-interface HeaderCategoriaProps {
+interface EncabezadoCategoriaProps {
   id?: string;
   nombre: string;
-  totalProductos?: number; // Opcional por si aún se pasa en alguna prop pero no se renderiza
+  totalProductos?: number;
   colorTextoCategoria?: string;
 }
 
-export default function HeaderCategoria({
+export default function EncabezadoCategoria({
   id,
   nombre,
+  totalProductos,
   colorTextoCategoria,
-}: HeaderCategoriaProps) {
-  const textColor = colorTextoCategoria || "var(--color-texto-categoria)";
+}: EncabezadoCategoriaProps) {
+  const colorTexto =
+    colorTextoCategoria?.trim() ||
+    "var(--color-texto-categoria)";
+
+  const tieneCantidadValida =
+    typeof totalProductos === "number" &&
+    Number.isFinite(totalProductos);
+
+  const cantidadProductos =
+    tieneCantidadValida
+      ? Math.max(
+          0,
+          Math.floor(totalProductos),
+        )
+      : null;
 
   return (
-    <div
-      id={id}
-      className="flex items-baseline gap-2 mb-5 pl-4 pr-1 md:pl-1 md:pr-0 scroll-mt-36"
-    >
+    <header className="mb-5 flex min-w-0 items-baseline gap-2 px-4 md:px-1">
       <h2
-        className="text-lg md:text-xl font-bold tracking-tight capitalize leading-none break-words"
-        style={{ color: textColor }}
+        id={id}
+        className="min-w-0 break-words text-lg font-bold leading-tight tracking-tight md:text-xl"
+        style={{
+          color: colorTexto,
+        }}
       >
         {nombre}
       </h2>
-    </div>
+
+      {cantidadProductos !== null && (
+        <span
+          aria-label={`${cantidadProductos} ${
+            cantidadProductos === 1
+              ? "producto"
+              : "productos"
+          }`}
+          className="shrink-0 text-xs font-medium text-[var(--color-text)] opacity-55"
+        >
+          {cantidadProductos}
+        </span>
+      )}
+    </header>
   );
 }

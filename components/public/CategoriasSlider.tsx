@@ -1,7 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 
 interface Categoria {
   id: string;
@@ -10,7 +19,9 @@ interface Categoria {
 
 interface CategoriasSliderProps {
   categorias: Categoria[];
-  onTrackCategoria?: (categoriaId: string) => void;
+  onTrackCategoria?: (
+    categoriaId: string,
+  ) => void;
 
   colorFondoCategoria?: string;
   colorTextoCategoria?: string;
@@ -29,280 +40,679 @@ export default function CategoriasSlider({
   categorias,
   onTrackCategoria,
   colorFondoCategoria = "#ffffff",
-  colorTextoCategoria = "#df0d1f",
+  colorTextoCategoria = "#111827",
   colorBorderCategoria = "#e5e7eb",
   colorFondoCategoriaActiva,
   colorTextoCategoriaActiva,
   colorBorderCategoriaActiva,
   colorHeader = "var(--color-header)",
-  colorTextHeader = "var(--color-text-header)",
-  colorBorderHeader = "var(--color-border-header)",
+  colorTextHeader =
+    "var(--color-text-header)",
+  colorBorderHeader =
+    "var(--color-border-header)",
 }: CategoriasSliderProps) {
-  const [categoriaActiva, setCategoriaActiva] = useState<string | null>(null);
-  const [showCategories, setShowCategories] = useState(true);
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [
+    categoriaActiva,
+    setCategoriaActiva,
+  ] = useState<string | null>(null);
 
-  const lastScrollY = useRef(0);
-  const showCategoriesRef = useRef(true);
-  const isTouchingRef = useRef(false);
-  const isClickingCategoryRef = useRef(false);
+  const [
+    mostrarCategorias,
+    setMostrarCategorias,
+  ] = useState(true);
 
-  const sliderRef = useRef<HTMLDivElement | null>(null);
-  const buttonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+  const [
+    paginaDesplazada,
+    setPaginaDesplazada,
+  ] = useState(false);
 
-  // Sincronizar Ref para el listener de scroll sin forzar re-renders
-  useEffect(() => {
-    showCategoriesRef.current = showCategories;
-  }, [showCategories]);
+  const [
+    puedeMoverIzquierda,
+    setPuedeMoverIzquierda,
+  ] = useState(false);
 
-  // Mover el slider con las flechas
-  const moverSlider = (direccion: "left" | "right") => {
-    if (!sliderRef.current) return;
-    sliderRef.current.scrollBy({
-      left: direccion === "left" ? -340 : 340,
-      behavior: "smooth",
-    });
-  };
+  const [
+    puedeMoverDerecha,
+    setPuedeMoverDerecha,
+  ] = useState(false);
 
-  // Scroll automático en la barra horizontal para centrar el botón activo sin interrumpir el scroll vertical
-  const autoScrollToActiveButton = useCallback((catId: string) => {
-    // Si el usuario tiene el dedo en la pantalla, no interrumpimos su desplazamiento vertical
-    if (isTouchingRef.current && !isClickingCategoryRef.current) return;
+  const ultimaPosicionScroll = useRef(0);
+  const mostrarCategoriasRef = useRef(true);
+  const categoriaActivaRef =
+    useRef<string | null>(null);
 
-    const activeBtn = buttonRefs.current.get(catId);
-    if (activeBtn && sliderRef.current) {
-      const container = sliderRef.current;
-      const btnLeft = activeBtn.offsetLeft;
-      const btnWidth = activeBtn.offsetWidth;
-      const containerWidth = container.offsetWidth;
+  const tocandoPantallaRef = useRef(false);
+  const seleccionandoCategoriaRef =
+    useRef(false);
 
-      const targetScroll = btnLeft - containerWidth / 2 + btnWidth / 2;
-      container.scrollTo({
-        left: targetScroll,
-        behavior: "smooth",
-      });
+  const sliderRef =
+    useRef<HTMLDivElement | null>(null);
+
+  const botonesRef = useRef<
+    Map<string, HTMLButtonElement>
+  >(new Map());
+
+  const frameScrollRef =
+    useRef<number | null>(null);
+
+  const temporizadorClickRef =
+    useRef<ReturnType<
+      typeof setTimeout
+    > | null>(null);
+
+  const categoriasValidas = useMemo(() => {
+    if (!Array.isArray(categorias)) {
+      return [];
     }
-  }, []);
 
-  // Detectar interacción táctil para prevenir interferencias en dispositivos móviles
+    return categorias.filter(
+      (categoria) =>
+        Boolean(categoria) &&
+        Boolean(categoria.id) &&
+        Boolean(categoria.nombre?.trim()),
+    );
+  }, [categorias]);
+
+  const obtenerComportamientoScroll =
+    useCallback((): ScrollBehavior => {
+      const reducirMovimiento =
+        window.matchMedia(
+          "(prefers-reduced-motion: reduce)",
+        ).matches;
+
+      return reducirMovimiento
+        ? "auto"
+        : "smooth";
+    }, []);
+
+  const actualizarEstadoFlechas =
+    useCallback(() => {
+      const slider = sliderRef.current;
+
+      if (!slider) {
+        setPuedeMoverIzquierda(false);
+        setPuedeMoverDerecha(false);
+        return;
+      }
+
+      const maximoScroll =
+        slider.scrollWidth -
+        slider.clientWidth;
+
+      setPuedeMoverIzquierda(
+        slider.scrollLeft > 4,
+      );
+
+      setPuedeMoverDerecha(
+        slider.scrollLeft <
+          maximoScroll - 4,
+      );
+    }, []);
+
+  const moverSlider = useCallback(
+    (direccion: "left" | "right") => {
+      const slider = sliderRef.current;
+
+      if (!slider) {
+        return;
+      }
+
+      slider.scrollBy({
+        left:
+          direccion === "left"
+            ? -340
+            : 340,
+        behavior:
+          obtenerComportamientoScroll(),
+      });
+    },
+    [obtenerComportamientoScroll],
+  );
+
+  const centrarCategoriaActiva =
+    useCallback(
+      (categoriaId: string) => {
+        if (
+          tocandoPantallaRef.current &&
+          !seleccionandoCategoriaRef.current
+        ) {
+          return;
+        }
+
+        const botonActivo =
+          botonesRef.current.get(categoriaId);
+
+        const slider = sliderRef.current;
+
+        if (!botonActivo || !slider) {
+          return;
+        }
+
+        const destino =
+          botonActivo.offsetLeft -
+          slider.offsetWidth / 2 +
+          botonActivo.offsetWidth / 2;
+
+        slider.scrollTo({
+          left: destino,
+          behavior:
+            obtenerComportamientoScroll(),
+        });
+      },
+      [obtenerComportamientoScroll],
+    );
+
+  const cambiarCategoriaActiva =
+    useCallback(
+      (
+        categoriaId: string,
+        registrarVista = true,
+      ) => {
+        if (
+          categoriaActivaRef.current ===
+          categoriaId
+        ) {
+          return;
+        }
+
+        categoriaActivaRef.current =
+          categoriaId;
+
+        setCategoriaActiva(categoriaId);
+
+        if (registrarVista) {
+          onTrackCategoria?.(categoriaId);
+        }
+
+        centrarCategoriaActiva(
+          categoriaId,
+        );
+      },
+      [
+        onTrackCategoria,
+        centrarCategoriaActiva,
+      ],
+    );
+
+  /*
+   * Sincronizamos el estado con referencias para
+   * utilizarlo dentro del listener de scroll sin
+   * reinstalar el listener constantemente.
+   */
   useEffect(() => {
-    const handleTouchStart = () => {
-      isTouchingRef.current = true;
-    };
-    const handleTouchEnd = () => {
-      setTimeout(() => {
-        isTouchingRef.current = false;
-      }, 500);
+    mostrarCategoriasRef.current =
+      mostrarCategorias;
+  }, [mostrarCategorias]);
+
+  /*
+   * Calcula cuándo mostrar las flechas.
+   */
+  useEffect(() => {
+    actualizarEstadoFlechas();
+
+    const manejarResize = () => {
+      actualizarEstadoFlechas();
     };
 
-    window.addEventListener("touchstart", handleTouchStart, { passive: true });
-    window.addEventListener("touchend", handleTouchEnd, { passive: true });
+    window.addEventListener(
+      "resize",
+      manejarResize,
+    );
+
+    let observador: ResizeObserver | null =
+      null;
+
+    if (
+      typeof ResizeObserver !==
+        "undefined" &&
+      sliderRef.current
+    ) {
+      observador = new ResizeObserver(() => {
+        actualizarEstadoFlechas();
+      });
+
+      observador.observe(sliderRef.current);
+    }
 
     return () => {
-      window.removeEventListener("touchstart", handleTouchStart);
-      window.removeEventListener("touchend", handleTouchEnd);
+      window.removeEventListener(
+        "resize",
+        manejarResize,
+      );
+
+      observador?.disconnect();
     };
-  }, []);
+  }, [
+    categoriasValidas,
+    actualizarEstadoFlechas,
+  ]);
 
-  // Control de scroll y detección de categoría activa optimizado
+  /*
+   * Detecta desplazamiento vertical y determina
+   * qué categoría se encuentra visible.
+   */
   useEffect(() => {
-    let ticking = false;
+    const manejarScroll = () => {
+      if (frameScrollRef.current !== null) {
+        return;
+      }
 
-    const handleScroll = () => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          const currentScrollY = window.scrollY;
-          const scrollingDown = currentScrollY > lastScrollY.current + 8;
-          const scrollingUp = currentScrollY < lastScrollY.current - 8;
+      frameScrollRef.current =
+        window.requestAnimationFrame(() => {
+          const posicionActual =
+            window.scrollY;
 
-          setIsScrolled(currentScrollY > 10);
+          const bajando =
+            posicionActual >
+            ultimaPosicionScroll.current + 8;
 
-          if (scrollingDown && currentScrollY > 280) {
-            setShowCategories(false);
+          const subiendo =
+            posicionActual <
+            ultimaPosicionScroll.current - 8;
+
+          setPaginaDesplazada(
+            posicionActual > 10,
+          );
+
+          if (
+            bajando &&
+            posicionActual > 280
+          ) {
+            setMostrarCategorias(false);
           }
 
-          if (scrollingUp || currentScrollY <= 120) {
-            setShowCategories(true);
+          if (
+            subiendo ||
+            posicionActual <= 120
+          ) {
+            setMostrarCategorias(true);
           }
 
-          lastScrollY.current = currentScrollY;
+          ultimaPosicionScroll.current =
+            posicionActual;
 
-          // Si el usuario hizo clic en un botón, pausamos la autodetección brevemente
-          if (!isClickingCategoryRef.current) {
-            let current: string | null = null;
+          if (
+            !seleccionandoCategoriaRef.current
+          ) {
+            const puntoDeteccion =
+              mostrarCategoriasRef.current
+                ? 160
+                : 90;
 
-            for (const categoria of categorias) {
-              const element = document.getElementById(`cat-${categoria.id}`);
-              if (!element) continue;
+            let categoriaVisible:
+              | string
+              | null = null;
 
-              const rect = element.getBoundingClientRect();
-              const offsetCheck = showCategoriesRef.current ? 160 : 90;
+            for (const categoria of categoriasValidas) {
+              const elemento =
+                document.getElementById(
+                  `cat-${categoria.id}`,
+                );
 
-              if (rect.top <= offsetCheck && rect.bottom >= offsetCheck) {
-                current = categoria.id;
+              if (!elemento) {
+                continue;
+              }
+
+              const posicion =
+                elemento.getBoundingClientRect();
+
+              if (
+                posicion.top <=
+                  puntoDeteccion &&
+                posicion.bottom >=
+                  puntoDeteccion
+              ) {
+                categoriaVisible =
+                  categoria.id;
                 break;
               }
             }
 
-            if (current && current !== categoriaActiva) {
-              setCategoriaActiva(current);
-              onTrackCategoria?.(current);
-              autoScrollToActiveButton(current);
+            if (categoriaVisible) {
+              cambiarCategoriaActiva(
+                categoriaVisible,
+              );
             }
           }
 
-          ticking = false;
+          frameScrollRef.current = null;
         });
-        ticking = true;
-      }
     };
 
-    handleScroll();
-    window.addEventListener("scroll", handleScroll, { passive: true });
+    manejarScroll();
+
+    window.addEventListener(
+      "scroll",
+      manejarScroll,
+      {
+        passive: true,
+      },
+    );
 
     return () => {
-      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener(
+        "scroll",
+        manejarScroll,
+      );
+
+      if (
+        frameScrollRef.current !== null
+      ) {
+        window.cancelAnimationFrame(
+          frameScrollRef.current,
+        );
+
+        frameScrollRef.current = null;
+      }
     };
-  }, [categorias, categoriaActiva, onTrackCategoria, autoScrollToActiveButton]);
+  }, [
+    categoriasValidas,
+    cambiarCategoriaActiva,
+  ]);
 
-  if (categorias.length === 0) return null;
+  /*
+   * Limpiamos cualquier temporizador pendiente
+   * cuando el componente se desmonta.
+   */
+  useEffect(() => {
+    return () => {
+      if (temporizadorClickRef.current) {
+        clearTimeout(
+          temporizadorClickRef.current,
+        );
+      }
+    };
+  }, []);
 
-  const wrapperBackgroundColor = isScrolled ? colorHeader : "var(--color-bg)";
-  const wrapperBorderColor = isScrolled
-    ? colorBorderHeader
-    : "rgba(255,255,255,0.1)";
+  const seleccionarCategoria =
+    useCallback(
+      (categoriaId: string) => {
+        seleccionandoCategoriaRef.current =
+          true;
+
+        categoriaActivaRef.current =
+          categoriaId;
+
+        setCategoriaActiva(categoriaId);
+
+        onTrackCategoria?.(categoriaId);
+
+        centrarCategoriaActiva(
+          categoriaId,
+        );
+
+        const elemento =
+          document.getElementById(
+            `cat-${categoriaId}`,
+          );
+
+        if (elemento) {
+          const desplazamiento =
+            mostrarCategoriasRef.current
+              ? -150
+              : -90;
+
+          const posicionDestino =
+            elemento.getBoundingClientRect()
+              .top +
+            window.scrollY +
+            desplazamiento;
+
+          window.scrollTo({
+            top: Math.max(
+              0,
+              posicionDestino,
+            ),
+            behavior:
+              obtenerComportamientoScroll(),
+          });
+        }
+
+        /*
+         * Este temporizador se programa incluso si
+         * no encontramos la sección. Así evitamos
+         * que el bloqueo quede activo para siempre.
+         */
+        if (temporizadorClickRef.current) {
+          clearTimeout(
+            temporizadorClickRef.current,
+          );
+        }
+
+        temporizadorClickRef.current =
+          setTimeout(() => {
+            seleccionandoCategoriaRef.current =
+              false;
+
+            temporizadorClickRef.current =
+              null;
+          }, 800);
+      },
+      [
+        onTrackCategoria,
+        centrarCategoriaActiva,
+        obtenerComportamientoScroll,
+      ],
+    );
+
+  if (categoriasValidas.length === 0) {
+    return null;
+  }
+
+  const fondoContenedor =
+    paginaDesplazada
+      ? colorHeader
+      : "var(--color-bg)";
+
+  const bordeContenedor =
+    paginaDesplazada
+      ? colorBorderHeader
+      : colorBorderCategoria;
 
   return (
-    <div
-      className={`sticky z-40 w-full border-b transition-[transform,background-color,border-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-        showCategories
-          ? "top-20 translate-y-0"
-          : "top-0 md:top-20 -translate-y-full pointer-events-none"
-      }`}
+    <nav
+      aria-label="Categorías de la tienda"
+      className={`
+        sticky
+        z-40
+        w-full
+        border-b
+        transition-[transform,background-color,border-color]
+        duration-500
+        ease-[cubic-bezier(0.22,1,0.36,1)]
+        ${
+          mostrarCategorias
+            ? "top-20 translate-y-0"
+            : "pointer-events-none top-0 -translate-y-full md:top-20"
+        }
+      `}
       style={{
-        backgroundColor: wrapperBackgroundColor,
-        borderColor: wrapperBorderColor,
+        backgroundColor: fondoContenedor,
+        borderColor: bordeContenedor,
       }}
     >
       <div className="relative w-full px-0 sm:px-4 lg:px-6">
-        {/* FLECHA IZQUIERDA DESKTOP */}
+        {/* FLECHA IZQUIERDA */}
         <button
           type="button"
-          onClick={() => moverSlider("left")}
-          aria-label="Mover categorias a la izquierda"
-          className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 z-10 h-9 w-9 items-center justify-center rounded-full border transition active:scale-95"
+          onClick={() =>
+            moverSlider("left")
+          }
+          disabled={!puedeMoverIzquierda}
+          aria-label="Ver categorías anteriores"
+          className="absolute left-3 top-1/2 z-10 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border outline-none transition active:scale-95 disabled:cursor-default disabled:opacity-30 md:flex"
           style={{
-            backgroundColor: isScrolled ? colorHeader : "var(--color-bg)",
-            borderColor: isScrolled
-              ? colorBorderHeader
-              : "rgba(255,255,255,0.1)",
-            color: isScrolled ? colorTextHeader : "var(--color-text)",
-            boxShadow: "none",
+            backgroundColor:
+              paginaDesplazada
+                ? colorHeader
+                : "var(--color-bg)",
+            borderColor:
+              paginaDesplazada
+                ? colorBorderHeader
+                : colorBorderCategoria,
+            color: paginaDesplazada
+              ? colorTextHeader
+              : "var(--color-text)",
           }}
         >
-          <ChevronLeft className="h-5 w-5" />
+          <ChevronLeft
+            aria-hidden="true"
+            className="h-5 w-5"
+          />
         </button>
 
-        {/* CONTENEDOR SLIDER */}
+        {/* CATEGORÍAS */}
         <div
           ref={sliderRef}
-          className="overflow-x-auto whitespace-nowrap py-3 px-3 sm:px-0 flex gap-1.5 scroll-smooth md:px-12"
+          onScroll={
+            actualizarEstadoFlechas
+          }
+          onTouchStart={() => {
+            tocandoPantallaRef.current =
+              true;
+          }}
+          onTouchEnd={() => {
+            tocandoPantallaRef.current =
+              false;
+          }}
+          className="flex scroll-smooth gap-1.5 overflow-x-auto whitespace-nowrap px-3 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:px-0 md:px-12"
           style={{
-            WebkitOverflowScrolling: "touch",
-            scrollbarWidth: "none",
-            msOverflowStyle: "none",
+            WebkitOverflowScrolling:
+              "touch",
             overscrollBehaviorX: "contain",
           }}
         >
-          {categorias.map((categoria) => {
-            const isActive = categoriaActiva === categoria.id;
+          {categoriasValidas.map(
+            (categoria) => {
+              const activa =
+                categoriaActiva ===
+                categoria.id;
 
-            const backgroundColor = isScrolled
-              ? isActive
-                ? `color-mix(in srgb, ${colorHeader} 85%, ${colorTextHeader})`
-                : colorHeader
-              : isActive
-              ? colorFondoCategoriaActiva || colorFondoCategoria
-              : colorFondoCategoria;
+              const colorFondo =
+                paginaDesplazada
+                  ? activa
+                    ? `color-mix(in srgb, ${colorHeader} 85%, ${colorTextHeader})`
+                    : colorHeader
+                  : activa
+                    ? colorFondoCategoriaActiva ||
+                      colorFondoCategoria
+                    : colorFondoCategoria;
 
-            const borderColor = isScrolled
-              ? colorBorderHeader
-              : isActive
-              ? colorBorderCategoriaActiva || colorBorderCategoria
-              : colorBorderCategoria;
+              const colorBorde =
+                paginaDesplazada
+                  ? colorBorderHeader
+                  : activa
+                    ? colorBorderCategoriaActiva ||
+                      colorBorderCategoria
+                    : colorBorderCategoria;
 
-            const textColor = isScrolled
-              ? colorTextHeader
-              : isActive
-              ? colorTextoCategoriaActiva || colorTextoCategoria
-              : colorTextoCategoria;
+              const colorTexto =
+                paginaDesplazada
+                  ? colorTextHeader
+                  : activa
+                    ? colorTextoCategoriaActiva ||
+                      colorTextoCategoria
+                    : colorTextoCategoria;
 
-            return (
-              <button
-                key={categoria.id}
-                ref={(el) => {
-                  if (el) buttonRefs.current.set(categoria.id, el);
-                  else buttonRefs.current.delete(categoria.id);
-                }}
-                type="button"
-                title={categoria.nombre}
-                onClick={() => {
-                  isClickingCategoryRef.current = true;
-                  setCategoriaActiva(categoria.id);
-                  onTrackCategoria?.(categoria.id);
-                  autoScrollToActiveButton(categoria.id);
-
-                  const element = document.getElementById(
-                    `cat-${categoria.id}`
-                  );
-                  if (!element) return;
-
-                  const yOffset = showCategories ? -150 : -90;
-                  const y =
-                    element.getBoundingClientRect().top +
-                    window.scrollY +
-                    yOffset;
-
-                  window.scrollTo({ top: y, behavior: "smooth" });
-
-                  setTimeout(() => {
-                    isClickingCategoryRef.current = false;
-                  }, 800);
-                }}
-                className={`relative max-w-[140px] sm:max-w-[200px] px-3 py-1.5 sm:px-3.5 sm:py-1.5 rounded-lg text-xs sm:text-xs font-semibold tracking-normal transition-all duration-300 border flex-shrink-0 outline-none touch-manipulation overflow-hidden ${
-                  isActive ? "" : "md:hover:bg-white/10 active:bg-white/10"
-                }`}
-                style={{
-                  backgroundColor,
-                  borderColor,
-                  color: textColor,
-                  boxShadow: "none",
-                }}
-              >
-                <span className="block truncate">{categoria.nombre}</span>
-              </button>
-            );
-          })}
+              return (
+                <button
+                  key={categoria.id}
+                  ref={(elemento) => {
+                    if (elemento) {
+                      botonesRef.current.set(
+                        categoria.id,
+                        elemento,
+                      );
+                    } else {
+                      botonesRef.current.delete(
+                        categoria.id,
+                      );
+                    }
+                  }}
+                  type="button"
+                  title={categoria.nombre}
+                  aria-current={
+                    activa
+                      ? "true"
+                      : undefined
+                  }
+                  onClick={() =>
+                    seleccionarCategoria(
+                      categoria.id,
+                    )
+                  }
+                  className={`
+                    relative
+                    max-w-[140px]
+                    shrink-0
+                    touch-manipulation
+                    overflow-hidden
+                    rounded-lg
+                    border
+                    px-3
+                    py-1.5
+                    text-xs
+                    font-semibold
+                    tracking-normal
+                    outline-none
+                    transition-all
+                    duration-300
+                    focus-visible:ring-2
+                    focus-visible:ring-[var(--color-primary)]
+                    sm:max-w-[200px]
+                    sm:px-3.5
+                    ${
+                      activa
+                        ? ""
+                        : "active:bg-white/10 md:hover:bg-white/10"
+                    }
+                  `}
+                  style={{
+                    backgroundColor:
+                      colorFondo,
+                    borderColor:
+                      colorBorde,
+                    color: colorTexto,
+                  }}
+                >
+                  <span className="block truncate">
+                    {categoria.nombre}
+                  </span>
+                </button>
+              );
+            },
+          )}
         </div>
 
-        {/* FLECHA DERECHA DESKTOP */}
+        {/* FLECHA DERECHA */}
         <button
           type="button"
-          onClick={() => moverSlider("right")}
-          aria-label="Mover categorias a la derecha"
-          className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 z-10 h-9 w-9 items-center justify-center rounded-full border transition active:scale-95"
+          onClick={() =>
+            moverSlider("right")
+          }
+          disabled={!puedeMoverDerecha}
+          aria-label="Ver categorías siguientes"
+          className="absolute right-3 top-1/2 z-10 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border outline-none transition active:scale-95 disabled:cursor-default disabled:opacity-30 md:flex"
           style={{
-            backgroundColor: isScrolled ? colorHeader : "var(--color-bg)",
-            borderColor: isScrolled
-              ? colorBorderHeader
-              : "rgba(255,255,255,0.1)",
-            color: isScrolled ? colorTextHeader : "var(--color-text)",
-            boxShadow: "none",
+            backgroundColor:
+              paginaDesplazada
+                ? colorHeader
+                : "var(--color-bg)",
+            borderColor:
+              paginaDesplazada
+                ? colorBorderHeader
+                : colorBorderCategoria,
+            color: paginaDesplazada
+              ? colorTextHeader
+              : "var(--color-text)",
           }}
         >
-          <ChevronRight className="h-5 w-5" />
+          <ChevronRight
+            aria-hidden="true"
+            className="h-5 w-5"
+          />
         </button>
       </div>
-    </div>
+    </nav>
   );
 }

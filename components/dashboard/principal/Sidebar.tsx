@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+
 import { supabase } from "@/lib/supabaseClient";
 import Logo from "@/components/marketing/ui/Logo";
 
@@ -16,7 +17,8 @@ import {
   Palette,
   BarChart3,
   PlusCircle,
-  HelpCircle, // 👈 Icono importado para el botón de ayuda
+  HelpCircle,
+  Globe2,
 } from "lucide-react";
 
 type Props = {
@@ -30,58 +32,104 @@ export default function Sidebar({ closeMenu }: Props) {
   const [userName, setUserName] = useState("");
 
   useEffect(() => {
-    cargarUsuario();
+    const cargarUsuario = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        setUserEmail(user.email || "");
+        setUserName(user.user_metadata?.name || "");
+      }
+    };
+
+    void cargarUsuario();
   }, []);
 
-  const cargarUsuario = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (user) {
-      setUserEmail(user.email || "");
-      setUserName(user.user_metadata?.name || "");
-    }
-  };
-
-  // FUNCIÓN ACTUALIZADA
   const cerrarSesion = async () => {
-    if (closeMenu) closeMenu(); // Cierra el menú responsive si está abierto
+    if (closeMenu) {
+      closeMenu();
+    }
+
     await supabase.auth.signOut();
-    
-    // Redirección limpia a la página principal de marketing
+
     window.location.href = "/";
   };
 
   const links = [
-    { name: "Principal", href: "/dashboard", icon: LayoutDashboard },
+    {
+      name: "Principal",
+      href: "/dashboard",
+      icon: LayoutDashboard,
+    },
     {
       name: "Agregar producto",
       href: "/dashboard/agregar-producto",
       icon: PlusCircle,
     },
-    { name: "Productos", href: "/dashboard/productos", icon: Package },
-    { name: "Categorías", href: "/dashboard/categorias", icon: Tags },
-    { name: "QR del catálogo", href: "/dashboard/qr", icon: QrCode },
-    { name: "Apariencia", href: "/dashboard/apariencia", icon: Palette },
-    { name: "Estadísticas", href: "/dashboard/estadistica", icon: BarChart3 },
-    { name: "Ajustes", href: "/dashboard/ajustes", icon: Settings },
-    { name: "Ayuda", href: "/contacto", icon: HelpCircle }, // 👈 Nuevo botón agregado debajo de Ajustes
+    {
+      name: "Productos",
+      href: "/dashboard/productos",
+      icon: Package,
+    },
+    {
+      name: "Categorías",
+      href: "/dashboard/categorias",
+      icon: Tags,
+    },
+    {
+      name: "QR del catálogo",
+      href: "/dashboard/qr",
+      icon: QrCode,
+    },
+    {
+      name: "Apariencia",
+      href: "/dashboard/apariencia",
+      icon: Palette,
+    },
+    {
+      name: "Estadísticas",
+      href: "/dashboard/estadistica",
+      icon: BarChart3,
+    },
+    {
+      name: "Ajustes",
+      href: "/dashboard/ajustes",
+      icon: Settings,
+    },
+    {
+      name: "Dominio personalizado",
+      href: "/dashboard/ajustes/dominios",
+      icon: Globe2,
+    },
+    {
+      name: "Ayuda",
+      href: "/contacto",
+      icon: HelpCircle,
+    },
   ];
 
-  const avatar = `https://ui-avatars.com/api/?name=${userName || userEmail}&background=111827&color=fff`;
+  const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+    userName || userEmail || "Usuario",
+  )}&background=111827&color=fff`;
 
   return (
-    <div className="flex flex-col h-full w-full bg-[var(--bg-secondary)] border-r border-[var(--border-card)] ">
+    <div className="flex h-full w-full flex-col border-r border-[var(--border-card)] bg-[var(--bg-secondary)]">
       {/* HEADER SOLO DESKTOP */}
-      <div className="hidden lg:block px-6 py-6 border-b border-[var(--border-card)]">
+      <div className="hidden border-b border-[var(--border-card)] px-6 py-6 lg:block">
         <Logo size="md" />
       </div>
 
-      {/* NAV */}
-      <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+      {/* NAVEGACIÓN */}
+      <nav className="flex-1 space-y-1 overflow-y-auto px-4 py-6">
         {links.map((link) => {
           const Icon = link.icon;
+
+          /*
+           * Usamos coincidencia exacta para evitar que
+           * "Ajustes" y "Dominio personalizado" aparezcan
+           * activos al mismo tiempo.
+           */
           const active = pathname === link.href;
 
           return (
@@ -90,40 +138,53 @@ export default function Sidebar({ closeMenu }: Props) {
               href={link.href}
               onClick={closeMenu}
               className={`
-                flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition
+                flex items-center gap-3 rounded-xl px-4 py-3
+                text-sm transition
                 ${
                   active
-                    ? "bg-[var(--color-primary)] text-[var(--text-primary)] font-semibold"
+                    ? "bg-[var(--color-primary)] font-semibold text-[var(--text-primary)]"
                     : "text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)] hover:text-[var(--text-primary)]"
                 }
               `}
             >
-              <Icon size={20} />
-              {link.name}
+              <Icon
+                size={20}
+                className="shrink-0"
+              />
+
+              <span className="min-w-0 truncate">
+                {link.name}
+              </span>
             </Link>
           );
         })}
       </nav>
 
-      {/* FOOTER */}
-      <div className="p-4 border-t border-[var(--border-card)]">
-        <div className="flex items-center gap-3 mb-4">
-          <img src={avatar} alt="avatar" className="w-10 h-10 rounded-full" />
+      {/* INFORMACIÓN DEL USUARIO */}
+      <div className="border-t border-[var(--border-card)] p-4">
+        <div className="mb-4 flex items-center gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={avatar}
+            alt="Avatar del usuario"
+            className="h-10 w-10 shrink-0 rounded-full"
+          />
 
-          <div className="flex flex-col min-w-0">
-            <span className="text-sm text-[var(--text-primary)] font-semibold truncate">
+          <div className="flex min-w-0 flex-col">
+            <span className="truncate text-sm font-semibold text-[var(--text-primary)]">
               {userName || "Usuario"}
             </span>
 
-            <span className="text-xs text-[var(--text-secondary)] truncate">
+            <span className="truncate text-xs text-[var(--text-secondary)]">
               {userEmail}
             </span>
           </div>
         </div>
 
         <button
+          type="button"
           onClick={cerrarSesion}
-          className="flex items-center justify-center gap-2 w-full px-4 py-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--color-danger)] hover:text-white transition-all duration-200"
+          className="flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-[var(--text-secondary)] transition-all duration-200 hover:bg-[var(--color-danger)] hover:text-white"
         >
           <LogOut size={16} />
           Cerrar sesión

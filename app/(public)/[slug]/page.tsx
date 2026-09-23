@@ -1,16 +1,22 @@
-import { createClient } from "@/lib/supabase/server";
-import MenuClient from "@/components/public/MenuClient";
-import { Metadata } from "next";
 import { cache } from "react";
+import { headers } from "next/headers";
+import type { Metadata } from "next";
+
+import { createClient } from "@/lib/supabase/server";
+import TiendaClient from "@/components/public/TiendaClient";
 
 interface PageProps {
-  params: Promise<{ slug: string }>;
-  searchParams: Promise<{ qr?: string }>;
+  params: Promise<{
+    slug: string;
+  }>;
+
+  searchParams: Promise<{
+    qr?: string;
+  }>;
 }
 
 export const revalidate = 60;
 
-// 🎨 VALORES POR DEFECTO CENTRALIZADOS
 const DEFAULT_THEME = {
   pais_code: "PE",
   color_primario: "#f97316",
@@ -30,13 +36,72 @@ const DEFAULT_THEME = {
   color_border_categoria: "#e5e7eb",
 };
 
-function getLogoUrl(logoPath?: string | null): string {
-  if (!logoPath) return "https://catalagox.com/default-share-image.png";
-  if (logoPath.startsWith("http://") || logoPath.startsWith("https://")) {
+function getLogoUrl(
+  logoPath?: string | null,
+): string {
+  if (!logoPath) {
+    return "https://catalagox.com/default-share-image.png";
+  }
+
+  if (
+    logoPath.startsWith("http://") ||
+    logoPath.startsWith("https://")
+  ) {
     return logoPath;
   }
-  const archivoCodificado = encodeURIComponent(logoPath);
+
+  const archivoCodificado =
+    encodeURIComponent(logoPath);
+
   return `https://yhlqooguctlzorinsxde.supabase.co/storage/v1/object/public/logos/${archivoCodificado}`;
+}
+
+function limpiarHost(
+  valor: string | null,
+): string {
+  if (!valor) {
+    return "";
+  }
+
+  return valor
+    .split(",")[0]
+    .trim()
+    .toLowerCase()
+    .split(":")[0]
+    .replace(/\.$/, "");
+}
+
+function esDominioDeCatalagox(
+  host: string,
+): boolean {
+  return (
+    !host ||
+    host === "catalagox.com" ||
+    host === "www.catalagox.com" ||
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host.endsWith(".vercel.app")
+  );
+}
+
+async function obtenerHostActual(): Promise<string> {
+  const headersList = await headers();
+
+  return limpiarHost(
+    headersList.get("x-forwarded-host") ??
+      headersList.get("host"),
+  );
+}
+
+function obtenerUrlTienda(
+  host: string,
+  slug: string,
+): string {
+  if (!esDominioDeCatalagox(host)) {
+    return `https://${host}`;
+  }
+
+  return `https://catalagox.com/${slug}`;
 }
 
 const getCatalogo = cache(async (slug: string) => {
@@ -45,23 +110,63 @@ const getCatalogo = cache(async (slug: string) => {
   const { data, error } = await supabase
     .from("catalogos")
     .select(`
-      id, nombre, logo, user_id, estilo_menu, slug,
-      color_primario, color_fondo, color_header, color_text_header,   
-      color_border_header, color_footer, color_texto, color_precio,
-      color_hamburguesa, color_tarjeta, color_categoria, color_lupa,
-      color_fondo_categoria, color_texto_categoria, color_border_categoria,
-      whatsapp, instagram, facebook, tiktok, youtube,
-      plan_vence_el, suscripcion_activa, subscription_status, pais_code          
+      id,
+      nombre,
+      logo,
+      user_id,
+      estilo_menu,
+      slug,
+      color_primario,
+      color_fondo,
+      color_header,
+      color_text_header,
+      color_border_header,
+      color_footer,
+      color_texto,
+      color_precio,
+      color_hamburguesa,
+      color_tarjeta,
+      color_categoria,
+      color_lupa,
+      color_fondo_categoria,
+      color_texto_categoria,
+      color_border_categoria,
+      whatsapp,
+      instagram,
+      facebook,
+      tiktok,
+      youtube,
+      plan_vence_el,
+      suscripcion_activa,
+      subscription_status,
+      pais_code
     `)
     .eq("slug", slug)
     .maybeSingle();
 
-  if (error || !data) return null;
+  if (error || !data) {
+    return null;
+  }
 
-  const fechaVencimiento = data.plan_vence_el ? new Date(data.plan_vence_el) : null;
-  const vencida = !fechaVencimiento || fechaVencimiento.getTime() < Date.now();
+  const fechaVencimiento = data.plan_vence_el
+    ? new Date(data.plan_vence_el)
+    : null;
 
-  if (!data.suscripcion_activa || data.subscription_status === "canceled" || vencida) {
+  const vencida =
+    !fechaVencimiento ||
+    Number.isNaN(fechaVencimiento.getTime()) ||
+    fechaVencimiento.getTime() < Date.now();
+
+  const suscripcionPermitida =
+    data.subscription_status === "active" ||
+    data.subscription_status === "trialing" ||
+    data.subscription_status === "trial";
+
+  if (
+    !data.suscripcion_activa ||
+    !suscripcionPermitida ||
+    vencida
+  ) {
     return null;
   }
 
@@ -71,115 +176,215 @@ const getCatalogo = cache(async (slug: string) => {
   };
 });
 
-const getCategoriasConProductos = cache(async (catalogoId: string) => {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("categorias")
-    .select(`
-      id,
-      nombre,
-      productos (
+const getCategoriasConProductos = cache(
+  async (catalogoId: string) => {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+      .from("categorias")
+      .select(`
         id,
         nombre,
-        descripcion,
-        precio,
-        imagen_url,
-        available: disponible, 
-        slug
-      )
-    `)
-    .eq("catalogo_id", catalogoId)
-    .order("created_at");
+        productos (
+          id,
+          nombre,
+          descripcion,
+          precio,
+          imagen_url,
+          disponible,
+          stock,
+          slug
+        )
+      `)
+      .eq("catalogo_id", catalogoId)
+      .order("created_at");
 
-  if (error) {
-    console.error("Error categorías:", error);
-    return null;
-  }
+    if (error) {
+      console.error(
+        "Error cargando categorías:",
+        error,
+      );
 
-  return data;
-});
+      return null;
+    }
 
-async function registrarEstadistica(userId: string, isQr: boolean) {
+    return data;
+  },
+);
+
+async function registrarEstadistica(
+  userId: string,
+  isQr: boolean,
+) {
   try {
     const supabase = await createClient();
-    const inserts = [{ user_id: userId, tipo: "menu_view" }];
-    if (isQr) inserts.push({ user_id: userId, tipo: "qr_scan" });
-    
-    await supabase.from("estadisticas").insert(inserts);
-  } catch (err) {
-    console.error("TRACKING ERROR:", err);
+
+    const inserts = [
+      {
+        user_id: userId,
+        tipo: "menu_view",
+      },
+    ];
+
+    if (isQr) {
+      inserts.push({
+        user_id: userId,
+        tipo: "qr_scan",
+      });
+    }
+
+    await supabase
+      .from("estadisticas")
+      .insert(inserts);
+  } catch (error) {
+    console.error(
+      "Error registrando estadística:",
+      error,
+    );
   }
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { slug } = await params;
-  if (!slug) return {};
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const [{ slug }, host] = await Promise.all([
+    params,
+    obtenerHostActual(),
+  ]);
 
-  const catalogoDB = await getCatalogo(slug);
-  if (!catalogoDB) {
-    return { title: "Catálogo No Encontrado" };
+  if (!slug) {
+    return {};
   }
 
-  const titulo = `Catálogo Digital - ${catalogoDB.nombre}`;
-  const descripcion = `¡Hola! Te invito a ver nuestro catálogo digital actualizado. Revisa nuestros productos y precios de ${catalogoDB.nombre} aquí.`;
+  const catalogo = await getCatalogo(slug);
+
+  if (!catalogo) {
+    return {
+      title: "Tienda no encontrada",
+      robots: {
+        index: false,
+        follow: false,
+      },
+    };
+  }
+
+  const slugTienda = catalogo.slug || slug;
+
+  const urlTienda = obtenerUrlTienda(
+    host,
+    slugTienda,
+  );
+
+  const titulo = `${catalogo.nombre} | Tienda Online`;
+
+  const descripcion =
+    `Descubre los productos, precios y novedades de ${catalogo.nombre}. Compra o realiza tu pedido directamente desde su tienda online.`;
 
   return {
-    metadataBase: new URL("https://catalagox.com"),
+    metadataBase: new URL(urlTienda),
     title: titulo,
     description: descripcion,
-    alternates: { canonical: `https://catalagox.com/${slug}` },
-    // 🚀 MEJORA SEO: Robots explícitos para asegurar indexación
+
+    alternates: {
+      canonical: urlTienda,
+    },
+
     robots: {
       index: true,
       follow: true,
-      nocache: true,
+      nocache: false,
+
       googleBot: {
         index: true,
         follow: true,
         noimageindex: false,
-        'max-video-preview': -1,
-        'max-image-preview': 'large',
-        'max-snippet': -1,
+        "max-video-preview": -1,
+        "max-image-preview": "large",
+        "max-snippet": -1,
       },
     },
+
     openGraph: {
       title: titulo,
       description: descripcion,
-      url: `https://catalagox.com/${slug}`,
-      siteName: "CatalagoX",
+      url: urlTienda,
+      siteName: catalogo.nombre,
       locale: "es_ES",
       type: "website",
-      images: [{ url: catalogoDB.logoUrl, width: 1200, height: 630, alt: `Logo de ${catalogoDB.nombre}` }],
+
+      images: [
+        {
+          url: catalogo.logoUrl,
+          width: 1200,
+          height: 630,
+          alt: `Logo de ${catalogo.nombre}`,
+        },
+      ],
     },
+
     twitter: {
       card: "summary_large_image",
       title: titulo,
       description: descripcion,
-      images: [{ url: catalogoDB.logoUrl, alt: `Logo de ${catalogoDB.nombre}` }],
+
+      images: [
+        {
+          url: catalogo.logoUrl,
+          alt: `Logo de ${catalogo.nombre}`,
+        },
+      ],
     },
   };
 }
 
-export default async function MenuPage({ params, searchParams }: PageProps) {
-  const [{ slug }, { qr }] = await Promise.all([params, searchParams]);
+export default async function TiendaPage({
+  params,
+  searchParams,
+}: PageProps) {
+  const [{ slug }, { qr }, host] =
+    await Promise.all([
+      params,
+      searchParams,
+      obtenerHostActual(),
+    ]);
 
   if (!slug) {
-    return <div className="p-10 text-center">Slug inválido</div>;
+    return (
+      <div className="p-10 text-center">
+        Enlace de tienda inválido
+      </div>
+    );
   }
 
   const catalogoDB = await getCatalogo(slug);
 
   if (!catalogoDB) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-[var(--bg-main)] text-[var(--text-primary)]">
-        <div className="w-16 h-16 mb-4 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500">
-          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[var(--bg-main)] p-6 text-center text-[var(--text-primary)]">
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-red-500/20 bg-red-500/10 text-red-500">
+          <svg
+            className="h-8 w-8"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
           </svg>
         </div>
-        <h1 className="text-xl font-bold mb-2">Catálogo no disponible</h1>
-        <p className="text-[var(--text-secondary)] text-sm max-w-sm">
-          Este catálogo no existe o la suscripción del comercio no está activa.
+
+        <h1 className="mb-2 text-xl font-bold">
+          Tienda no disponible
+        </h1>
+
+        <p className="max-w-sm text-sm text-[var(--text-secondary)]">
+          Esta tienda no existe o la suscripción del
+          comercio no está activa.
         </p>
       </div>
     );
@@ -192,52 +397,87 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
   };
 
   const [, categorias] = await Promise.all([
-    registrarEstadistica(catalogo.user_id, Boolean(qr)),
+    registrarEstadistica(
+      catalogo.user_id,
+      Boolean(qr),
+    ),
+
     getCategoriasConProductos(catalogo.id),
   ]);
 
   if (!categorias) {
-    return <div className="p-10 text-center">Error al cargar categorías</div>;
+    return (
+      <div className="p-10 text-center">
+        Error al cargar los productos
+      </div>
+    );
   }
 
-  // 🚀 MEJORA SEO: Datos Estructurados (Schema.org) para Organización
-  // Esto no cambia el diseño, solo añade info para Google a nivel de código.
+  const urlTienda = obtenerUrlTienda(
+    host,
+    catalogo.slug || slug,
+  );
+
+  /*
+   * En Catalagox los productos viven debajo del slug:
+   * /mi-tienda/mi-producto
+   *
+   * En un dominio personalizado parten desde la raíz:
+   * /mi-producto
+   */
+  const rutaBase = esDominioDeCatalagox(host)
+    ? `/${catalogo.slug || slug}`
+    : "";
+
   const schemaOrgJSONLD = {
     "@context": "https://schema.org",
-    "@type": "Organization",
-    "name": catalogo.nombre,
-    "url": `https://catalagox.com/${catalogo.slug}`,
-    "logo": catalogo.logoUrl,
-    "sameAs": [
+    "@type": "OnlineStore",
+    name: catalogo.nombre,
+    url: urlTienda,
+    logo: catalogo.logoUrl,
+
+    sameAs: [
       catalogo.facebook,
       catalogo.instagram,
       catalogo.tiktok,
-      catalogo.youtube
-    ].filter(Boolean), // Elimina valores nulos si no existen
-    "contactPoint": catalogo.whatsapp ? {
-      "@type": "ContactPoint",
-      "telephone": catalogo.whatsapp,
-      "contactType": "customer service",
-      "availableLanguage": "Spanish"
-    } : undefined,
-    "areaServed": catalogo.pais_code
+      catalogo.youtube,
+    ].filter(Boolean),
+
+    contactPoint: catalogo.whatsapp
+      ? {
+          "@type": "ContactPoint",
+          telephone: catalogo.whatsapp,
+          contactType: "customer service",
+          availableLanguage: "Spanish",
+        }
+      : undefined,
+
+    areaServed: catalogo.pais_code,
   };
+
+  const schemaSeguro = JSON.stringify(
+    schemaOrgJSONLD,
+  ).replace(/</g, "\\u003c");
 
   return (
     <div
-      className="min-h-screen w-full transition-colors duration-300 relative"
-      style={{ backgroundColor: catalogo.color_fondo }}
+      className="relative min-h-screen w-full transition-colors duration-300"
+      style={{
+        backgroundColor: catalogo.color_fondo,
+      }}
     >
-      {/* 🚀 Inyección de Datos Estructurados (Invisible en el diseño) */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaOrgJSONLD) }}
+        dangerouslySetInnerHTML={{
+          __html: schemaSeguro,
+        }}
       />
-      
-      <MenuClient
+
+      <TiendaClient
         catalogo={catalogo}
         categorias={categorias}
         countryCode={catalogo.pais_code}
+        rutaBase={rutaBase}
       />
     </div>
   );

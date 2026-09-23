@@ -1,102 +1,214 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import Image from "next/image";
 
 interface InteractiveProductImageProps {
   src: string;
   alt: string;
+  priority?: boolean;
 }
 
-export default function InteractiveProductImage({ src, alt }: InteractiveProductImageProps) {
-  const [isMaximized, setIsMaximized] = useState(false);
+export default function InteractiveProductImage({
+  src,
+  alt,
+  priority = true,
+}: InteractiveProductImageProps) {
+  const [imagenAmpliada, setImagenAmpliada] =
+    useState(false);
 
-  const toggleMaximize = useCallback(() => {
-    setIsMaximized((prev) => !prev);
+  const botonAbrirRef =
+    useRef<HTMLButtonElement>(null);
+
+  const botonCerrarRef =
+    useRef<HTMLButtonElement>(null);
+
+  const abrirImagen = useCallback(() => {
+    setImagenAmpliada(true);
   }, []);
 
-  // 🔒 Bloquear el scroll de fondo cuando el modal esté abierto
-  // ⌨️ Cerrar al presionar la tecla Escape
-  useEffect(() => {
-    if (!isMaximized) return;
+  const cerrarImagen = useCallback(() => {
+    setImagenAmpliada(false);
+  }, []);
 
-    const originalOverflow = document.body.style.overflow;
+  /*
+   * Cuando abrimos la imagen:
+   * - bloqueamos el scroll del fondo;
+   * - movemos el foco al botón de cerrar;
+   * - permitimos cerrar con Escape;
+   * - mantenemos el foco dentro del modal.
+   */
+  useEffect(() => {
+    if (!imagenAmpliada) {
+      return;
+    }
+
+    const overflowAnterior =
+      document.body.style.overflow;
+
     document.body.style.overflow = "hidden";
 
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setIsMaximized(false);
+    const enfocarBotonCerrar =
+      window.requestAnimationFrame(() => {
+        botonCerrarRef.current?.focus();
+      });
+
+    const manejarTeclado = (
+      event: KeyboardEvent,
+    ) => {
+      if (event.key === "Escape") {
+        cerrarImagen();
+        return;
+      }
+
+      /*
+       * El modal solamente tiene un control interactivo:
+       * el botón de cerrar. Evitamos que Tab lleve el foco
+       * hacia elementos de la página que están detrás.
+       */
+      if (event.key === "Tab") {
+        event.preventDefault();
+        botonCerrarRef.current?.focus();
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener(
+      "keydown",
+      manejarTeclado,
+    );
 
     return () => {
-      document.body.style.overflow = originalOverflow;
-      window.removeEventListener("keydown", handleKeyDown);
+      window.cancelAnimationFrame(
+        enfocarBotonCerrar,
+      );
+
+      document.body.style.overflow =
+        overflowAnterior;
+
+      window.removeEventListener(
+        "keydown",
+        manejarTeclado,
+      );
+
+      botonAbrirRef.current?.focus();
     };
-  }, [isMaximized]);
+  }, [imagenAmpliada, cerrarImagen]);
 
   return (
     <>
-      <div 
-        role="button"
-        tabIndex={0}
+      {/* IMAGEN PRINCIPAL DEL PRODUCTO */}
+      <button
+        ref={botonAbrirRef}
+        type="button"
+        onClick={abrirImagen}
         aria-label={`Ampliar imagen de ${alt}`}
-        className="w-full h-full cursor-zoom-in relative outline-none touch-manipulation focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] rounded-lg overflow-hidden" 
-        onClick={toggleMaximize}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            toggleMaximize();
-          }
-        }}
+        aria-haspopup="dialog"
+        aria-expanded={imagenAmpliada}
+        className="relative h-full w-full cursor-zoom-in touch-manipulation overflow-hidden rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]"
       >
         <Image
           src={src}
           alt={alt}
           fill
-          priority
+          priority={priority}
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          className="object-cover opacity-90 transition-opacity md:hover:opacity-100"
+          className="object-cover opacity-95 transition duration-300 md:group-hover:scale-[1.02] md:hover:opacity-100"
         />
-        
-        <div className="absolute bottom-4 right-4 bg-black/50 p-2 rounded-full text-white/70 pointer-events-none">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6" />
-          </svg>
-        </div>
-      </div>
 
-      {isMaximized && (
-        <div 
+        {/* INDICADOR PARA AMPLIAR */}
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white shadow-lg backdrop-blur-sm sm:bottom-4 sm:right-4"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.8}
+            stroke="currentColor"
+            className="h-5 w-5"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6"
+            />
+          </svg>
+        </span>
+      </button>
+
+      {/* VISOR DE IMAGEN AMPLIADA */}
+      {imagenAmpliada && (
+        <div
           role="dialog"
           aria-modal="true"
-          aria-label={`Vista ampliada de ${alt}`}
-          className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 cursor-zoom-out animate-fade-in touch-manipulation"
-          onClick={toggleMaximize}
+          aria-labelledby="imagen-ampliada-titulo"
+          aria-describedby="imagen-ampliada-descripcion"
+          className="fixed inset-0 z-[100] flex cursor-zoom-out items-center justify-center bg-black/95 p-3 backdrop-blur-sm animate-fade-in touch-manipulation sm:p-6"
+          onClick={cerrarImagen}
         >
-          <button 
+          <h2
+            id="imagen-ampliada-titulo"
+            className="sr-only"
+          >
+            Imagen ampliada de {alt}
+          </h2>
+
+          <p
+            id="imagen-ampliada-descripcion"
+            className="sr-only"
+          >
+            Pulsa el botón de cerrar, el fondo oscuro
+            o la tecla Escape para regresar al producto.
+          </p>
+
+          {/* BOTÓN CERRAR */}
+          <button
+            ref={botonCerrarRef}
             type="button"
             aria-label="Cerrar imagen ampliada"
-            className="absolute top-6 right-6 text-white/70 md:hover:text-white active:text-white p-3 rounded-full bg-black/50 active:scale-95 transition-transform outline-none focus-visible:ring-2 focus-visible:ring-white z-10"
-            onClick={(e) => {
-              e.stopPropagation(); 
-              toggleMaximize();
+            onClick={(event) => {
+              event.stopPropagation();
+              cerrarImagen();
             }}
+            className="absolute right-3 top-3 z-20 flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-black/70 text-white shadow-lg outline-none transition hover:bg-black focus-visible:ring-2 focus-visible:ring-white active:scale-95 sm:right-6 sm:top-6"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+              className="h-6 w-6"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M6 18 18 6M6 6l12 12"
+              />
             </svg>
           </button>
 
-          <div className="relative w-full h-full max-w-7xl max-h-[90vh]">
+          {/* IMAGEN COMPLETA */}
+          <div
+            className="relative h-full max-h-[92vh] w-full max-w-7xl cursor-default"
+            onClick={(event) =>
+              event.stopPropagation()
+            }
+          >
             <Image
               src={src}
               alt={alt}
               fill
-              className="object-contain"
-              sizes="(max-width: 1280px) 100vw, 1280px"
+              priority
+              sizes="100vw"
+              className="select-none object-contain"
+              draggable={false}
             />
           </div>
         </div>

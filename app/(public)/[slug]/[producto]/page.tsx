@@ -1,15 +1,18 @@
 
+import type { CSSProperties } from "react";
+import { headers } from "next/headers";
+import type { Metadata } from "next";
+import Image from "next/image";
+import { notFound } from "next/navigation";
+import { ShieldCheck, Truck } from "lucide-react";
+
 import { createClient } from "@/lib/supabase/server";
 import BackButton from "@/components/public/BackButton";
 import BotonCompartir from "@/components/public/BotonCompartir";
 import AccionesProducto from "@/components/public/AccionesProducto";
 import StockBadge from "@/components/public/StockBadge";
 import CartWidget from "@/components/public/CartWidget";
-import { notFound } from "next/navigation";
-import { Metadata } from "next";
 import Price from "@/components/ui/Price";
-import Image from "next/image";
-import { ShieldCheck, Truck } from "lucide-react";
 
 interface PageProps {
   params: Promise<{
@@ -33,6 +36,51 @@ const DEFAULT_COLORS = {
 const blurDataURL =
   "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBmaWxsPSIjZjNmNGY2Ii8+PC9zdmc+";
 
+function limpiarHost(valor: string | null): string {
+  if (!valor) {
+    return "";
+  }
+
+  return valor
+    .split(",")[0]
+    .trim()
+    .toLowerCase()
+    .split(":")[0]
+    .replace(/\.$/, "");
+}
+
+function esDominioDeCatalagox(host: string): boolean {
+  return (
+    !host ||
+    host === "catalagox.com" ||
+    host === "www.catalagox.com" ||
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host.endsWith(".vercel.app")
+  );
+}
+
+async function obtenerHostActual(): Promise<string> {
+  const headersList = await headers();
+
+  return limpiarHost(
+    headersList.get("x-forwarded-host") ??
+      headersList.get("host"),
+  );
+}
+
+function obtenerUrlProducto(
+  host: string,
+  slugTienda: string,
+  slugProducto: string,
+): string {
+  if (!esDominioDeCatalagox(host)) {
+    return `https://${host}/${slugProducto}`;
+  }
+
+  return `https://catalagox.com/${slugTienda}/${slugProducto}`;
+}
+
 async function getProductoData(slug: string, productoSlug: string) {
   const supabase = await createClient();
 
@@ -50,12 +98,37 @@ async function getProductoData(slug: string, productoSlug: string) {
       color_fondo,
       color_texto,
       color_precio,
-      color_tarjeta
+      color_tarjeta,
+      plan_vence_el,
+      suscripcion_activa,
+      subscription_status
     `)
     .eq("slug", slug)
     .maybeSingle();
 
   if (!catalogo) return null;
+
+  const fechaVencimiento = catalogo.plan_vence_el
+    ? new Date(catalogo.plan_vence_el)
+    : null;
+
+  const planVencido =
+    !fechaVencimiento ||
+    Number.isNaN(fechaVencimiento.getTime()) ||
+    fechaVencimiento.getTime() < Date.now();
+
+  const suscripcionPermitida =
+    catalogo.subscription_status === "active" ||
+    catalogo.subscription_status === "trialing" ||
+    catalogo.subscription_status === "trial";
+
+  if (
+    !catalogo.suscripcion_activa ||
+    !suscripcionPermitida ||
+    planVencido
+  ) {
+    return null;
+  }
 
   const { data: producto } = await supabase
     .from("productos")
@@ -72,7 +145,11 @@ async function getProductoData(slug: string, productoSlug: string) {
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
-  const { slug, producto: productoSlug } = await params;
+  const [{ slug, producto: productoSlug }, host] =
+    await Promise.all([
+      params,
+      obtenerHostActual(),
+    ]);
 
   const data = await getProductoData(slug, productoSlug);
 
@@ -94,14 +171,30 @@ export async function generateMetadata({
     producto.imagen_url ||
     "https://catalagox.com/default-share-image.png";
 
+  const urlProducto = obtenerUrlProducto(
+    host,
+    slug,
+    productoSlug,
+  );
+
   return {
+    metadataBase: new URL(urlProducto),
     title: titulo,
     description: descripcion,
+
+    alternates: {
+      canonical: urlProducto,
+    },
+
+    robots: {
+      index: true,
+      follow: true,
+    },
 
     openGraph: {
       title: titulo,
       description: descripcion,
-      url: `https://catalagox.com/${slug}/${productoSlug}`,
+      url: urlProducto,
       siteName: catalogo.nombre,
       images: [
         {
@@ -173,7 +266,7 @@ export default async function ProductoPage({ params }: PageProps) {
 
     "--color-card":
       catalogo.color_tarjeta || DEFAULT_COLORS.color_tarjeta,
-  } as React.CSSProperties;
+  } as CSSProperties;
 
   return (
     <main

@@ -5,7 +5,8 @@ import { supabase } from "@/lib/supabaseClient";
 import imageCompression from "browser-image-compression";
 
 import { PageHeader } from "@/components/dashboard/PageHeader";
-import { Settings } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, Globe2, Settings } from "lucide-react";
 
 // Importación de subcomponentes visuales
 import FormNombreMenu from "@/components/dashboard/ajustes/FormNombreMenu";
@@ -74,7 +75,7 @@ export default function AjustesPage() {
       setFacebook(data.facebook || "");
       setTiktok(data.tiktok || "");
       setYoutube(data.youtube || "");
-      setPaisCode(data.pais_code || "PE"); 
+      setPaisCode(data.pais_code || "PE");
     }
 
     setLoading(false);
@@ -131,15 +132,18 @@ export default function AjustesPage() {
 
       // ─── CONFIGURACIÓN Y PROCESO DE COMPRESIÓN ───
       const opciones = {
-        maxSizeMB: 0.2,            // Máximo 200KB de peso objetivo
-        maxWidthOrHeight: 500,     // Redimensionar si mide más de 500px de ancho o alto
+        maxSizeMB: 0.2, // Máximo 200KB de peso objetivo
+        maxWidthOrHeight: 500, // Redimensionar si mide más de 500px de ancho o alto
         useWebWorker: true,
       };
 
       try {
         file = await imageCompression(file, opciones);
       } catch (compressionError) {
-        console.error("Error al comprimir, se intentará subir original:", compressionError);
+        console.error(
+          "Error al comprimir, se intentará subir original:",
+          compressionError,
+        );
       }
       // ─────────────────────────────────────────────
 
@@ -250,19 +254,19 @@ export default function AjustesPage() {
   };
 
   // 1. Agrega useEffect en tus hooks si aún no lo tienes
-useEffect(() => {
-  if (!loading) {
-    // Si la URL tiene #logo, hace scroll suave hacia ese elemento
-    if (window.location.hash === "#logo") {
-      const el = document.getElementById("logo");
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth" });
+  useEffect(() => {
+    if (!loading) {
+      // Si la URL tiene #logo, hace scroll suave hacia ese elemento
+      if (window.location.hash === "#logo") {
+        const el = document.getElementById("logo");
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth" });
+        }
       }
     }
-  }
-}, [loading]);
+  }, [loading]);
 
- // 🔄 LOADING (SKELETON PÁGINA AJUSTES)
+  // 🔄 LOADING (SKELETON PÁGINA AJUSTES)
   if (loading) {
     return (
       <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8 animate-pulse">
@@ -280,7 +284,6 @@ useEffect(() => {
 
         {/* 🟢 CONTENEDOR DE SECCIONES (MAX-W-2XL) */}
         <div className="max-w-2xl mx-auto space-y-8">
-          
           {/* Section 1: FormNombreMenu */}
           <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 space-y-4">
             <div className="h-5 w-40 rounded bg-white/10 mb-2" />
@@ -329,7 +332,6 @@ useEffect(() => {
               <div className="h-10 w-44 rounded-xl bg-white/5 border border-[var(--border-card)]" />
             </div>
           </div>
-
         </div>
       </div>
     );
@@ -346,6 +348,31 @@ useEffect(() => {
       />
 
       <div className="max-w-2xl mx-auto space-y-8">
+        {/* DOMINIO PERSONALIZADO */}
+        <Link
+          href="/dashboard/ajustes/dominios"
+          className="group block rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] p-5 transition hover:border-[var(--color-primary)]/50 hover:bg-[var(--bg-card-hover)] sm:p-6"
+        >
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[var(--color-primary)]/10 text-[var(--color-primary)]">
+              <Globe2 className="h-6 w-6" />
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <h2 className="font-bold text-[var(--text-primary)]">
+                Dominio personalizado
+              </h2>
+
+              <p className="mt-1 text-sm leading-relaxed text-[var(--text-secondary)]">
+                Conecta tu propio dominio para que tus clientes encuentren tu
+                tienda fácilmente.
+              </p>
+            </div>
+
+            <ArrowRight className="h-5 w-5 shrink-0 text-[var(--text-secondary)] transition-transform group-hover:translate-x-1 group-hover:text-[var(--color-primary)]" />
+          </div>
+        </Link>
+
         {/* NOMBRE DEL MENÚ */}
         <FormNombreMenu
           nombreMenu={nombreMenu}
@@ -363,8 +390,8 @@ useEffect(() => {
 
         {/* CONTACTO Y REDES */}
         <FormContacto
-          paisCode={paisCode}      
-          setPaisCode={setPaisCode} 
+          paisCode={paisCode}
+          setPaisCode={setPaisCode}
           whatsapp={whatsapp}
           setWhatsapp={setWhatsapp}
           instagram={instagram}
