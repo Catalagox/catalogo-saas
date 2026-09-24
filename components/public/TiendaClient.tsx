@@ -11,19 +11,10 @@ import {
 import { supabase } from "@/lib/supabaseClient";
 import { useCart } from "@/context/CartContext";
 
-/*
- * Usamos nombres de tienda dentro de este componente,
- * pero conservamos temporalmente las rutas antiguas de los
- * archivos para no romper las importaciones.
- *
- * Cuando renombremos esos archivos solamente cambiaremos
- * las rutas de importación.
- */
 import TiendaHeader from "@/components/public/TiendaHeader";
 import TiendaFooter from "@/components/public/TiendaFooter";
 import TiendaLista from "@/components/public/TiendaLista";
 import TiendaGaleria from "@/components/public/TiendaGaleria";
-
 import CategoriasSlider from "@/components/public/CategoriasSlider";
 import CartDrawer from "@/components/public/CartDrawer";
 
@@ -49,17 +40,11 @@ interface Tienda {
   nombre: string;
   logo?: string;
   user_id: string;
-
-  /*
-   * Este campo mantiene su nombre porque así está
-   * registrado actualmente en Supabase.
-   */
   estilo_menu?: "lista" | "galeria";
-
   slug?: string;
   pais_code?: string;
 
-  // COLORES DE LA TIENDA
+  // Colores de la tienda
   color_primario?: string;
   color_fondo?: string;
   color_header?: string;
@@ -76,10 +61,10 @@ interface Tienda {
   color_texto_categoria?: string;
   color_border_categoria?: string;
 
-  // CONTACTO
+  // Contacto
   whatsapp?: string;
 
-  // REDES SOCIALES
+  // Redes sociales
   instagram?: string;
   facebook?: string;
   tiktok?: string;
@@ -87,11 +72,6 @@ interface Tienda {
 }
 
 interface TiendaClientProps {
-  /*
-   * Conservamos el nombre "catalogo" en la propiedad
-   * temporalmente porque la página pública ya lo utiliza.
-   * Dentro del componente lo renombramos como "tienda".
-   */
   catalogo: Tienda | null;
   categorias: Categoria[];
   countryCode?: string;
@@ -109,31 +89,18 @@ export default function TiendaClient({
   const { cantidadTotal } = useCart();
 
   const [carritoAbierto, setCarritoAbierto] = useState(false);
-
   const [componenteMontado, setComponenteMontado] = useState(false);
 
   useEffect(() => {
     setComponenteMontado(true);
   }, []);
 
-  /*
-   * Registra una sola visualización por categoría
-   * durante la visita actual.
-   */
+  // Registra una visualización por categoría durante esta visita.
   const registrarVistaCategoria = useCallback(
     async (categoriaId: string) => {
-      if (!tienda?.user_id) {
-        return;
-      }
+      if (!tienda?.user_id) return;
+      if (categoriasVisitadas.current.has(categoriaId)) return;
 
-      if (categoriasVisitadas.current.has(categoriaId)) {
-        return;
-      }
-
-      /*
-       * Marcamos la categoría antes de iniciar la petición
-       * para evitar envíos duplicados por eventos rápidos.
-       */
       categoriasVisitadas.current.add(categoriaId);
 
       const { error } = await supabase.from("estadisticas").insert({
@@ -148,11 +115,7 @@ export default function TiendaClient({
     [tienda?.user_id],
   );
 
-  /*
-   * Este caso normalmente no debería ocurrir porque la
-   * página del servidor ya comprueba la tienda. Se conserva
-   * como respaldo visual.
-   */
+  // La página del servidor normalmente ya verifica que exista la tienda.
   if (!tienda) {
     return (
       <div className="mx-auto min-h-screen w-full max-w-2xl animate-pulse space-y-6 p-4">
@@ -174,41 +137,28 @@ export default function TiendaClient({
   }
 
   const categoriasSeguras = Array.isArray(categorias) ? categorias : [];
-
   const vistaTienda = tienda.estilo_menu ?? "lista";
-
   const paisTienda = countryCode ?? tienda.pais_code ?? "PE";
 
   const colorFondo = tienda.color_fondo ?? "#fefefe";
-
   const colorHeader = tienda.color_header ?? "#2c2c2c";
-
   const colorTextoHeader = tienda.color_text_header ?? "#ffffff";
-
   const colorBordeHeader =
     tienda.color_border_header ?? "rgba(255,255,255,0.1)";
-
   const colorFooter = tienda.color_footer ?? "#111827";
-
   const colorTexto = tienda.color_texto ?? "#4f4d4d";
-
   const colorPrecio = tienda.color_precio ?? "#22c55e";
-
   const colorHamburguesa = tienda.color_hamburguesa ?? "#ffffff";
-
   const colorTarjeta = tienda.color_tarjeta ?? "#ffffff10";
-
   const colorCategoria = tienda.color_categoria ?? "#eae9e9";
-
   const colorPrimario = tienda.color_primario ?? "#f97316";
-
   const colorLupa = tienda.color_lupa ?? "#ffffff";
-
-  const colorFondoCategoria = tienda.color_fondo_categoria ?? "#ffffff";
-
-  const colorTextoCategoria = tienda.color_texto_categoria ?? "#111827";
-
-  const colorBordeCategoria = tienda.color_border_categoria ?? "#e5e7eb";
+  const colorFondoCategoria =
+    tienda.color_fondo_categoria ?? "#ffffff";
+  const colorTextoCategoria =
+    tienda.color_texto_categoria ?? "#111827";
+  const colorBordeCategoria =
+    tienda.color_border_categoria ?? "#e5e7eb";
 
   const temaTienda = {
     "--color-bg": colorFondo,
@@ -292,7 +242,7 @@ export default function TiendaClient({
           aria-label={`Ver carrito con ${cantidadTotal} ${
             cantidadTotal === 1 ? "producto" : "productos"
           }`}
-          className="fixed bottom-6 right-6 z-50 flex items-center justify-center gap-2 rounded-full p-4 text-white shadow-2xl transition-transform active:scale-95 touch-manipulation"
+          className="fixed bottom-6 right-6 z-50 flex touch-manipulation items-center justify-center gap-2 rounded-full p-4 text-white shadow-2xl transition-transform active:scale-95"
           style={{
             backgroundColor: "var(--color-primary)",
           }}
@@ -312,6 +262,7 @@ export default function TiendaClient({
         <CartDrawer
           isOpen={carritoAbierto}
           onClose={() => setCarritoAbierto(false)}
+          catalogoId={tienda.id}
           catalogoNombre={tienda.nombre}
           whatsapp={tienda.whatsapp}
           userCountry={paisTienda}

@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 
 import { createClient } from "@/lib/supabase/server";
 import TiendaClient from "@/components/public/TiendaClient";
+import { CartProvider } from "@/context/CartContext";
 
 interface PageProps {
   params: Promise<{
@@ -36,29 +37,21 @@ const DEFAULT_THEME = {
   color_border_categoria: "#e5e7eb",
 };
 
-function getLogoUrl(
-  logoPath?: string | null,
-): string {
+function getLogoUrl(logoPath?: string | null): string {
   if (!logoPath) {
     return "https://catalagox.com/default-share-image.png";
   }
 
-  if (
-    logoPath.startsWith("http://") ||
-    logoPath.startsWith("https://")
-  ) {
+  if (logoPath.startsWith("http://") || logoPath.startsWith("https://")) {
     return logoPath;
   }
 
-  const archivoCodificado =
-    encodeURIComponent(logoPath);
+  const archivoCodificado = encodeURIComponent(logoPath);
 
   return `https://yhlqooguctlzorinsxde.supabase.co/storage/v1/object/public/logos/${archivoCodificado}`;
 }
 
-function limpiarHost(
-  valor: string | null,
-): string {
+function limpiarHost(valor: string | null): string {
   if (!valor) {
     return "";
   }
@@ -71,9 +64,7 @@ function limpiarHost(
     .replace(/\.$/, "");
 }
 
-function esDominioDeCatalagox(
-  host: string,
-): boolean {
+function esDominioDeCatalagox(host: string): boolean {
   return (
     !host ||
     host === "catalagox.com" ||
@@ -88,15 +79,11 @@ async function obtenerHostActual(): Promise<string> {
   const headersList = await headers();
 
   return limpiarHost(
-    headersList.get("x-forwarded-host") ??
-      headersList.get("host"),
+    headersList.get("x-forwarded-host") ?? headersList.get("host"),
   );
 }
 
-function obtenerUrlTienda(
-  host: string,
-  slug: string,
-): string {
+function obtenerUrlTienda(host: string, slug: string): string {
   if (!esDominioDeCatalagox(host)) {
     return `https://${host}`;
   }
@@ -109,7 +96,8 @@ const getCatalogo = cache(async (slug: string) => {
 
   const { data, error } = await supabase
     .from("catalogos")
-    .select(`
+    .select(
+      `
       id,
       nombre,
       logo,
@@ -140,7 +128,8 @@ const getCatalogo = cache(async (slug: string) => {
       suscripcion_activa,
       subscription_status,
       pais_code
-    `)
+    `,
+    )
     .eq("slug", slug)
     .maybeSingle();
 
@@ -162,11 +151,7 @@ const getCatalogo = cache(async (slug: string) => {
     data.subscription_status === "trialing" ||
     data.subscription_status === "trial";
 
-  if (
-    !data.suscripcion_activa ||
-    !suscripcionPermitida ||
-    vencida
-  ) {
+  if (!data.suscripcion_activa || !suscripcionPermitida || vencida) {
     return null;
   }
 
@@ -176,13 +161,13 @@ const getCatalogo = cache(async (slug: string) => {
   };
 });
 
-const getCategoriasConProductos = cache(
-  async (catalogoId: string) => {
-    const supabase = await createClient();
+const getCategoriasConProductos = cache(async (catalogoId: string) => {
+  const supabase = await createClient();
 
-    const { data, error } = await supabase
-      .from("categorias")
-      .select(`
+  const { data, error } = await supabase
+    .from("categorias")
+    .select(
+      `
         id,
         nombre,
         productos (
@@ -195,27 +180,21 @@ const getCategoriasConProductos = cache(
           stock,
           slug
         )
-      `)
-      .eq("catalogo_id", catalogoId)
-      .order("created_at");
+      `,
+    )
+    .eq("catalogo_id", catalogoId)
+    .order("created_at");
 
-    if (error) {
-      console.error(
-        "Error cargando categorías:",
-        error,
-      );
+  if (error) {
+    console.error("Error cargando categorías:", error);
 
-      return null;
-    }
+    return null;
+  }
 
-    return data;
-  },
-);
+  return data;
+});
 
-async function registrarEstadistica(
-  userId: string,
-  isQr: boolean,
-) {
+async function registrarEstadistica(userId: string, isQr: boolean) {
   try {
     const supabase = await createClient();
 
@@ -233,24 +212,16 @@ async function registrarEstadistica(
       });
     }
 
-    await supabase
-      .from("estadisticas")
-      .insert(inserts);
+    await supabase.from("estadisticas").insert(inserts);
   } catch (error) {
-    console.error(
-      "Error registrando estadística:",
-      error,
-    );
+    console.error("Error registrando estadística:", error);
   }
 }
 
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
-  const [{ slug }, host] = await Promise.all([
-    params,
-    obtenerHostActual(),
-  ]);
+  const [{ slug }, host] = await Promise.all([params, obtenerHostActual()]);
 
   if (!slug) {
     return {};
@@ -270,15 +241,11 @@ export async function generateMetadata({
 
   const slugTienda = catalogo.slug || slug;
 
-  const urlTienda = obtenerUrlTienda(
-    host,
-    slugTienda,
-  );
+  const urlTienda = obtenerUrlTienda(host, slugTienda);
 
   const titulo = `${catalogo.nombre} | Tienda Online`;
 
-  const descripcion =
-    `Descubre los productos, precios y novedades de ${catalogo.nombre}. Compra o realiza tu pedido directamente desde su tienda online.`;
+  const descripcion = `Descubre los productos, precios y novedades de ${catalogo.nombre}. Compra o realiza tu pedido directamente desde su tienda online.`;
 
   return {
     metadataBase: new URL(urlTienda),
@@ -337,23 +304,15 @@ export async function generateMetadata({
   };
 }
 
-export default async function TiendaPage({
-  params,
-  searchParams,
-}: PageProps) {
-  const [{ slug }, { qr }, host] =
-    await Promise.all([
-      params,
-      searchParams,
-      obtenerHostActual(),
-    ]);
+export default async function TiendaPage({ params, searchParams }: PageProps) {
+  const [{ slug }, { qr }, host] = await Promise.all([
+    params,
+    searchParams,
+    obtenerHostActual(),
+  ]);
 
   if (!slug) {
-    return (
-      <div className="p-10 text-center">
-        Enlace de tienda inválido
-      </div>
-    );
+    return <div className="p-10 text-center">Enlace de tienda inválido</div>;
   }
 
   const catalogoDB = await getCatalogo(slug);
@@ -378,13 +337,10 @@ export default async function TiendaPage({
           </svg>
         </div>
 
-        <h1 className="mb-2 text-xl font-bold">
-          Tienda no disponible
-        </h1>
+        <h1 className="mb-2 text-xl font-bold">Tienda no disponible</h1>
 
         <p className="max-w-sm text-sm text-[var(--text-secondary)]">
-          Esta tienda no existe o la suscripción del
-          comercio no está activa.
+          Esta tienda no existe o la suscripción del comercio no está activa.
         </p>
       </div>
     );
@@ -397,26 +353,18 @@ export default async function TiendaPage({
   };
 
   const [, categorias] = await Promise.all([
-    registrarEstadistica(
-      catalogo.user_id,
-      Boolean(qr),
-    ),
+    registrarEstadistica(catalogo.user_id, Boolean(qr)),
 
     getCategoriasConProductos(catalogo.id),
   ]);
 
   if (!categorias) {
     return (
-      <div className="p-10 text-center">
-        Error al cargar los productos
-      </div>
+      <div className="p-10 text-center">Error al cargar los productos</div>
     );
   }
 
-  const urlTienda = obtenerUrlTienda(
-    host,
-    catalogo.slug || slug,
-  );
+  const urlTienda = obtenerUrlTienda(host, catalogo.slug || slug);
 
   /*
    * En Catalagox los productos viven debajo del slug:
@@ -455,9 +403,7 @@ export default async function TiendaPage({
     areaServed: catalogo.pais_code,
   };
 
-  const schemaSeguro = JSON.stringify(
-    schemaOrgJSONLD,
-  ).replace(/</g, "\\u003c");
+  const schemaSeguro = JSON.stringify(schemaOrgJSONLD).replace(/</g, "\\u003c");
 
   return (
     <div
@@ -473,12 +419,14 @@ export default async function TiendaPage({
         }}
       />
 
-      <TiendaClient
-        catalogo={catalogo}
-        categorias={categorias}
-        countryCode={catalogo.pais_code}
-        rutaBase={rutaBase}
-      />
+      <CartProvider key={catalogo.id} catalogoId={catalogo.id}>
+        <TiendaClient
+          catalogo={catalogo}
+          categorias={categorias}
+          countryCode={catalogo.pais_code}
+          rutaBase={rutaBase}
+        />
+      </CartProvider>
     </div>
   );
 }

@@ -1,29 +1,25 @@
-
 import type { CSSProperties } from "react";
 import { headers } from "next/headers";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ShieldCheck, Truck } from "lucide-react";
-
 import { createClient } from "@/lib/supabase/server";
 import BackButton from "@/components/public/BackButton";
 import BotonCompartir from "@/components/public/BotonCompartir";
 import AccionesProducto from "@/components/public/AccionesProducto";
 import StockBadge from "@/components/public/StockBadge";
 import CartWidget from "@/components/public/CartWidget";
+import { CartProvider } from "@/context/CartContext";
 import Price from "@/components/ui/Price";
-
 interface PageProps {
   params: Promise<{
     slug: string;
     producto: string;
   }>;
 }
-
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-
 const DEFAULT_COLORS = {
   color_fondo: "#ffffff",
   color_texto: "#111827",
@@ -31,16 +27,13 @@ const DEFAULT_COLORS = {
   color_primario: "#f97316",
   color_tarjeta: "rgba(0,0,0,0.02)",
 };
-
 // Placeholder ligero
 const blurDataURL =
   "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBmaWxsPSIjZjNmNGY2Ii8+PC9zdmc+";
-
 function limpiarHost(valor: string | null): string {
   if (!valor) {
     return "";
   }
-
   return valor
     .split(",")[0]
     .trim()
@@ -48,7 +41,6 @@ function limpiarHost(valor: string | null): string {
     .split(":")[0]
     .replace(/\.$/, "");
 }
-
 function esDominioDeCatalagox(host: string): boolean {
   return (
     !host ||
@@ -59,16 +51,13 @@ function esDominioDeCatalagox(host: string): boolean {
     host.endsWith(".vercel.app")
   );
 }
-
 async function obtenerHostActual(): Promise<string> {
   const headersList = await headers();
-
   return limpiarHost(
     headersList.get("x-forwarded-host") ??
       headersList.get("host"),
   );
 }
-
 function obtenerUrlProducto(
   host: string,
   slugTienda: string,
@@ -77,15 +66,11 @@ function obtenerUrlProducto(
   if (!esDominioDeCatalagox(host)) {
     return `https://${host}/${slugProducto}`;
   }
-
   return `https://catalagox.com/${slugTienda}/${slugProducto}`;
 }
-
 async function getProductoData(slug: string, productoSlug: string) {
   const supabase = await createClient();
-
   if (!slug || !productoSlug) return null;
-
   const { data: catalogo } = await supabase
     .from("catalogos")
     .select(`
@@ -105,23 +90,18 @@ async function getProductoData(slug: string, productoSlug: string) {
     `)
     .eq("slug", slug)
     .maybeSingle();
-
   if (!catalogo) return null;
-
   const fechaVencimiento = catalogo.plan_vence_el
     ? new Date(catalogo.plan_vence_el)
     : null;
-
   const planVencido =
     !fechaVencimiento ||
     Number.isNaN(fechaVencimiento.getTime()) ||
     fechaVencimiento.getTime() < Date.now();
-
   const suscripcionPermitida =
     catalogo.subscription_status === "active" ||
     catalogo.subscription_status === "trialing" ||
     catalogo.subscription_status === "trial";
-
   if (
     !catalogo.suscripcion_activa ||
     !suscripcionPermitida ||
@@ -129,19 +109,15 @@ async function getProductoData(slug: string, productoSlug: string) {
   ) {
     return null;
   }
-
   const { data: producto } = await supabase
     .from("productos")
     .select("*")
     .eq("catalogo_id", catalogo.id)
     .eq("slug", productoSlug)
     .maybeSingle();
-
   if (!producto) return null;
-
   return { catalogo, producto };
 }
-
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
@@ -150,47 +126,36 @@ export async function generateMetadata({
       params,
       obtenerHostActual(),
     ]);
-
   const data = await getProductoData(slug, productoSlug);
-
   if (!data) {
     return {
       title: "Producto no encontrado",
     };
   }
-
   const { producto, catalogo } = data;
-
   const titulo = `${producto.nombre} | ${catalogo.nombre}`;
-
   const descripcion = producto.descripcion
     ? `${producto.descripcion.substring(0, 150)}... ¡Pídelo aquí!`
     : `Mira nuestro producto ${producto.nombre} en ${catalogo.nombre}.`;
-
   const imagenUrl =
     producto.imagen_url ||
     "https://catalagox.com/default-share-image.png";
-
   const urlProducto = obtenerUrlProducto(
     host,
     slug,
     productoSlug,
   );
-
   return {
     metadataBase: new URL(urlProducto),
     title: titulo,
     description: descripcion,
-
     alternates: {
       canonical: urlProducto,
     },
-
     robots: {
       index: true,
       follow: true,
     },
-
     openGraph: {
       title: titulo,
       description: descripcion,
@@ -206,7 +171,6 @@ export async function generateMetadata({
       ],
       type: "website",
     },
-
     twitter: {
       card: "summary_large_image",
       title: titulo,
@@ -215,24 +179,17 @@ export async function generateMetadata({
     },
   };
 }
-
 export default async function ProductoPage({ params }: PageProps) {
   const { slug, producto: productoSlug } = await params;
-
   const supabase = await createClient();
-
   const data = await getProductoData(slug, productoSlug);
-
   if (!data) {
     return notFound();
   }
-
   const { catalogo, producto } = data;
-
   // ---------------------------------------------
   // TRACKING
   // ---------------------------------------------
-
   try {
     await supabase.from("estadisticas").insert({
       user_id: catalogo.user_id,
@@ -241,44 +198,36 @@ export default async function ProductoPage({ params }: PageProps) {
   } catch (err) {
     console.error("TRACKING PRODUCT ERROR:", err);
   }
-
   // ---------------------------------------------
   // CONFIGURACIÓN
   // ---------------------------------------------
-
   const userCountry = catalogo.pais_code ?? "PE";
-
   const colorPrimario =
     catalogo.color_primario || DEFAULT_COLORS.color_primario;
-
   const dynamicTheme = {
     "--color-bg":
       catalogo.color_fondo || DEFAULT_COLORS.color_fondo,
-
     "--color-text":
       catalogo.color_texto || DEFAULT_COLORS.color_texto,
-
     "--color-price":
       catalogo.color_precio || DEFAULT_COLORS.color_precio,
-
     "--color-primary":
       colorPrimario,
-
     "--color-card":
       catalogo.color_tarjeta || DEFAULT_COLORS.color_tarjeta,
   } as CSSProperties;
-
   return (
-    <main
-      className="
+    <CartProvider key={catalogo.id} catalogoId={catalogo.id}>
+      <main
+        className="
         min-h-screen
         bg-[var(--color-bg)]
         text-[var(--color-text)]
         transition-colors
         duration-200
       "
-      style={dynamicTheme}
-    >
+        style={dynamicTheme}
+      >
       <div
         className="
           max-w-7xl
@@ -295,7 +244,6 @@ export default async function ProductoPage({ params }: PageProps) {
         {/* ================================================= */}
         {/* PRODUCTO                                          */}
         {/* ================================================= */}
-
         <div
           className="
             grid
@@ -310,7 +258,6 @@ export default async function ProductoPage({ params }: PageProps) {
           {/* ================================================= */}
           {/* IMAGEN                                            */}
           {/* ================================================= */}
-
           <div className="lg:col-span-7">
             <div
               className="
@@ -332,7 +279,6 @@ export default async function ProductoPage({ params }: PageProps) {
               }}
             >
               {/* BOTÓN VOLVER */}
-
               <div
                 className="
                   absolute
@@ -345,9 +291,7 @@ export default async function ProductoPage({ params }: PageProps) {
               >
                 <BackButton />
               </div>
-
               {/* IMAGEN */}
-
               {producto.imagen_url ? (
                 <Image
                   src={producto.imagen_url}
@@ -380,11 +324,9 @@ export default async function ProductoPage({ params }: PageProps) {
               )}
             </div>
           </div>
-
           {/* ================================================= */}
           {/* INFORMACIÓN                                      */}
           {/* ================================================= */}
-
           <div
             className="
               lg:col-span-5
@@ -393,11 +335,9 @@ export default async function ProductoPage({ params }: PageProps) {
             "
           >
             <div className="space-y-6 sm:space-y-7">
-
               {/* --------------------------------------------- */}
               {/* TÍTULO                                        */}
               {/* --------------------------------------------- */}
-
               <div>
                 <h1
                   className="
@@ -412,11 +352,9 @@ export default async function ProductoPage({ params }: PageProps) {
                   {producto.nombre}
                 </h1>
               </div>
-
               {/* --------------------------------------------- */}
               {/* PRECIO                                        */}
               {/* --------------------------------------------- */}
-
               <div
                 className="
                   pb-6
@@ -440,11 +378,9 @@ export default async function ProductoPage({ params }: PageProps) {
                   />
                 </div>
               </div>
-
               {/* --------------------------------------------- */}
               {/* DESCRIPCIÓN                                   */}
               {/* --------------------------------------------- */}
-
               {producto.descripcion && (
                 <div>
                   <p
@@ -460,11 +396,9 @@ export default async function ProductoPage({ params }: PageProps) {
                   </p>
                 </div>
               )}
-
               {/* --------------------------------------------- */}
               {/* STOCK + COMPARTIR + ACCIONES                 */}
               {/* --------------------------------------------- */}
-
               <div
                 className="
                   rounded-2xl
@@ -479,7 +413,6 @@ export default async function ProductoPage({ params }: PageProps) {
                 }}
               >
                 {/* STOCK + COMPARTIR */}
-
                 <div
                   className="
                     flex
@@ -490,7 +423,6 @@ export default async function ProductoPage({ params }: PageProps) {
                   "
                 >
                   {/* STOCK */}
-
                   <div className="min-w-0">
                     <StockBadge
                       stock={producto.stock}
@@ -498,26 +430,20 @@ export default async function ProductoPage({ params }: PageProps) {
                       mostrarTextoCompleto={true}
                     />
                   </div>
-
                   {/* COMPARTIR */}
-
                   <div className="shrink-0">
                     <BotonCompartir titulo={producto.nombre} />
                   </div>
                 </div>
-
                 {/* SELECTOR + CARRITO */}
-
                 <AccionesProducto
                   producto={producto}
                   colorPrimario={colorPrimario}
                 />
               </div>
-
               {/* --------------------------------------------- */}
               {/* BENEFICIOS                                    */}
               {/* --------------------------------------------- */}
-
               <div
                 className="
                   grid
@@ -527,7 +453,6 @@ export default async function ProductoPage({ params }: PageProps) {
                 "
               >
                 {/* Pedido seguro */}
-
                 <div
                   className="
                     flex
@@ -561,20 +486,16 @@ export default async function ProductoPage({ params }: PageProps) {
                       }}
                     />
                   </div>
-
                   <div className="min-w-0">
                     <p className="text-xs font-bold">
                       Pedido seguro
                     </p>
-
                     <p className="text-[11px] opacity-55 mt-0.5">
                       Compra directamente
                     </p>
                   </div>
                 </div>
-
                 {/* Atención directa */}
-
                 <div
                   className="
                     flex
@@ -608,34 +529,31 @@ export default async function ProductoPage({ params }: PageProps) {
                       }}
                     />
                   </div>
-
                   <div className="min-w-0">
                     <p className="text-xs font-bold">
                       Atención directa
                     </p>
-
                     <p className="text-[11px] opacity-55 mt-0.5">
                       Pedido por WhatsApp
                     </p>
                   </div>
                 </div>
               </div>
-
             </div>
           </div>
         </div>
       </div>
-
       {/* ================================================= */}
       {/* CARRITO                                          */}
       {/* ================================================= */}
-
       <CartWidget
+        catalogoId={catalogo.id}
         catalogoNombre={catalogo.nombre}
         whatsapp={catalogo.whatsapp}
         userCountry={userCountry}
         colorPrimario={catalogo.color_primario}
       />
-    </main>
+      </main>
+    </CartProvider>
   );
 }

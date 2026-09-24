@@ -45,9 +45,14 @@ const CartContext = createContext<CartContextType | null>(null);
 
 export function CartProvider({
   children,
+  catalogoId,
 }: {
-  children: ReactNode;
+  children: React.ReactNode;
+  catalogoId: string;
 }) {
+  const clave = `cart:${catalogoId}`;
+
+  // Aquí continúa el resto del código nuevo del CartContext
   const [items, setItems] = useState<CartItem[]>([]);
 
   // ==================================================
