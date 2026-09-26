@@ -1,23 +1,18 @@
 import { cache } from "react";
 import { headers } from "next/headers";
 import type { Metadata } from "next";
-
 import { createClient } from "@/lib/supabase/server";
 import TiendaClient from "@/components/public/TiendaClient";
-import { CartProvider } from "@/context/CartContext";
-
+import TiendaLayout from "@/components/public/TiendaLayout";
 interface PageProps {
   params: Promise<{
     slug: string;
   }>;
-
   searchParams: Promise<{
     qr?: string;
   }>;
 }
-
 export const revalidate = 60;
-
 const DEFAULT_THEME = {
   pais_code: "PE",
   color_primario: "#f97316",
@@ -36,26 +31,20 @@ const DEFAULT_THEME = {
   color_texto_categoria: "#111827",
   color_border_categoria: "#e5e7eb",
 };
-
 function getLogoUrl(logoPath?: string | null): string {
   if (!logoPath) {
     return "https://catalagox.com/default-share-image.png";
   }
-
   if (logoPath.startsWith("http://") || logoPath.startsWith("https://")) {
     return logoPath;
   }
-
   const archivoCodificado = encodeURIComponent(logoPath);
-
   return `https://yhlqooguctlzorinsxde.supabase.co/storage/v1/object/public/logos/${archivoCodificado}`;
 }
-
 function limpiarHost(valor: string | null): string {
   if (!valor) {
     return "";
   }
-
   return valor
     .split(",")[0]
     .trim()
@@ -63,7 +52,6 @@ function limpiarHost(valor: string | null): string {
     .split(":")[0]
     .replace(/\.$/, "");
 }
-
 function esDominioDeCatalagox(host: string): boolean {
   return (
     !host ||
@@ -74,26 +62,20 @@ function esDominioDeCatalagox(host: string): boolean {
     host.endsWith(".vercel.app")
   );
 }
-
 async function obtenerHostActual(): Promise<string> {
   const headersList = await headers();
-
   return limpiarHost(
     headersList.get("x-forwarded-host") ?? headersList.get("host"),
   );
 }
-
 function obtenerUrlTienda(host: string, slug: string): string {
   if (!esDominioDeCatalagox(host)) {
     return `https://${host}`;
   }
-
   return `https://catalagox.com/${slug}`;
 }
-
 const getCatalogo = cache(async (slug: string) => {
   const supabase = await createClient();
-
   const { data, error } = await supabase
     .from("catalogos")
     .select(
@@ -132,38 +114,30 @@ const getCatalogo = cache(async (slug: string) => {
     )
     .eq("slug", slug)
     .maybeSingle();
-
   if (error || !data) {
     return null;
   }
-
   const fechaVencimiento = data.plan_vence_el
     ? new Date(data.plan_vence_el)
     : null;
-
   const vencida =
     !fechaVencimiento ||
     Number.isNaN(fechaVencimiento.getTime()) ||
     fechaVencimiento.getTime() < Date.now();
-
   const suscripcionPermitida =
     data.subscription_status === "active" ||
     data.subscription_status === "trialing" ||
     data.subscription_status === "trial";
-
   if (!data.suscripcion_activa || !suscripcionPermitida || vencida) {
     return null;
   }
-
   return {
     ...data,
     logoUrl: getLogoUrl(data.logo),
   };
 });
-
 const getCategoriasConProductos = cache(async (catalogoId: string) => {
   const supabase = await createClient();
-
   const { data, error } = await supabase
     .from("categorias")
     .select(
@@ -184,51 +158,40 @@ const getCategoriasConProductos = cache(async (catalogoId: string) => {
     )
     .eq("catalogo_id", catalogoId)
     .order("created_at");
-
   if (error) {
     console.error("Error cargando categorías:", error);
-
     return null;
   }
-
   return data;
 });
-
 async function registrarEstadistica(userId: string, isQr: boolean) {
   try {
     const supabase = await createClient();
-
     const inserts = [
       {
         user_id: userId,
         tipo: "menu_view",
       },
     ];
-
     if (isQr) {
       inserts.push({
         user_id: userId,
         tipo: "qr_scan",
       });
     }
-
     await supabase.from("estadisticas").insert(inserts);
   } catch (error) {
     console.error("Error registrando estadística:", error);
   }
 }
-
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const [{ slug }, host] = await Promise.all([params, obtenerHostActual()]);
-
   if (!slug) {
     return {};
   }
-
   const catalogo = await getCatalogo(slug);
-
   if (!catalogo) {
     return {
       title: "Tienda no encontrada",
@@ -238,29 +201,21 @@ export async function generateMetadata({
       },
     };
   }
-
   const slugTienda = catalogo.slug || slug;
-
   const urlTienda = obtenerUrlTienda(host, slugTienda);
-
   const titulo = `${catalogo.nombre} | Tienda Online`;
-
   const descripcion = `Descubre los productos, precios y novedades de ${catalogo.nombre}. Compra o realiza tu pedido directamente desde su tienda online.`;
-
   return {
     metadataBase: new URL(urlTienda),
     title: titulo,
     description: descripcion,
-
     alternates: {
       canonical: urlTienda,
     },
-
     robots: {
       index: true,
       follow: true,
       nocache: false,
-
       googleBot: {
         index: true,
         follow: true,
@@ -270,7 +225,6 @@ export async function generateMetadata({
         "max-snippet": -1,
       },
     },
-
     openGraph: {
       title: titulo,
       description: descripcion,
@@ -278,7 +232,6 @@ export async function generateMetadata({
       siteName: catalogo.nombre,
       locale: "es_ES",
       type: "website",
-
       images: [
         {
           url: catalogo.logoUrl,
@@ -288,12 +241,10 @@ export async function generateMetadata({
         },
       ],
     },
-
     twitter: {
       card: "summary_large_image",
       title: titulo,
       description: descripcion,
-
       images: [
         {
           url: catalogo.logoUrl,
@@ -303,20 +254,16 @@ export async function generateMetadata({
     },
   };
 }
-
 export default async function TiendaPage({ params, searchParams }: PageProps) {
   const [{ slug }, { qr }, host] = await Promise.all([
     params,
     searchParams,
     obtenerHostActual(),
   ]);
-
   if (!slug) {
     return <div className="p-10 text-center">Enlace de tienda inválido</div>;
   }
-
   const catalogoDB = await getCatalogo(slug);
-
   if (!catalogoDB) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-[var(--bg-main)] p-6 text-center text-[var(--text-primary)]">
@@ -336,36 +283,28 @@ export default async function TiendaPage({ params, searchParams }: PageProps) {
             />
           </svg>
         </div>
-
         <h1 className="mb-2 text-xl font-bold">Tienda no disponible</h1>
-
         <p className="max-w-sm text-sm text-[var(--text-secondary)]">
           Esta tienda no existe o la suscripción del comercio no está activa.
         </p>
       </div>
     );
   }
-
   const catalogo = {
     ...DEFAULT_THEME,
     ...catalogoDB,
     logo: catalogoDB.logoUrl,
   };
-
   const [, categorias] = await Promise.all([
     registrarEstadistica(catalogo.user_id, Boolean(qr)),
-
     getCategoriasConProductos(catalogo.id),
   ]);
-
   if (!categorias) {
     return (
       <div className="p-10 text-center">Error al cargar los productos</div>
     );
   }
-
   const urlTienda = obtenerUrlTienda(host, catalogo.slug || slug);
-
   /*
    * En Catalagox los productos viven debajo del slug:
    * /mi-tienda/mi-producto
@@ -376,21 +315,18 @@ export default async function TiendaPage({ params, searchParams }: PageProps) {
   const rutaBase = esDominioDeCatalagox(host)
     ? `/${catalogo.slug || slug}`
     : "";
-
   const schemaOrgJSONLD = {
     "@context": "https://schema.org",
     "@type": "OnlineStore",
     name: catalogo.nombre,
     url: urlTienda,
     logo: catalogo.logoUrl,
-
     sameAs: [
       catalogo.facebook,
       catalogo.instagram,
       catalogo.tiktok,
       catalogo.youtube,
     ].filter(Boolean),
-
     contactPoint: catalogo.whatsapp
       ? {
           "@type": "ContactPoint",
@@ -399,12 +335,9 @@ export default async function TiendaPage({ params, searchParams }: PageProps) {
           availableLanguage: "Spanish",
         }
       : undefined,
-
     areaServed: catalogo.pais_code,
   };
-
-  const schemaSeguro = JSON.stringify(schemaOrgJSONLD).replace(/</g, "\\u003c");
-
+  const schemaSeguro = JSON.stringify(schemaOrgJSONLD).replace(/</g, "\u003c");
   return (
     <div
       className="relative min-h-screen w-full transition-colors duration-300"
@@ -418,15 +351,14 @@ export default async function TiendaPage({ params, searchParams }: PageProps) {
           __html: schemaSeguro,
         }}
       />
-
-      <CartProvider key={catalogo.id} catalogoId={catalogo.id}>
+      <TiendaLayout key={catalogo.id} catalogo={catalogo} categorias={categorias} rutaBase={rutaBase}>
         <TiendaClient
           catalogo={catalogo}
           categorias={categorias}
           countryCode={catalogo.pais_code}
           rutaBase={rutaBase}
         />
-      </CartProvider>
+      </TiendaLayout>
     </div>
   );
 }

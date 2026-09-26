@@ -1,10 +1,7 @@
 "use client";
-
 import { useState, type FormEvent } from "react";
-
 import { useCart, type CartItem } from "@/context/CartContext";
 import Price from "@/components/ui/Price";
-
 interface CartDrawerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -13,9 +10,9 @@ interface CartDrawerProps {
   whatsapp?: string;
   userCountry: string;
 }
-
 interface PedidoConfirmado {
   id: string;
+  referencia: string;
   total: number;
   moneda: string;
   nombre: string;
@@ -24,7 +21,6 @@ interface PedidoConfirmado {
   notas: string;
   items: CartItem[];
 }
-
 function formatPrice(amount: number, countryCode: string) {
   const etiquetas: Record<string, string> = {
     AR: "$ARS",
@@ -38,40 +34,31 @@ function formatPrice(amount: number, countryCode: string) {
     US: "$USD",
     UY: "$UYU",
   };
-
   return `${etiquetas[countryCode] ?? "$"} ${amount.toLocaleString("es", {
     maximumFractionDigits: 2,
   })}`;
 }
-
 function obtenerClaveIntento(catalogoId: string, contenido: string): string {
   const storageKey = `pedido-intento:${catalogoId}`;
-
   try {
     const anterior = sessionStorage.getItem(storageKey);
-
     if (anterior) {
       const parsed = JSON.parse(anterior) as {
         contenido?: string;
         clave?: string;
       };
-
       if (parsed.contenido === contenido && parsed.clave) {
         return parsed.clave;
       }
     }
-
     const clave = crypto.randomUUID();
-
     sessionStorage.setItem(storageKey, JSON.stringify({ contenido, clave }));
-
     return clave;
   } catch {
     // El pedido también funciona si el navegador bloquea sessionStorage.
     return crypto.randomUUID();
   }
 }
-
 export default function CartDrawer({
   isOpen,
   onClose,
@@ -82,29 +69,22 @@ export default function CartDrawer({
 }: CartDrawerProps) {
   const { items, increaseQuantity, decreaseQuantity, total, clearCart } =
     useCart();
-
   const [nombre, setNombre] = useState("");
   const [telefono, setTelefono] = useState("");
   const [email, setEmail] = useState("");
   const [direccion, setDireccion] = useState("");
   const [notas, setNotas] = useState("");
-
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState("");
   const [confirmado, setConfirmado] = useState<PedidoConfirmado | null>(null);
-
   if (!isOpen) return null;
-
   const confirmarPedido = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
     if (enviando || items.length === 0) return;
-
     const itemsParaEnviar = items.map((item) => ({
       id: item.id,
       cantidad: item.cantidad,
     }));
-
     const datos = {
       catalogoId,
       nombre: nombre.trim(),
@@ -114,13 +94,10 @@ export default function CartDrawer({
       notas: notas.trim(),
       items: itemsParaEnviar,
     };
-
     const contenido = JSON.stringify(datos);
     const claveIdempotencia = obtenerClaveIntento(catalogoId, contenido);
-
     setEnviando(true);
     setError("");
-
     try {
       const response = await fetch("/api/pedidos", {
         method: "POST",
@@ -132,32 +109,31 @@ export default function CartDrawer({
           claveIdempotencia,
         }),
       });
-
       if (response.status === 429) {
         throw new Error(
           "Demasiados intentos. Espera un minuto y vuelve a intentarlo.",
         );
       }
-
       const resultado: {
         pedidoId?: string;
+        referencia?: string;
         total?: number;
         moneda?: string;
         error?: string;
       } = await response.json().catch(() => ({}));
-
       if (
         !response.ok ||
         !resultado.pedidoId ||
+        !resultado.referencia ||
         typeof resultado.total !== "number"
       ) {
         throw new Error(resultado.error ?? "No pudimos registrar el pedido.");
       }
-
       // Conservar una copia para mostrar el resumen después de
       // vaciar el carrito.
       setConfirmado({
         id: resultado.pedidoId,
+        referencia: resultado.referencia,
         total: resultado.total,
         moneda: resultado.moneda ?? "",
         nombre: datos.nombre,
@@ -166,13 +142,11 @@ export default function CartDrawer({
         notas: datos.notas,
         items: items.map((item) => ({ ...item })),
       });
-
       try {
         sessionStorage.removeItem(`pedido-intento:${catalogoId}`);
       } catch {
         // No impide mostrar el pedido ya guardado.
       }
-
       clearCart();
     } catch (err) {
       setError(
@@ -182,43 +156,32 @@ export default function CartDrawer({
       setEnviando(false);
     }
   };
-
   const abrirWhatsApp = () => {
     if (!confirmado || !whatsapp) return;
-
     const numero = whatsapp.replace(/\D/g, "");
-
     if (!numero) return;
-
-    let mensaje = `*Hola, hice el pedido ${confirmado.id} en ${catalogoNombre}.*\n\n`;
-
+    let mensaje = `*Hola, hice el pedido ${confirmado.referencia} en ${catalogoNombre}.*\n\n`;
     confirmado.items.forEach((item) => {
       mensaje += `- ${item.cantidad}x ${item.nombre}: ${formatPrice(
         item.precio * item.cantidad,
         userCountry,
       )}\n`;
     });
-
     mensaje += `\n*Total: ${formatPrice(confirmado.total, userCountry)}*`;
-
     mensaje += `\nNombre: ${confirmado.nombre}`;
     mensaje += `\nTeléfono: ${confirmado.telefono}`;
-
     if (confirmado.direccion) {
       mensaje += `\nDirección: ${confirmado.direccion}`;
     }
-
     if (confirmado.notas) {
       mensaje += `\nNotas: ${confirmado.notas}`;
     }
-
     window.open(
       `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`,
       "_blank",
       "noopener,noreferrer",
     );
   };
-
   return (
     <div className="fixed inset-0 z-[9999] flex justify-end bg-black/60 backdrop-blur-sm">
       <div
@@ -235,7 +198,6 @@ export default function CartDrawer({
           <h2 className="text-xl font-black uppercase tracking-wider">
             {confirmado ? "Pedido registrado" : "Tu pedido"}
           </h2>
-
           <button
             type="button"
             onClick={onClose}
@@ -245,26 +207,20 @@ export default function CartDrawer({
             ✕
           </button>
         </div>
-
         {confirmado ? (
           <div className="flex flex-1 flex-col justify-center gap-5">
             <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-5">
               <p className="text-lg font-bold">Tu pedido quedó registrado</p>
-
               <p className="mt-2 text-sm opacity-80">Número de pedido:</p>
-
-              <p className="break-all text-sm font-bold">{confirmado.id}</p>
-
+              <p className="text-sm font-bold">{confirmado.referencia}</p>
               <p className="mt-4 text-sm">
                 Total:{" "}
                 <strong>{formatPrice(confirmado.total, userCountry)}</strong>
               </p>
-
               <p className="mt-2 text-xs opacity-70">
                 Pago pendiente. La tienda confirmará los detalles contigo.
               </p>
             </div>
-
             {whatsapp && (
               <button
                 type="button"
@@ -274,7 +230,6 @@ export default function CartDrawer({
                 Avisar a la tienda por WhatsApp
               </button>
             )}
-
             <button
               type="button"
               onClick={onClose}
@@ -289,13 +244,11 @@ export default function CartDrawer({
               {items.map((item) => {
                 const tieneStock =
                   item.stock !== null && item.stock !== undefined;
-
                 const llegoAlStock =
                   tieneStock &&
                   item.stock !== null &&
                   item.stock !== undefined &&
                   item.cantidad >= item.stock;
-
                 return (
                   <div
                     key={item.id}
@@ -305,18 +258,15 @@ export default function CartDrawer({
                       <p className="truncate text-sm font-bold sm:text-base">
                         {item.nombre}
                       </p>
-
                       <div className="text-xs font-black text-[var(--color-price)]">
                         <Price amount={item.precio} countryCode={userCountry} />
                       </div>
-
                       {tieneStock && (
                         <p className="mt-1 text-[10px] font-bold opacity-60">
                           Máximo disponible: {item.stock}
                         </p>
                       )}
                     </div>
-
                     <div className="flex shrink-0 items-center gap-3 rounded-lg border border-white/10 bg-black/20 p-1">
                       <button
                         type="button"
@@ -327,11 +277,9 @@ export default function CartDrawer({
                       >
                         −
                       </button>
-
                       <span className="w-4 text-center text-sm font-bold">
                         {item.cantidad}
                       </span>
-
                       <button
                         type="button"
                         onClick={() => increaseQuantity(item.id)}
@@ -346,13 +294,11 @@ export default function CartDrawer({
                 );
               })}
             </div>
-
             <form
               onSubmit={confirmarPedido}
               className="mt-6 space-y-4 border-t border-white/10 pt-5"
             >
               <h3 className="font-bold">Tus datos</h3>
-
               <label className="block text-sm">
                 Nombre *
                 <input
@@ -365,7 +311,6 @@ export default function CartDrawer({
                   className="mt-1 w-full rounded-xl border border-white/20 bg-transparent p-3"
                 />
               </label>
-
               <label className="block text-sm">
                 Teléfono *
                 <input
@@ -379,7 +324,6 @@ export default function CartDrawer({
                   className="mt-1 w-full rounded-xl border border-white/20 bg-transparent p-3"
                 />
               </label>
-
               <label className="block text-sm">
                 Correo electrónico (opcional)
                 <input
@@ -391,7 +335,6 @@ export default function CartDrawer({
                   className="mt-1 w-full rounded-xl border border-white/20 bg-transparent p-3"
                 />
               </label>
-
               <label className="block text-sm">
                 Dirección o lugar de entrega (opcional)
                 <textarea
@@ -402,7 +345,6 @@ export default function CartDrawer({
                   className="mt-1 w-full rounded-xl border border-white/20 bg-transparent p-3"
                 />
               </label>
-
               <label className="block text-sm">
                 Nota para la tienda (opcional)
                 <textarea
@@ -413,25 +355,20 @@ export default function CartDrawer({
                   className="mt-1 w-full rounded-xl border border-white/20 bg-transparent p-3"
                 />
               </label>
-
               <div className="flex items-center justify-between border-t border-white/10 pt-4">
                 <span className="text-sm font-bold">Total estimado</span>
-
                 <span className="text-xl font-black text-[var(--color-price)]">
                   <Price amount={total} countryCode={userCountry} />
                 </span>
               </div>
-
               <p className="text-xs opacity-70">
                 El precio y el stock se verificarán al confirmar.
               </p>
-
               {error && (
                 <p role="alert" className="text-sm font-bold text-red-500">
                   {error}
                 </p>
               )}
-
               <button
                 type="submit"
                 disabled={enviando || items.length === 0}

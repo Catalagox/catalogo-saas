@@ -9,8 +9,7 @@ import BackButton from "@/components/public/BackButton";
 import BotonCompartir from "@/components/public/BotonCompartir";
 import AccionesProducto from "@/components/public/AccionesProducto";
 import StockBadge from "@/components/public/StockBadge";
-import CartWidget from "@/components/public/CartWidget";
-import { CartProvider } from "@/context/CartContext";
+import TiendaLayout from "@/components/public/TiendaLayout";
 import Price from "@/components/ui/Price";
 interface PageProps {
   params: Promise<{
@@ -77,8 +76,24 @@ async function getProductoData(slug: string, productoSlug: string) {
       id,
       user_id,
       nombre,
+      slug,
+      logo,
       pais_code,
       whatsapp,
+      color_header,
+      color_text_header,
+      color_border_header,
+      color_footer,
+      color_hamburguesa,
+      color_categoria,
+      color_lupa,
+      color_fondo_categoria,
+      color_texto_categoria,
+      color_border_categoria,
+      instagram,
+      facebook,
+      tiktok,
+      youtube,
       color_primario,
       color_fondo,
       color_texto,
@@ -187,6 +202,21 @@ export default async function ProductoPage({ params }: PageProps) {
     return notFound();
   }
   const { catalogo, producto } = data;
+  const host = await obtenerHostActual();
+  const rutaBase = esDominioDeCatalagox(host)
+    ? `/${catalogo.slug || slug}`
+    : "";
+
+  // El buscador del encabezado necesita las categorías y productos de esta tienda.
+  const { data: categorias, error: categoriasError } = await supabase
+    .from("categorias")
+    .select("id, nombre, productos(id, nombre, imagen_url, slug)")
+    .eq("catalogo_id", catalogo.id)
+    .order("created_at");
+
+  if (categoriasError) {
+    console.error("No se pudieron cargar las categorías del producto:", categoriasError);
+  }
   // ---------------------------------------------
   // TRACKING
   // ---------------------------------------------
@@ -217,7 +247,7 @@ export default async function ProductoPage({ params }: PageProps) {
       catalogo.color_tarjeta || DEFAULT_COLORS.color_tarjeta,
   } as CSSProperties;
   return (
-    <CartProvider key={catalogo.id} catalogoId={catalogo.id}>
+    <TiendaLayout catalogo={catalogo} categorias={categorias ?? []} rutaBase={rutaBase}>
       <main
         className="
         min-h-screen
@@ -543,17 +573,7 @@ export default async function ProductoPage({ params }: PageProps) {
           </div>
         </div>
       </div>
-      {/* ================================================= */}
-      {/* CARRITO                                          */}
-      {/* ================================================= */}
-      <CartWidget
-        catalogoId={catalogo.id}
-        catalogoNombre={catalogo.nombre}
-        whatsapp={catalogo.whatsapp}
-        userCountry={userCountry}
-        colorPrimario={catalogo.color_primario}
-      />
       </main>
-    </CartProvider>
+    </TiendaLayout>
   );
 }

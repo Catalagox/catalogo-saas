@@ -1,6 +1,7 @@
 import "server-only";
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { createHash, randomBytes } from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
@@ -19,17 +20,13 @@ function esUuid(value: unknown): value is string {
 
 function texto(value: unknown, maximo: number): string | null {
   if (typeof value !== "string") return null;
-
   const limpio = value.trim();
   return limpio.length <= maximo ? limpio : null;
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    // El formulario se enviará desde la misma tienda, también
-    // cuando utilice un dominio personalizado.
     const origin = request.headers.get("origin");
-
     if (!origin || origin !== new URL(request.url).origin) {
       return NextResponse.json(
         { error: "Origen de solicitud no permitido." },
@@ -38,7 +35,6 @@ export async function POST(request: Request) {
     }
 
     const longitud = Number(request.headers.get("content-length"));
-
     if (Number.isFinite(longitud) && longitud > 16_000) {
       return NextResponse.json(
         { error: "El pedido es demasiado grande." },
@@ -47,7 +43,6 @@ export async function POST(request: Request) {
     }
 
     const body: unknown = await request.json().catch(() => null);
-
     if (!body || typeof body !== "object" || Array.isArray(body)) {
       return NextResponse.json(
         { error: "Datos del pedido inválidos." },
@@ -56,7 +51,6 @@ export async function POST(request: Request) {
     }
 
     const datos = body as Record<string, unknown>;
-
     const catalogoId = datos.catalogoId;
     const claveIdempotencia = datos.claveIdempotencia;
     const nombre = texto(datos.nombre, 120);
@@ -87,7 +81,6 @@ export async function POST(request: Request) {
     }
 
     const productos: ItemRecibido[] = [];
-
     for (const item of items) {
       if (
         !item ||
@@ -103,10 +96,7 @@ export async function POST(request: Request) {
         );
       }
 
-      productos.push({
-        id: item.id,
-        cantidad: item.cantidad,
-      });
+      productos.push({ id: item.id, cantidad: item.cantidad });
     }
 
     if (new Set(productos.map((item) => item.id)).size !== productos.length) {
@@ -117,35 +107,28 @@ export async function POST(request: Request) {
     }
 
     const supabase = createAdminClient();
-
-    const { data, error } = await supabase.rpc(
-      "crear_pedido_whatsapp",
-      {
-        p_catalogo_id: catalogoId,
-        p_clave_idempotencia: claveIdempotencia,
-        p_nombre: nombre,
-        p_telefono: telefono,
-        p_email: email || null,
-        p_direccion: direccion || null,
-        p_notas: notas || null,
-        p_items: productos,
-      },
-    );
+    const { data, error } = await supabase.rpc("crear_pedido_whatsapp", {
+      p_catalogo_id: catalogoId,
+      p_clave_idempotencia: claveIdempotencia,
+      p_nombre: nombre,
+      p_telefono: telefono,
+      p_email: email || null,
+      p_direccion: direccion || null,
+      p_notas: notas || null,
+      p_items: productos,
+    });
 
     if (error) {
       console.error("Error al crear pedido:", error);
-
       const mensajesPermitidos = [
         "No hay suficiente stock",
         "Un producto ya no está disponible",
         "La tienda no existe",
         "Cantidad inválida o producto repetido",
       ];
-
       const mensaje = mensajesPermitidos.find((permitido) =>
         error.message.startsWith(permitido),
       );
-
       return NextResponse.json(
         {
           error:
@@ -157,18 +140,59 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json(
+    if (!data?.pedidoId || !esUuid(data.pedidoId)) {
+      throw new Error("La creación del pedido no devolvió su ID");
+    }
+
+    // Consultar por ID y tienda también cubre los reintentos idempotentes.
+    const { data: pedido, error: numeroError } = await supabase
+      .from("pedidos")
+      .select("numero")
+      .eq("id", data.pedidoId)
+      .eq("catalogo_id", catalogoId)
+      .single();
+
+    if (numeroError || !pedido || !Number.isSafeInteger(pedido.numero)) {
+      throw numeroError || new Error("El pedido no tiene un número válido");
+    }
+
+    const nombreCookie = "catalagox_comprador";
+    const cookieExistente = request.cookies.get(nombreCookie)?.value;
+    const secretoSesion = cookieExistente && /^[A-Za-z0-9_-]{43}$/.test(cookieExistente)
+      ? cookieExistente
+      : randomBytes(32).toString("base64url");
+    const hashSesion = createHash("sha256").update(secretoSesion).digest("hex");
+
+    // Los pedidos anteriores o reintentos con otra sesión no cambian de dueño.
+    const { error: sesionError } = await supabase
+      .from("pedidos")
+      .update({ comprador_sesion_hash: hashSesion })
+      .eq("id", data.pedidoId)
+      .eq("catalogo_id", catalogoId)
+      .is("comprador_sesion_hash", null);
+
+    if (sesionError) throw sesionError;
+
+    const respuesta = NextResponse.json(
       {
         pedidoId: data.pedidoId,
+        referencia: `PED-${String(pedido.numero).padStart(6, "0")}`,
         total: data.total,
         moneda: data.moneda,
         yaExistia: data.yaExistia,
       },
       { status: data.yaExistia ? 200 : 201 },
     );
+    respuesta.cookies.set(nombreCookie, secretoSesion, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+    });
+    return respuesta;
   } catch (error) {
     console.error("Error inesperado al crear pedido:", error);
-
     return NextResponse.json(
       { error: "No pudimos registrar el pedido. Inténtalo de nuevo." },
       { status: 500 },
