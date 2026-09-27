@@ -185,7 +185,7 @@ export default function TiendaHeader({
               ref={botonMenuRef}
               type="button"
               onClick={abrirMenu}
-              aria-label="Abrir categorías de la tienda"
+              aria-label="Abrir menú de la tienda"
               aria-haspopup="dialog"
               aria-expanded={menuAbierto}
               className="flex items-center justify-center rounded-lg p-2 transition hover:bg-white/10 lg:hidden"
@@ -241,9 +241,10 @@ export default function TiendaHeader({
                 onClick={() => { setMenuAbierto(false); setBuscadorAbierto(false); onOpenOrders(); }}
                 aria-label="Mis pedidos"
                 title="Mis pedidos"
-                className="hidden rounded-full p-2 outline-none transition-colors hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-current lg:flex"
+                className="hidden items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold outline-none transition-colors hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-current lg:flex"
               >
-                <ClipboardList size={24} aria-hidden="true" />
+                <ClipboardList size={22} aria-hidden="true" />
+                <span>Mis pedidos</span>
               </button>
             )}
             <button
@@ -271,71 +272,45 @@ export default function TiendaHeader({
           categorias={categoriasSeguras}
         />
       </header>
-      {/* PANEL MÓVIL DE CATEGORÍAS */}
+      {/* MENÚ MÓVIL */}
       {menuAbierto && (
         <>
           <button
             type="button"
-            aria-label="Cerrar categorías"
+            aria-label="Cerrar menú"
             onClick={cerrarMenu}
             className="fixed inset-0 z-[60] cursor-default bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
           />
           <aside
             role="dialog"
             aria-modal="true"
-            aria-labelledby="categorias-tienda-titulo"
+            aria-labelledby="menu-tienda-titulo"
             className="fixed left-0 top-0 z-[70] flex h-full w-[280px] max-w-[85vw] flex-col bg-[var(--color-header)] text-[var(--color-text-header,#ffffff)] shadow-2xl animate-in slide-in-from-left duration-300"
           >
-            {/* ENCABEZADO DEL PANEL */}
             <div className="flex items-center justify-between border-b border-[var(--color-border-header,rgba(255,255,255,0.1))] p-6">
-              <h2
-                id="categorias-tienda-titulo"
-                className="text-xl font-bold"
-              >
-                Categorías
-              </h2>
+              <h2 id="menu-tienda-titulo" className="text-xl font-bold">{tienda.nombre}</h2>
               <button
                 ref={botonCerrarRef}
                 type="button"
                 onClick={cerrarMenu}
-                aria-label="Cerrar categorías"
+                aria-label="Cerrar menú"
                 className="flex h-9 w-9 items-center justify-center rounded-full outline-none transition-colors hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-current"
               >
                 <X size={21} />
               </button>
             </div>
-            {/* LISTA DE CATEGORÍAS */}
-            <nav
-              aria-label="Todas las categorías"
-              className="flex-1 overflow-y-auto py-2"
-            >
+            <nav aria-label="Menú de la tienda" className="flex-1 overflow-y-auto py-2">
+              <Link href={inicioTienda} onClick={cerrarMenu} className="flex w-full items-center border-b border-white/10 px-6 py-4 font-semibold hover:bg-white/10">
+                Inicio
+              </Link>
               {onOpenOrders && (
                 <button
                   type="button"
                   onClick={() => { cerrarMenu(); onOpenOrders(); }}
-                  className="flex w-full items-center gap-3 border-b border-white/10 px-6 py-4 text-left font-semibold"
+                  className="flex w-full items-center gap-3 border-b border-white/10 px-6 py-4 text-left font-semibold hover:bg-white/10"
                 >
                   <ClipboardList size={20} aria-hidden="true" /> Mis pedidos
                 </button>
-              )}
-              {categoriasSeguras.length > 0 ? (
-                categoriasSeguras.map(
-                  (categoria) => (
-                    <a
-                      key={categoria.id}
-                      href={`#cat-${categoria.id}`}
-                      onClick={cerrarMenu}
-                      className="block border-b border-white/5 px-6 py-4 text-base font-medium transition-colors hover:bg-white/5"
-                    >
-                      {categoria.nombre}
-                    </a>
-                  ),
-                )
-              ) : (
-                <p className="px-6 py-8 text-sm opacity-70">
-                  Esta tienda todavía no tiene
-                  categorías disponibles.
-                </p>
               )}
             </nav>
             {/* FIRMA DE CATALAGOX */}

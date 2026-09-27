@@ -29,7 +29,7 @@ const estados: Record<string, string> = {
   confirmado: "Confirmado",
   en_preparacion: "En preparación",
   listo: "Listo para entregar",
-  enviado: "Enviado",
+  enviado: "En camino",
   entregado: "Entregado",
   cancelado: "Cancelado",
 };
@@ -47,6 +47,35 @@ export default function MisPedidosPanel({ isOpen, onClose, catalogoId }: Props) 
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
+  const [cancelandoId, setCancelandoId] = useState<string | null>(null);
+  const [errorCancelacion, setErrorCancelacion] = useState<Record<string, string>>({});
+
+  const cancelarPedido = async (pedido: Pedido) => {
+    if (cancelandoId) return;
+    if (!window.confirm(`¿Cancelar el pedido PED-${String(pedido.numero).padStart(6, "0")}?`)) return;
+    setCancelandoId(pedido.id);
+    setErrorCancelacion((actual) => ({ ...actual, [pedido.id]: "" }));
+    try {
+      const response = await fetch("/api/mis-pedidos/cancelar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pedidoId: pedido.id, catalogoId }),
+      });
+      const resultado: { estado?: string; error?: string } = await response.json();
+      if (!response.ok) throw new Error(resultado.error ?? "No pudimos cancelar el pedido.");
+      setPedidos((actuales) => actuales.map((actual) =>
+        actual.id === pedido.id ? { ...actual, estado_pedido: "cancelado" } : actual,
+      ));
+      window.dispatchEvent(new Event("pedidos:actualizados"));
+    } catch (err) {
+      setErrorCancelacion((actual) => ({
+        ...actual,
+        [pedido.id]: err instanceof Error ? err.message : "No pudimos cancelar el pedido.",
+      }));
+    } finally {
+      setCancelandoId(null);
+    }
+  };
 
   useEffect(() => {
     if (!isOpen) return;
@@ -134,6 +163,20 @@ export default function MisPedidosPanel({ isOpen, onClose, catalogoId }: Props) 
                 <span>Total</span><span>{dinero(pedido.total, pedido.moneda)}</span>
               </div>
               <p className="mt-2 text-xs opacity-65">Pago: {pedido.estado_pago}</p>
+              {pedido.estado_pedido === "nuevo" &&
+                ["pendiente", "fallido"].includes(pedido.estado_pago) && (
+                  <button
+                    type="button"
+                    disabled={cancelandoId !== null}
+                    onClick={() => void cancelarPedido(pedido)}
+                    className="mt-4 rounded-lg border border-red-500/50 px-4 py-2 text-sm font-semibold text-red-600 transition-colors hover:bg-red-500/10 disabled:opacity-50"
+                  >
+                    {cancelandoId === pedido.id ? "Cancelando..." : "Cancelar pedido"}
+                  </button>
+                )}
+              {errorCancelacion[pedido.id] && (
+                <p role="alert" className="mt-2 text-sm text-red-600">{errorCancelacion[pedido.id]}</p>
+              )}
             </article>
           ))}
         </div>

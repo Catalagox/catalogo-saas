@@ -2,6 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { PackageCheck, ShoppingBag } from "lucide-react";
 import PedidoAcciones from "@/components/dashboard/pedidos/PedidoAcciones";
+import PedidoVisto from "@/components/dashboard/pedidos/PedidoVisto";
+import SonidoPedidosSwitch from "@/components/dashboard/pedidos/SonidoPedidosSwitch";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -27,6 +29,7 @@ type Pedido = {
   metodo_pago: string;
   estado_pedido: string;
   estado_pago: string;
+  visto_por_vendedor_at: string | null;
   created_at: string;
   pedido_items: PedidoItem[];
 };
@@ -87,7 +90,7 @@ export default async function PedidosPage() {
     .select(`
       id, numero, comprador_nombre, comprador_telefono, comprador_email,
       direccion_entrega, notas, moneda, total, metodo_pago,
-      estado_pedido, estado_pago, created_at,
+      estado_pedido, estado_pago, visto_por_vendedor_at, created_at,
       pedido_items (id, nombre_producto, cantidad, precio_unitario, subtotal)
     `)
     .eq("catalogo_id", catalogo.id)
@@ -107,7 +110,8 @@ export default async function PedidosPage() {
   const pedidos = (data ?? []) as Pedido[];
   return (
     <div className="space-y-7 text-[var(--text-primary)]">
-      <header>
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div>
         <div className="flex items-center gap-3">
           <ShoppingBag size={28} className="text-[var(--color-primary)]" />
           <h1 className="text-2xl font-black sm:text-3xl">Pedidos</h1>
@@ -115,6 +119,8 @@ export default async function PedidosPage() {
         <p className="mt-2 text-sm text-[var(--text-secondary)]">
           Pedidos recibidos en {catalogo.nombre}.
         </p>
+        </div>
+        <SonidoPedidosSwitch />
       </header>
 
       {pedidos.length === 0 ? (
@@ -134,7 +140,8 @@ export default async function PedidosPage() {
             const numeroWhatsApp = pedido.comprador_telefono.replace(/\D/g, "");
             const referencia = `PED-${String(pedido.numero).padStart(6, "0")}`;
             return (
-              <article key={pedido.id} className="overflow-hidden rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)]">
+              <PedidoVisto key={pedido.id} pedidoId={pedido.id} vistoInicialmente={Boolean(pedido.visto_por_vendedor_at)}>
+              <article className="overflow-hidden rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)]">
                 <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--border-card)] p-5">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)]">
@@ -198,6 +205,7 @@ export default async function PedidosPage() {
                   />
                 </div>
               </article>
+              </PedidoVisto>
             );
           })}
         </div>
