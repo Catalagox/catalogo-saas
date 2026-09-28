@@ -117,20 +117,38 @@ const getCatalogo = cache(async (slug: string) => {
   if (error || !data) {
     return null;
   }
-  const fechaVencimiento = data.plan_vence_el
-    ? new Date(data.plan_vence_el)
-    : null;
-  const vencida =
-    !fechaVencimiento ||
-    Number.isNaN(fechaVencimiento.getTime()) ||
-    fechaVencimiento.getTime() < Date.now();
-  const suscripcionPermitida =
-    data.subscription_status === "active" ||
-    data.subscription_status === "trialing" ||
-    data.subscription_status === "trial";
-  if (!data.suscripcion_activa || !suscripcionPermitida || vencida) {
-    return null;
-  }
+  const { data: accesoGratis, error: accesoGratisError } = await supabase.rpc(
+  "catalogo_con_acceso_gratis",
+  { p_catalogo_id: data.id },
+);
+
+if (accesoGratisError) {
+  console.error("Error comprobando el acceso gratis:", accesoGratisError);
+  return null;
+}
+
+const fechaVencimiento = data.plan_vence_el
+  ? new Date(data.plan_vence_el)
+  : null;
+
+const vencida =
+  !fechaVencimiento ||
+  Number.isNaN(fechaVencimiento.getTime()) ||
+  fechaVencimiento.getTime() < Date.now();
+
+const suscripcionPermitida =
+  data.subscription_status === "active" ||
+  data.subscription_status === "trialing" ||
+  data.subscription_status === "trial";
+
+const accesoPorSuscripcion =
+  data.suscripcion_activa &&
+  suscripcionPermitida &&
+  !vencida;
+
+if (!accesoPorSuscripcion && accesoGratis !== true) {
+  return null;
+}
   return {
     ...data,
     logoUrl: getLogoUrl(data.logo),

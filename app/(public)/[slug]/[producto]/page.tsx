@@ -106,24 +106,39 @@ async function getProductoData(slug: string, productoSlug: string) {
     .eq("slug", slug)
     .maybeSingle();
   if (!catalogo) return null;
-  const fechaVencimiento = catalogo.plan_vence_el
-    ? new Date(catalogo.plan_vence_el)
-    : null;
-  const planVencido =
-    !fechaVencimiento ||
-    Number.isNaN(fechaVencimiento.getTime()) ||
-    fechaVencimiento.getTime() < Date.now();
-  const suscripcionPermitida =
-    catalogo.subscription_status === "active" ||
-    catalogo.subscription_status === "trialing" ||
-    catalogo.subscription_status === "trial";
-  if (
-    !catalogo.suscripcion_activa ||
-    !suscripcionPermitida ||
-    planVencido
-  ) {
-    return null;
-  }
+
+  const { data: accesoGratis, error: accesoGratisError } = await supabase.rpc(
+  "catalogo_con_acceso_gratis",
+  { p_catalogo_id: catalogo.id },
+);
+
+if (accesoGratisError) {
+  console.error("Error comprobando el acceso gratis:", accesoGratisError);
+  return null;
+}
+
+const fechaVencimiento = catalogo.plan_vence_el
+  ? new Date(catalogo.plan_vence_el)
+  : null;
+
+const planVencido =
+  !fechaVencimiento ||
+  Number.isNaN(fechaVencimiento.getTime()) ||
+  fechaVencimiento.getTime() < Date.now();
+
+const suscripcionPermitida =
+  catalogo.subscription_status === "active" ||
+  catalogo.subscription_status === "trialing" ||
+  catalogo.subscription_status === "trial";
+
+const accesoPorSuscripcion =
+  catalogo.suscripcion_activa &&
+  suscripcionPermitida &&
+  !planVencido;
+
+if (!accesoPorSuscripcion && accesoGratis !== true) {
+  return null;
+}
   const { data: producto } = await supabase
     .from("productos")
     .select("*")
