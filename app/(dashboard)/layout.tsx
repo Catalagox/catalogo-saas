@@ -31,11 +31,18 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           const params = new URLSearchParams(window.location.search);
           if (params.get("success") === "true") {
             router.refresh();
-            window.history.replaceState({}, document.title, window.location.pathname);
+            window.history.replaceState(
+              {},
+              document.title,
+              window.location.pathname,
+            );
           }
         }
 
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
         if (userError || !user) {
           router.replace("/auth?redirect=%2Fdashboard");
           return;
@@ -52,14 +59,34 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           return;
         }
 
-        const trialValido = Boolean(catalogo.plan_vence_el) &&
-          new Date(catalogo.plan_vence_el as string).getTime() > Date.now();
-        const stripeActivo = catalogo.subscription_status === "active" ||
+        const { data: accesoGratis, error: accesoGratisError } = await supabase
+          .from("accesos_gratis")
+          .select("vence_el")
+          .eq("catalogo_id", catalogo.id)
+          .maybeSingle();
+
+        if (accesoGratisError) throw accesoGratisError;
+
+        const promocionValida =
+          accesoGratis?.vence_el != null &&
+          new Date(accesoGratis.vence_el).getTime() > Date.now();
+
+        const trialValido =
+          catalogo.plan_vence_el != null &&
+          new Date(catalogo.plan_vence_el).getTime() > Date.now();
+
+        const stripeActivo =
+          catalogo.subscription_status === "active" ||
           catalogo.subscription_status === "trialing";
-        const stripeEnProblema = catalogo.subscription_status === "past_due" ||
+
+        const stripeEnProblema =
+          catalogo.subscription_status === "past_due" ||
           catalogo.subscription_status === "canceled";
 
-        if (stripeEnProblema || (!stripeActivo && !trialValido)) {
+        if (
+          !promocionValida &&
+          (stripeEnProblema || (!stripeActivo && !trialValido))
+        ) {
           router.replace("/suscripcion");
           return;
         }
@@ -71,13 +98,17 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       } catch (error) {
         console.error("Error verificando el acceso al dashboard:", error);
         if (active) {
-          setAccessError("No pudimos verificar el acceso a tu tienda. Revisa tu conexión e inténtalo nuevamente.");
+          setAccessError(
+            "No pudimos verificar el acceso a tu tienda. Revisa tu conexión e inténtalo nuevamente.",
+          );
           setLoading(false);
         }
       }
     };
     void checkUser();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [router]);
 
   if (loading) {
@@ -85,7 +116,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[var(--bg-main)]">
         <div className="flex flex-col items-center gap-6">
           <div className="relative h-20 w-20 animate-pulse sm:h-24 sm:w-24">
-            <Image src="/Logotipo-fondo-trasparente4.png" alt="Catalogox" fill className="object-contain" priority />
+            <Image
+              src="/Logotipo-fondo-trasparente4.png"
+              alt="Catalogox"
+              fill
+              className="object-contain"
+              priority
+            />
           </div>
           <div className="h-1 w-32 overflow-hidden rounded-full bg-white/10 sm:w-40">
             <div className="h-full w-full animate-pulse bg-emerald-500" />
@@ -99,8 +136,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     return (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[var(--bg-main)] px-4">
         <div className="w-full max-w-md rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] p-6 text-center shadow-2xl">
-          <h1 className="text-xl font-bold text-[var(--text-primary)]">No pudimos cargar tu tienda</h1>
-          <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">{accessError}</p>
+          <h1 className="text-xl font-bold text-[var(--text-primary)]">
+            No pudimos cargar tu tienda
+          </h1>
+          <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">
+            {accessError}
+          </p>
           <button
             type="button"
             onClick={() => window.location.reload()}
@@ -121,14 +162,18 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-[var(--border-card)] lg:flex">
           <Sidebar />
         </aside>
-        <div className={`fixed inset-0 z-50 transition-all duration-300 lg:hidden ${open ? "visible" : "invisible"}`}>
+        <div
+          className={`fixed inset-0 z-50 transition-all duration-300 lg:hidden ${open ? "visible" : "invisible"}`}
+        >
           <button
             type="button"
             aria-label="Cerrar menú"
             className={`absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-300 ${open ? "opacity-100" : "opacity-0"}`}
             onClick={() => setOpen(false)}
           />
-          <aside className={`relative flex h-full w-72 max-w-[85vw] flex-col border-r border-[var(--border-card)] bg-[var(--bg-secondary)] shadow-2xl transition-transform duration-300 ease-in-out ${open ? "translate-x-0" : "-translate-x-full"}`}>
+          <aside
+            className={`relative flex h-full w-72 max-w-[85vw] flex-col border-r border-[var(--border-card)] bg-[var(--bg-secondary)] shadow-2xl transition-transform duration-300 ease-in-out ${open ? "translate-x-0" : "-translate-x-full"}`}
+          >
             <div className="flex items-center justify-between border-b border-[var(--border-card)] px-4 py-4">
               <Logo size="sm" />
               <button
