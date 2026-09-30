@@ -7,12 +7,6 @@ import { supabase } from "@/lib/supabaseClient";
 import PricingCard from "@/components/marketing/PricingCard";
 import BotonSuscripcionPortal from "@/components/dashboard/ajustes/BotonSuscripcionPortal";
 
-declare global {
-  interface Window {
-    gtag?: (...args: any[]) => void;
-  }
-}
-
 interface EstadoSuscripcion {
   tieneClienteStripe: boolean;
   tieneSuscripcionEnCurso: boolean;
@@ -139,14 +133,6 @@ export default function SuscripcionPage() {
         );
       }
 
-      if (window.gtag) {
-        window.gtag(
-          "event",
-          "manual_event_SIGNUP",
-          {},
-        );
-      }
-
       window.location.assign(data.url);
     } catch (error) {
       console.error(
@@ -217,9 +203,7 @@ export default function SuscripcionPage() {
             badgeColor="bg-emerald-50 text-emerald-700 border border-emerald-200"
             isLoading={loadingPlan === "monthly"}
             isDisabled={deshabilitarPlanes}
-            onSubmit={() =>
-              handleSuscribirse("monthly")
-            }
+            onSubmit={() => handleSuscribirse("monthly")}
           />
 
           <PricingCard
@@ -232,9 +216,7 @@ export default function SuscripcionPage() {
             subPriceText="Equivale a solo $9.00 al mes"
             isLoading={loadingPlan === "annual"}
             isDisabled={deshabilitarPlanes}
-            onSubmit={() =>
-              handleSuscribirse("annual")
-            }
+            onSubmit={() => handleSuscribirse("annual")}
           />
         </div>
 
@@ -261,8 +243,7 @@ export default function SuscripcionPage() {
 
         {/* Enlace de soporte */}
         <p className="mt-16 text-center text-sm text-slate-500">
-          ¿Tienes alguna duda sobre nuestras tiendas
-          online?{" "}
+          ¿Tienes alguna duda sobre nuestras tiendas online?{" "}
           <Link
             href="/contacto"
             className="font-bold text-emerald-600 transition-colors hover:underline"

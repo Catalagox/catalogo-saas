@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { FaGlobeAmericas, FaStore } from "react-icons/fa";
 import SelectorPaises from "@/components/ui/SelectorPaises";
@@ -9,6 +9,22 @@ import { supabase } from "@/lib/supabaseClient";
 interface OnboardingFormProps {
   initialCountryCode: string;
   nextPath: string;
+}
+
+type AnalyticsWindow = Window & {
+  gtag?: (
+    command: "event",
+    eventName: string,
+    parameters: Record<string, string>,
+  ) => void;
+};
+
+function getSafeNext(value: string) {
+  if (!value.startsWith("/") || value.startsWith("//")) {
+    return "/dashboard";
+  }
+
+  return value;
 }
 
 function translateOnboardingError(message: string) {
@@ -40,11 +56,35 @@ function translateOnboardingError(message: string) {
   return message || "No pudimos crear tu tienda.";
 }
 
+async function trackStoreCreated(countryCode: string) {
+  // Esperamos brevemente si Analytics todavía está cargando.
+  const deadline = Date.now() + 1500;
+
+  while (Date.now() < deadline) {
+    const analyticsWindow = window as AnalyticsWindow;
+
+    if (typeof analyticsWindow.gtag === "function") {
+      analyticsWindow.gtag("event", "manual_event_SIGNUP", {
+        send_to: "G-181DBYJ8QZ",
+        country_code: countryCode,
+        registration_step: "store_created",
+      });
+
+      return;
+    }
+
+    await new Promise<void>((resolve) => {
+      window.setTimeout(resolve, 100);
+    });
+  }
+}
+
 export default function OnboardingForm({
   initialCountryCode,
   nextPath,
 }: OnboardingFormProps) {
   const router = useRouter();
+  const submittingRef = useRef(false);
 
   const [storeName, setStoreName] = useState("");
   const [countryCode, setCountryCode] = useState(
@@ -59,9 +99,11 @@ export default function OnboardingForm({
   ) => {
     event.preventDefault();
 
-    if (loading) return;
+    if (submittingRef.current) return;
 
     const normalizedName = storeName.trim();
+    const normalizedCountry = countryCode.trim().toUpperCase();
+    const destination = getSafeNext(nextPath);
 
     if (normalizedName.length < 3) {
       setErrorMsg(
@@ -77,11 +119,12 @@ export default function OnboardingForm({
       return;
     }
 
-    if (!countryCode) {
+    if (!normalizedCountry) {
       setErrorMsg("Selecciona el país de tu negocio.");
       return;
     }
 
+    submittingRef.current = true;
     setLoading(true);
     setErrorMsg("");
 
@@ -92,31 +135,86 @@ export default function OnboardingForm({
       } = await supabase.auth.getUser();
 
       if (userError || !user) {
+        const onboardingPath =
+          `/onboarding?next=${encodeURIComponent(destination)}`;
+
         router.replace(
-          `/auth?redirect=${encodeURIComponent("/onboarding")}`,
+          `/auth?redirect=${encodeURIComponent(onboardingPath)}`,
         );
         return;
       }
 
-      const { error } = await supabase.rpc(
+      // Si la tienda ya existe, entramos sin enviar otra conversión.
+      const {
+        data: existingStore,
+        error: existingStoreError,
+      } = await supabase
+        .from("catalogos")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (existingStoreError) throw existingStoreError;
+
+      if (existingStore) {
+        router.replace(destination);
+        router.refresh();
+        return;
+      }
+
+      const { error: onboardingError } = await supabase.rpc(
         "completar_onboarding",
         {
           p_nombre: normalizedName,
-          p_pais_code: countryCode,
+          p_pais_code: normalizedCountry,
         },
       );
 
-      if (error) throw error;
+      if (onboardingError) throw onboardingError;
 
-      router.replace(nextPath);
+      // Confirmamos que la tienda quedó guardada.
+      const {
+        data: createdStore,
+        error: createdStoreError,
+      } = await supabase
+        .from("catalogos")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (createdStoreError) throw createdStoreError;
+
+      if (!createdStore) {
+        throw new Error(
+          "No pudimos confirmar la creación de tu tienda.",
+        );
+      }
+
+      // Analytics no debe impedir el acceso a una tienda creada.
+      try {
+        await trackStoreCreated(normalizedCountry);
+      } catch (analyticsError) {
+        console.warn(
+          "No se pudo enviar el evento de tienda creada:",
+          analyticsError,
+        );
+      }
+
+      router.replace(destination);
       router.refresh();
     } catch (error: unknown) {
       const message =
         error instanceof Error
           ? error.message
-          : "No pudimos crear tu tienda.";
+          : typeof error === "object" &&
+              error !== null &&
+              "message" in error &&
+              typeof error.message === "string"
+            ? error.message
+            : "No pudimos crear tu tienda.";
 
       setErrorMsg(translateOnboardingError(message));
+      submittingRef.current = false;
       setLoading(false);
     }
   };
