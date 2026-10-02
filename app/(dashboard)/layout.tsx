@@ -15,65 +15,155 @@ interface DashboardLayoutProps {
   children: ReactNode;
 }
 
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
+type Tema = "light" | "dark" | "system";
+type TemaAplicado = "light" | "dark";
+
+const STORAGE_KEY = "catalogox-dashboard-theme";
+const EVENT_NAME = "catalogox-dashboard-theme-change";
+
+function esTema(value: unknown): value is Tema {
+  return value === "light" || value === "dark" || value === "system";
+}
+
+export default function DashboardLayout({
+  children,
+}: DashboardLayoutProps) {
   const router = useRouter();
+
   const [loading, setLoading] = useState(true);
   const [accessError, setAccessError] = useState("");
   const [open, setOpen] = useState(false);
   const [catalogoId, setCatalogoId] = useState<string | null>(null);
+  const [temaAplicado, setTemaAplicado] =
+    useState<TemaAplicado>("light");
+
+  // Aplica la preferencia incluso durante la carga y los errores.
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    let preferencia: Tema = "light";
+
+    const aplicar = () => {
+      setTemaAplicado(
+        preferencia === "system"
+          ? media.matches
+            ? "dark"
+            : "light"
+          : preferencia,
+      );
+    };
+
+    const leerPreferencia = () => {
+      try {
+        const guardado = localStorage.getItem(STORAGE_KEY);
+        preferencia = esTema(guardado) ? guardado : "light";
+      } catch {
+        preferencia = "light";
+      }
+
+      aplicar();
+    };
+
+    const cambiarPreferencia = (event: Event) => {
+      const valor = (event as CustomEvent<unknown>).detail;
+
+      if (esTema(valor)) {
+        preferencia = valor;
+        aplicar();
+      }
+    };
+
+    const sincronizarAlmacenamiento = (event: StorageEvent) => {
+      if (event.key === STORAGE_KEY || event.key === null) {
+        leerPreferencia();
+      }
+    };
+
+    leerPreferencia();
+
+    media.addEventListener("change", aplicar);
+    window.addEventListener(EVENT_NAME, cambiarPreferencia);
+    window.addEventListener("storage", sincronizarAlmacenamiento);
+
+    return () => {
+      media.removeEventListener("change", aplicar);
+      window.removeEventListener(EVENT_NAME, cambiarPreferencia);
+      window.removeEventListener(
+        "storage",
+        sincronizarAlmacenamiento,
+      );
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
+
     const checkUser = async () => {
       try {
         setAccessError("");
-        if (typeof window !== "undefined") {
-          const params = new URLSearchParams(window.location.search);
-          if (params.get("success") === "true") {
-            router.refresh();
-            window.history.replaceState(
-              {},
-              document.title,
-              window.location.pathname,
-            );
-          }
+
+        const params = new URLSearchParams(window.location.search);
+
+        if (params.get("success") === "true") {
+          router.refresh();
+
+          const url = new URL(window.location.href);
+          url.searchParams.delete("success");
+
+          window.history.replaceState(
+            window.history.state,
+            document.title,
+            `${url.pathname}${url.search}${url.hash}`,
+          );
         }
 
         const {
           data: { user },
           error: userError,
         } = await supabase.auth.getUser();
+
+        if (!active) return;
+
         if (userError || !user) {
           router.replace("/auth?redirect=%2Fdashboard");
           return;
         }
 
-        const { data: catalogo, error: catalogoError } = await supabase
-          .from("catalogos")
-          .select("id, suscripcion_activa, plan_vence_el, subscription_status")
-          .eq("user_id", user.id)
-          .maybeSingle();
+        const { data: catalogo, error: catalogoError } =
+          await supabase
+            .from("catalogos")
+            .select(
+              "id, suscripcion_activa, plan_vence_el, subscription_status",
+            )
+            .eq("user_id", user.id)
+            .maybeSingle();
+
+        if (!active) return;
         if (catalogoError) throw catalogoError;
+
         if (!catalogo) {
           router.replace("/onboarding?next=%2Fdashboard");
           return;
         }
 
-        const { data: accesoGratis, error: accesoGratisError } = await supabase
-          .from("accesos_gratis")
-          .select("vence_el")
-          .eq("catalogo_id", catalogo.id)
-          .maybeSingle();
+        const { data: accesoGratis, error: accesoGratisError } =
+          await supabase
+            .from("accesos_gratis")
+            .select("vence_el")
+            .eq("catalogo_id", catalogo.id)
+            .maybeSingle();
 
+        if (!active) return;
         if (accesoGratisError) throw accesoGratisError;
+
+        const ahora = Date.now();
 
         const promocionValida =
           accesoGratis?.vence_el != null &&
-          new Date(accesoGratis.vence_el).getTime() > Date.now();
+          new Date(accesoGratis.vence_el).getTime() > ahora;
 
         const trialValido =
           catalogo.plan_vence_el != null &&
-          new Date(catalogo.plan_vence_el).getTime() > Date.now();
+          new Date(catalogo.plan_vence_el).getTime() > ahora;
 
         const stripeActivo =
           catalogo.subscription_status === "active" ||
@@ -91,12 +181,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           return;
         }
 
-        if (active) {
-          setCatalogoId(catalogo.id);
-          setLoading(false);
-        }
+        setCatalogoId(catalogo.id);
+        setLoading(false);
       } catch (error) {
-        console.error("Error verificando el acceso al dashboard:", error);
+        console.error(
+          "Error verificando el acceso al dashboard:",
+          error,
+        );
+
         if (active) {
           setAccessError(
             "No pudimos verificar el acceso a tu tienda. Revisa tu conexión e inténtalo nuevamente.",
@@ -105,7 +197,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         }
       }
     };
+
     void checkUser();
+
     return () => {
       active = false;
     };
@@ -113,7 +207,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[var(--bg-main)]">
+      <div
+        data-theme={temaAplicado}
+        className="dashboard-theme fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[var(--bg-main)] text-[var(--text-primary)]"
+      >
         <div className="flex flex-col items-center gap-6">
           <div className="relative h-20 w-20 animate-pulse sm:h-24 sm:w-24">
             <Image
@@ -124,7 +221,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               priority
             />
           </div>
-          <div className="h-1 w-32 overflow-hidden rounded-full bg-white/10 sm:w-40">
+
+          <div
+            role="status"
+            aria-label="Cargando tu tienda"
+            className="h-1 w-32 overflow-hidden rounded-full bg-[var(--border-card)] sm:w-40"
+          >
             <div className="h-full w-full animate-pulse bg-emerald-500" />
           </div>
         </div>
@@ -134,14 +236,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   if (accessError) {
     return (
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[var(--bg-main)] px-4">
+      <div
+        data-theme={temaAplicado}
+        className="dashboard-theme fixed inset-0 z-[9999] flex items-center justify-center bg-[var(--bg-main)] px-4 text-[var(--text-primary)]"
+      >
         <div className="w-full max-w-md rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] p-6 text-center shadow-2xl">
           <h1 className="text-xl font-bold text-[var(--text-primary)]">
             No pudimos cargar tu tienda
           </h1>
+
           <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">
             {accessError}
           </p>
+
           <button
             type="button"
             onClick={() => window.location.reload()}
@@ -158,24 +265,38 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <PedidosNotificacionesProvider catalogoId={catalogoId}>
-      <div className="flex min-h-screen bg-[var(--bg-main)] text-white">
+      <div
+        data-theme={temaAplicado}
+        className="dashboard-theme flex min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)]"
+      >
         <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-[var(--border-card)] lg:flex">
           <Sidebar />
         </aside>
+
         <div
-          className={`fixed inset-0 z-50 transition-all duration-300 lg:hidden ${open ? "visible" : "invisible"}`}
+          inert={!open}
+          className={`fixed inset-0 z-50 transition-all duration-300 lg:hidden ${
+            open ? "visible" : "invisible"
+          }`}
         >
           <button
             type="button"
             aria-label="Cerrar menú"
-            className={`absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-300 ${open ? "opacity-100" : "opacity-0"}`}
+            className={`absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-300 ${
+              open ? "opacity-100" : "opacity-0"
+            }`}
             onClick={() => setOpen(false)}
           />
+
           <aside
-            className={`relative flex h-full w-72 max-w-[85vw] flex-col border-r border-[var(--border-card)] bg-[var(--bg-secondary)] shadow-2xl transition-transform duration-300 ease-in-out ${open ? "translate-x-0" : "-translate-x-full"}`}
+            id="dashboard-menu-movil"
+            className={`relative flex h-full w-72 max-w-[85vw] flex-col border-r border-[var(--border-card)] bg-[var(--bg-secondary)] shadow-2xl transition-transform duration-300 ease-in-out ${
+              open ? "translate-x-0" : "-translate-x-full"
+            }`}
           >
-            <div className="flex items-center justify-between border-b border-[var(--border-card)] px-4 py-4">
+            <div className="flex shrink-0 items-center justify-between border-b border-[var(--border-card)] px-4 py-4">
               <Logo size="sm" />
+
               <button
                 type="button"
                 onClick={() => setOpen(false)}
@@ -185,23 +306,29 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <X size={20} />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto">
+
+            <div className="min-h-0 flex-1">
               <Sidebar closeMenu={() => setOpen(false)} />
             </div>
           </aside>
         </div>
+
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-40 flex items-center justify-between border-b border-[var(--border-card)] bg-[var(--bg-main)]/90 px-4 py-4 backdrop-blur-md lg:hidden">
+          <header className="sticky top-0 z-40 flex items-center justify-between border-b border-[var(--border-card)] bg-[var(--bg-main)] px-4 py-4 lg:hidden">
             <Logo size="sm" />
+
             <button
               type="button"
               onClick={() => setOpen(true)}
               aria-label="Abrir menú"
-              className="rounded-xl border border-[var(--border-card)] bg-[var(--bg-secondary)] p-2 transition hover:bg-[var(--bg-card-hover)]"
+              aria-expanded={open}
+              aria-controls="dashboard-menu-movil"
+              className="rounded-xl border border-[var(--border-card)] bg-[var(--bg-secondary)] p-2 text-[var(--text-primary)] transition hover:bg-[var(--bg-card-hover)]"
             >
               <Menu size={20} />
             </button>
           </header>
+
           <main className="mx-auto w-full max-w-[1600px] flex-1 p-4 md:p-6 lg:p-10">
             <InstalarAppBanner />
             <NuevaFuncionDominioBanner />
