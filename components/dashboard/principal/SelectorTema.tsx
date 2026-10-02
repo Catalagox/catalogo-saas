@@ -15,68 +15,50 @@ export default function SelectorTema() {
   const [tema, setTema] = useState<Tema>("light");
 
   useEffect(() => {
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-
-    const aplicarTema = (preferencia: Tema) => {
-      setTema(preferencia);
-
-      const resultado =
-        preferencia === "system"
-          ? media.matches
-            ? "dark"
-            : "light"
-          : preferencia;
-
-      document
-        .querySelectorAll<HTMLElement>(".dashboard-theme")
-        .forEach((elemento) => {
-          elemento.dataset.theme = resultado;
-        });
-    };
-
-    const sincronizar = () => {
-      let preferencia: Tema = "light";
-
+    const leerPreferencia = () => {
       try {
         const guardado = localStorage.getItem(STORAGE_KEY);
-        if (esTema(guardado)) preferencia = guardado;
+        setTema(esTema(guardado) ? guardado : "light");
       } catch {
-        // El selector sigue funcionando si el almacenamiento no está disponible.
+        setTema("light");
       }
-
-      aplicarTema(preferencia);
     };
 
-    const cambiar = (event: Event) => {
-      const preferencia = (event as CustomEvent<unknown>).detail;
-      if (esTema(preferencia)) aplicarTema(preferencia);
+    const sincronizarEvento = (event: Event) => {
+      const valor = (event as CustomEvent<unknown>).detail;
+
+      if (esTema(valor)) {
+        setTema(valor);
+      }
     };
 
-    const cambiarSistema = () => {
-      setTema((actual) => {
-        if (actual === "system") aplicarTema(actual);
-        return actual;
-      });
+    const sincronizarAlmacenamiento = (event: StorageEvent) => {
+      if (event.key === STORAGE_KEY || event.key === null) {
+        leerPreferencia();
+      }
     };
 
-    sincronizar();
+    leerPreferencia();
 
-    window.addEventListener(EVENT_NAME, cambiar);
-    window.addEventListener("storage", sincronizar);
-    media.addEventListener("change", cambiarSistema);
+    window.addEventListener(EVENT_NAME, sincronizarEvento);
+    window.addEventListener("storage", sincronizarAlmacenamiento);
 
     return () => {
-      window.removeEventListener(EVENT_NAME, cambiar);
-      window.removeEventListener("storage", sincronizar);
-      media.removeEventListener("change", cambiarSistema);
+      window.removeEventListener(EVENT_NAME, sincronizarEvento);
+      window.removeEventListener(
+        "storage",
+        sincronizarAlmacenamiento,
+      );
     };
   }, []);
 
   const seleccionar = (nuevoTema: Tema) => {
+    setTema(nuevoTema);
+
     try {
       localStorage.setItem(STORAGE_KEY, nuevoTema);
     } catch {
-      // La elección se aplica igualmente durante esta sesión.
+      // Se aplica durante esta sesión aunque no se pueda guardar.
     }
 
     window.dispatchEvent(
@@ -94,9 +76,12 @@ export default function SelectorTema() {
         value={tema}
         onChange={(event) => {
           const valor = event.target.value;
-          if (esTema(valor)) seleccionar(valor);
+
+          if (esTema(valor)) {
+            seleccionar(valor);
+          }
         }}
-        className="w-full rounded-xl border border-[var(--border-card)] bg-[var(--bg-tertiary)] px-3 py-2.5 text-sm text-[var(--text-primary)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
+        className="w-full cursor-pointer rounded-xl border border-[var(--border-card)] bg-[var(--bg-tertiary)] px-3 py-2.5 text-sm text-[var(--text-primary)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
       >
         <option value="light">Claro</option>
         <option value="dark">Oscuro</option>

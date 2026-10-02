@@ -16,8 +16,6 @@ type Producto = {
   disponible: boolean;
   categoria_id: string;
   imagen_url?: string;
-
-  // 📦 Stock
   stock?: number | null;
 };
 
@@ -46,20 +44,23 @@ export default function ProductGrid({
     .filter((cat) => cat.prods.length > 0);
 
   const productosHuerfanos = productos.filter(
-    (p) => !categorias.find((c) => c.id === p.categoria_id),
+    (p) => !categorias.some((c) => c.id === p.categoria_id),
   );
 
   return (
-    <div className="space-y-12">
+    <div className="min-w-0 space-y-12 text-[var(--text-primary)]">
       {/* Categorías */}
       {productosPorCategoria.map((cat) => (
-        <section key={cat.id} className="space-y-6">
+        <section key={cat.id} className="min-w-0 space-y-6">
           <div className="flex items-center gap-3 border-b border-[var(--border-card)] pb-4">
-            <div className="p-2 bg-[var(--bg-tertiary)] rounded-lg">
-              <Layers className="w-5 h-5 text-[var(--color-primary)]" />
+            <div className="shrink-0 rounded-lg bg-[var(--bg-tertiary)] p-2">
+              <Layers
+                className="h-5 w-5 text-[var(--text-primary)]"
+                aria-hidden="true"
+              />
             </div>
 
-            <h2 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">
+            <h2 className="min-w-0 break-words text-xl font-bold tracking-tight text-[var(--text-primary)]">
               {cat.nombre}
 
               <span className="ml-3 text-sm font-normal text-[var(--text-secondary)]">
@@ -68,7 +69,7 @@ export default function ProductGrid({
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {cat.prods.map((producto) => (
               <ProductCard
                 key={producto.id}
@@ -84,20 +85,27 @@ export default function ProductGrid({
         </section>
       ))}
 
-      {/* Sin categoría */}
+      {/* Productos sin categoría */}
       {productosHuerfanos.length > 0 && (
-        <section className="space-y-6">
+        <section className="min-w-0 space-y-6">
           <div className="flex items-center gap-3 border-b border-[var(--border-card)] pb-4">
-            <div className="p-2 bg-[var(--bg-tertiary)] rounded-lg">
-              <LayoutGrid className="w-5 h-5 text-[var(--text-secondary)]" />
+            <div className="shrink-0 rounded-lg bg-[var(--bg-tertiary)] p-2">
+              <LayoutGrid
+                className="h-5 w-5 text-[var(--text-secondary)]"
+                aria-hidden="true"
+              />
             </div>
 
-            <h2 className="text-xl font-bold text-[var(--text-secondary)] italic">
+            <h2 className="min-w-0 break-words text-xl font-bold tracking-tight text-[var(--text-primary)]">
               Sin categoría asignada
+
+              <span className="ml-3 text-sm font-normal text-[var(--text-secondary)]">
+                ({productosHuerfanos.length})
+              </span>
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {productosHuerfanos.map((producto) => (
               <ProductCard
                 key={producto.id}

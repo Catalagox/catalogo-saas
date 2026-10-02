@@ -11,8 +11,6 @@ type Producto = {
   descripcion?: string;
   disponible: boolean;
   imagen_url?: string;
-
-  // 📦 Stock
   stock?: number | null;
 };
 
@@ -33,17 +31,34 @@ export default function ProductCard({
   onEdit,
   onDelete,
 }: Props) {
-  const tieneStockAdministrado =
-    producto.stock !== null && producto.stock !== undefined;
+  const stock = producto.stock;
 
-  const agotado = tieneStockAdministrado && producto.stock === 0;
+  const tieneStockAdministrado =
+    stock !== null && stock !== undefined;
+
+  const agotado = tieneStockAdministrado && stock === 0;
+  const activo = producto.disponible && !agotado;
+
+  const estado = !producto.disponible
+    ? "Oculto"
+    : agotado
+      ? "Agotado"
+      : "Activo";
+
+  const estilosStock = !tieneStockAdministrado
+    ? "border-[var(--border-card)] bg-[var(--bg-tertiary)]"
+    : agotado
+      ? "border-red-500/30 bg-red-500/10"
+      : stock <= 5
+        ? "border-amber-500/30 bg-amber-500/10"
+        : "border-emerald-500/30 bg-emerald-500/10";
 
   return (
     <div
-      className={`group relative bg-[var(--bg-card)] rounded-[2rem] border transition-all duration-300 overflow-hidden flex flex-col ${
-        producto.disponible && !agotado
-          ? "border-[var(--border-card)] hover:border-[var(--color-primary)] shadow-xl"
-          : "border-[var(--border-card)] opacity-75 grayscale-[0.5]"
+      className={`group relative flex flex-col overflow-hidden rounded-[2rem] border border-[var(--border-card)] bg-[var(--bg-card)] text-[var(--text-primary)] transition-all duration-300 ${
+        activo
+          ? "shadow-[var(--shadow-card)] hover:border-[var(--color-primary)]"
+          : "border-dashed"
       }`}
     >
       {/* Imagen */}
@@ -53,30 +68,26 @@ export default function ProductCard({
           alt={producto.nombre}
         />
 
-        {/* Estado */}
+        {/* Fondo sólido para mantener la legibilidad sobre cualquier foto */}
         <div
-          className={`absolute top-4 left-4 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest backdrop-blur-md border ${
-            producto.disponible && !agotado
-              ? "bg-[var(--color-success)]/10 text-[var(--color-success)] border-[var(--color-success)]/20"
-              : "bg-[var(--color-danger)]/10 text-[var(--color-danger)] border-[var(--color-danger)]/20"
+          className={`absolute left-4 top-4 rounded-full border bg-[var(--bg-card)] px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[var(--text-primary)] shadow-sm ${
+            activo
+              ? "border-emerald-500/50"
+              : "border-red-500/50"
           }`}
         >
-          {!producto.disponible
-            ? "Oculto"
-            : agotado
-              ? "Agotado"
-              : "Activo"}
+          {estado}
         </div>
       </div>
 
-      <div className="p-5 flex-1 flex flex-col">
+      <div className="flex flex-1 flex-col p-5">
         <div className="mb-4">
-          <div className="flex justify-between items-start mb-1 gap-3">
-            <h3 className="text-lg font-bold text-[var(--text-primary)] leading-tight group-hover:text-[var(--color-primary)] transition-colors">
+          <div className="mb-1 flex flex-wrap items-start justify-between gap-3">
+            <h3 className="min-w-0 break-words text-lg font-bold leading-tight text-[var(--text-primary)]">
               {producto.nombre}
             </h3>
 
-            <span className="text-[var(--color-primary)] font-black text-lg whitespace-nowrap">
+            <span className="whitespace-nowrap text-lg font-black text-[var(--text-primary)]">
               <Price
                 amount={producto.precio}
                 countryCode={paisCode}
@@ -84,91 +95,107 @@ export default function ProductCard({
             </span>
           </div>
 
-          <p className="text-[var(--text-secondary)] text-xs font-medium uppercase tracking-wider mb-2">
+          <p className="mb-2 text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)]">
             {categoria || "General"}
           </p>
 
           {producto.descripcion && (
-            <p className="text-[var(--text-secondary)] text-sm line-clamp-2 leading-relaxed">
+            <p className="line-clamp-2 text-sm leading-relaxed text-[var(--text-secondary)]">
               {producto.descripcion}
             </p>
           )}
         </div>
 
-        {/* 📦 Información de stock */}
+        {/* Información de stock */}
         <div className="mb-4">
-          {!tieneStockAdministrado ? (
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--bg-tertiary)] text-[var(--text-secondary)] text-xs font-semibold">
-              <Package className="w-3.5 h-3.5" />
-              Stock no administrado
-            </div>
-          ) : agotado ? (
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--color-danger)]/10 text-[var(--color-danger)] text-xs font-bold">
-              <Package className="w-3.5 h-3.5" />
-              Sin stock
-            </div>
-          ) : producto.stock! <= 5 ? (
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-bold">
-              <Package className="w-3.5 h-3.5" />
-              Quedan {producto.stock} unidades
-            </div>
-          ) : (
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
-              <Package className="w-3.5 h-3.5" />
-              {producto.stock} unidades disponibles
-            </div>
-          )}
+          <div
+            className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-semibold text-[var(--text-primary)] ${estilosStock}`}
+          >
+            <Package
+              className="h-3.5 w-3.5 shrink-0"
+              aria-hidden="true"
+            />
+
+            <span>
+              {!tieneStockAdministrado
+                ? "Stock no administrado"
+                : agotado
+                  ? "Sin stock"
+                  : stock <= 5
+                    ? `Quedan ${stock} unidades`
+                    : `${stock} unidades disponibles`}
+            </span>
+          </div>
         </div>
 
         {/* Acciones */}
-        <div className="mt-auto pt-4 border-t border-[var(--border-card)] flex items-center justify-between gap-2">
+        <div className="mt-auto flex items-center justify-between gap-2 border-t border-[var(--border-card)] pt-4">
           <div className="flex items-center gap-2">
             <button
+              type="button"
+              role="switch"
+              aria-checked={producto.disponible}
               onClick={onToggle}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 focus:outline-none ${
-                producto.disponible
-                  ? "bg-[var(--color-primary)]"
-                  : "bg-[var(--bg-tertiary)]"
-              }`}
               aria-label={
                 producto.disponible
                   ? "Ocultar producto"
                   : "Mostrar producto"
               }
+              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] ${
+                producto.disponible
+                  ? "bg-[var(--color-primary)]"
+                  : "bg-[var(--border-card)]"
+              }`}
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-[var(--color-text-inverse)] transition-transform duration-300 ${
+                className={`inline-block h-4 w-4 rounded-full transition-transform duration-300 ${
                   producto.disponible
-                    ? "translate-x-6"
-                    : "translate-x-1"
+                    ? "translate-x-6 bg-[var(--color-text-inverse)]"
+                    : "translate-x-1 bg-[var(--text-secondary)]"
                 }`}
               />
             </button>
 
             <span className="text-[var(--text-secondary)]">
               {producto.disponible ? (
-                <Eye className="w-3 h-3" />
+                <Eye
+                  className="h-3.5 w-3.5"
+                  aria-hidden="true"
+                />
               ) : (
-                <EyeOff className="w-3 h-3" />
+                <EyeOff
+                  className="h-3.5 w-3.5"
+                  aria-hidden="true"
+                />
               )}
             </span>
           </div>
 
           <div className="flex gap-1">
             <button
+              type="button"
               onClick={onEdit}
-              className="p-2.5 bg-[var(--bg-tertiary)] hover:bg-[var(--bg-card-hover)] text-[var(--color-primary)] rounded-xl transition-colors"
+              aria-label={`Editar ${producto.nombre}`}
               title="Editar"
+              className="rounded-xl bg-[var(--bg-tertiary)] p-2.5 text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-card-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
             >
-              <Edit3 className="w-4 h-4" />
+              <Edit3
+                className="h-4 w-4"
+                aria-hidden="true"
+              />
             </button>
 
             <button
+              type="button"
               onClick={onDelete}
-              className="p-2.5 bg-[var(--bg-tertiary)] hover:bg-[var(--color-danger)]/20 text-[var(--color-danger)] rounded-xl transition-colors"
+              aria-label={`Eliminar ${producto.nombre}`}
               title="Eliminar"
+              className="rounded-xl bg-[var(--bg-tertiary)] p-2.5 text-[var(--color-danger)] transition-colors hover:bg-red-500/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-danger)]"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2
+                className="h-4 w-4"
+                aria-hidden="true"
+              />
             </button>
           </div>
         </div>

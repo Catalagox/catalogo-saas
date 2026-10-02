@@ -1,25 +1,15 @@
-
 "use client";
 
 import Image from "next/image";
 import {
-  Dispatch,
-  SetStateAction,
+  useId,
   useRef,
+  type ChangeEvent,
+  type Dispatch,
+  type SetStateAction,
 } from "react";
-
-import {
-  X,
-  Upload,
-  Save,
-  Camera,
-  Package,
-} from "lucide-react";
-
-import {
-  countriesRegistry,
-  isCountryCode,
-} from "@/lib/countries";
+import { X, Upload, Save, Camera, Package } from "lucide-react";
+import { countriesRegistry, isCountryCode } from "@/lib/countries";
 
 type Producto = {
   id: string;
@@ -29,11 +19,6 @@ type Producto = {
   categoria_id: string;
   imagen_url?: string;
   disponible: boolean;
-
-  // Stock:
-  // null = inventario no administrado
-  // 0 = agotado
-  // > 0 = unidades disponibles
   stock?: number | null;
 };
 
@@ -47,12 +32,8 @@ type Props = {
   categorias: Categoria[];
   paisCode: string;
   previewImage: string | null;
-  onFileChange: (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => void;
-  setProducto: Dispatch<
-    SetStateAction<Producto | null>
-  >;
+  onFileChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  setProducto: Dispatch<SetStateAction<Producto | null>>;
   onCancel: () => void;
   onSave: () => void;
 };
@@ -67,131 +48,123 @@ export default function ProductEditModal({
   onCancel,
   onSave,
 }: Props) {
-  const fileInputRef =
-    useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const id = useId();
 
   const normalizedCountryCode = (paisCode || "PE").toUpperCase();
 
-const countryData = isCountryCode(normalizedCountryCode)
-  ? countriesRegistry[normalizedCountryCode]
-  : countriesRegistry.PE;
+  const countryData = isCountryCode(normalizedCountryCode)
+    ? countriesRegistry[normalizedCountryCode]
+    : countriesRegistry.PE;
 
-  const handleChange = (
-    cambios: Partial<Producto>
-  ) => {
-    setProducto((prev) =>
-      prev ? { ...prev, ...cambios } : null
-    );
+  const imagen = previewImage || producto.imagen_url;
+  const stock = producto.stock;
+  const tieneStock = stock !== null && stock !== undefined;
+
+  const inputClass =
+    "w-full rounded-2xl border border-[var(--border-card)] bg-[var(--bg-tertiary)] px-4 py-3 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none transition-colors focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]";
+
+  const labelClass =
+    "ml-1 text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]";
+
+  const focusClass =
+    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]";
+
+  const handleChange = (cambios: Partial<Producto>) => {
+    setProducto((prev) => (prev ? { ...prev, ...cambios } : null));
   };
 
-  // ==================================================
-  // STOCK
-  // ==================================================
-
-  const handleStockChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleStockChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
 
-    // Campo vacío = inventario no administrado
+    // Vacío = inventario no administrado.
     if (value === "") {
-      handleChange({
-        stock: null,
-      });
-
+      handleChange({ stock: null });
       return;
     }
 
     const numero = Number(value);
 
-    // Evitar valores inválidos o negativos
-    if (
-      Number.isNaN(numero) ||
-      numero < 0
-    ) {
-      return;
-    }
+    if (!Number.isFinite(numero) || numero < 0) return;
 
-    // Solo permitimos números enteros
-    handleChange({
-      stock: Math.floor(numero),
-    });
+    handleChange({ stock: Math.floor(numero) });
   };
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-      {/* Overlay */}
+      {/* Fondo del modal */}
       <div
+        aria-hidden="true"
         className="absolute inset-0 bg-[var(--bg-overlay)] backdrop-blur-md"
         onClick={onCancel}
       />
 
-      <div className="relative bg-[var(--bg-card)] border border-[var(--border-card)] rounded-[2.5rem] w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
-
-        {/* ==================================================
-            HEADER
-        ================================================== */}
-
-        <div className="flex items-center justify-between p-6 border-b border-[var(--border-card)] bg-[var(--bg-secondary)]">
-          <h2 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">
-            Editar Producto
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={`${id}-titulo`}
+        className="relative flex max-h-[90dvh] w-full max-w-lg flex-col overflow-hidden rounded-[2rem] border border-[var(--border-card)] bg-[var(--bg-card)] text-[var(--text-primary)] shadow-2xl animate-in fade-in zoom-in duration-300 sm:rounded-[2.5rem]"
+      >
+        {/* Encabezado */}
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--border-card)] bg-[var(--bg-secondary)] p-5 sm:p-6">
+          <h2
+            id={`${id}-titulo`}
+            className="text-xl font-bold tracking-tight text-[var(--text-primary)]"
+          >
+            Editar producto
           </h2>
 
           <button
+            type="button"
             onClick={onCancel}
-            className="p-2 hover:bg-[var(--bg-card-hover)] rounded-full text-[var(--text-secondary)] transition-colors"
+            aria-label="Cerrar edición"
+            className={`rounded-full p-2 text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-card-hover)] hover:text-[var(--text-primary)] ${focusClass}`}
           >
-            <X className="w-5 h-5" />
+            <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
 
-        {/* ==================================================
-            CONTENIDO
-        ================================================== */}
-
-        <div className="p-6 overflow-y-auto max-h-[75vh] space-y-6">
-
-          {/* ==================================================
-              IMAGEN
-          ================================================== */}
-
-          <div className="relative group">
-            <div
-              onClick={() =>
-                fileInputRef.current?.click()
+        {/* Contenido desplazable */}
+        <div className="min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain p-5 sm:p-6">
+          {/* Imagen */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              aria-label={
+                imagen ? "Cambiar imagen del producto" : "Subir imagen del producto"
               }
-              className="relative w-full h-52 bg-[var(--bg-tertiary)] rounded-3xl overflow-hidden cursor-pointer border-2 border-dashed border-[var(--border-card)] hover:border-[var(--color-primary)] transition-all"
+              className={`group relative h-52 w-full overflow-hidden rounded-3xl border-2 border-dashed border-[var(--border-card)] bg-[var(--bg-tertiary)] transition-colors hover:border-[var(--color-primary)] ${focusClass}`}
             >
-              {previewImage ||
-              producto.imagen_url ? (
+              {imagen ? (
                 <>
                   <Image
-                    src={
-                      previewImage ||
-                      producto.imagen_url ||
-                      "/placeholder.png"
-                    }
+                    src={imagen}
                     alt={producto.nombre}
                     fill
-                    className="object-cover transition duration-500 group-hover:scale-105"
+                    sizes="(max-width: 640px) 100vw, 464px"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
 
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/20">
-                      <Camera className="w-6 h-6 text-white" />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                    <div className="rounded-2xl border border-white/20 bg-white/10 p-3 backdrop-blur-md">
+                      <Camera
+                        className="h-6 w-6 text-white"
+                        aria-hidden="true"
+                      />
                     </div>
                   </div>
                 </>
               ) : (
-                <div className="flex flex-col items-center justify-center h-full text-[var(--text-secondary)]">
-                  <Upload className="w-8 h-8 mb-2" />
+                <div className="flex h-full flex-col items-center justify-center text-[var(--text-secondary)]">
+                  <Upload className="mb-2 h-8 w-8" aria-hidden="true" />
 
                   <span className="text-sm font-medium">
                     Subir nueva imagen
                   </span>
                 </div>
               )}
-            </div>
+            </button>
 
             <input
               ref={fileInputRef}
@@ -199,60 +172,49 @@ const countryData = isCountryCode(normalizedCountryCode)
               accept="image/*"
               className="hidden"
               onChange={onFileChange}
+              aria-label="Seleccionar imagen del producto"
             />
           </div>
 
-          {/* ==================================================
-              FORMULARIO
-          ================================================== */}
-
+          {/* Campos */}
           <div className="space-y-4">
-
-            {/* NOMBRE + PRECIO */}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-              {/* NOMBRE */}
-
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {/* Nombre */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-widest ml-1">
+                <label htmlFor={`${id}-nombre`} className={labelClass}>
                   Nombre
                 </label>
 
                 <input
-                  className="w-full px-4 py-3 bg-[var(--bg-tertiary)] border border-[var(--border-card)] rounded-2xl text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--color-primary)] outline-none transition-all placeholder:text-[var(--text-secondary)]"
+                  id={`${id}-nombre`}
+                  className={inputClass}
                   value={producto.nombre}
-                  onChange={(e) =>
-                    handleChange({
-                      nombre: e.target.value,
-                    })
-                  }
+                  onChange={(e) => handleChange({ nombre: e.target.value })}
                   placeholder="Ej: Pizza Pepperoni"
                 />
               </div>
 
-              {/* PRECIO */}
-
+              {/* Precio */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-widest ml-1">
+                <label htmlFor={`${id}-precio`} className={labelClass}>
                   Precio
                 </label>
 
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-primary)] font-bold text-sm">
+                <div className="flex items-center gap-2 rounded-2xl border border-[var(--border-card)] bg-[var(--bg-tertiary)] px-4 focus-within:border-[var(--color-primary)] focus-within:ring-2 focus-within:ring-[var(--color-primary)]">
+                  <span className="shrink-0 text-sm font-bold text-[var(--text-secondary)]">
                     {countryData.symbol}
                   </span>
 
                   <input
+                    id={`${id}-precio`}
                     type="number"
-                    className="w-full pl-12 pr-4 py-3 bg-[var(--bg-tertiary)] border border-[var(--border-card)] rounded-2xl text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--color-primary)] outline-none transition-all"
+                    inputMode="decimal"
+                    min="0"
+                    step="any"
+                    className="min-w-0 flex-1 bg-transparent py-3 text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)]"
                     value={producto.precio}
                     onChange={(e) =>
-                      handleChange({
-                        precio: Number(
-                          e.target.value
-                        ),
-                      })
+                      handleChange({ precio: Number(e.target.value) })
                     }
                     placeholder="0.00"
                   />
@@ -260,82 +222,73 @@ const countryData = isCountryCode(normalizedCountryCode)
               </div>
             </div>
 
-            {/* ==================================================
-                STOCK
-            ================================================== */}
-
+            {/* Stock */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-widest ml-1">
+              <label htmlFor={`${id}-stock`} className={labelClass}>
                 Stock disponible
               </label>
 
               <div className="relative">
                 <Package
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-primary)]"
+                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]"
                   size={19}
+                  aria-hidden="true"
                 />
 
                 <input
+                  id={`${id}-stock`}
                   type="number"
                   min="0"
                   step="1"
                   inputMode="numeric"
-                  className="w-full pl-12 pr-4 py-3 bg-[var(--bg-tertiary)] border border-[var(--border-card)] rounded-2xl text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--color-primary)] outline-none transition-all"
-                  value={
-                    producto.stock === null ||
-                    producto.stock === undefined
-                      ? ""
-                      : producto.stock
-                  }
+                  className={`${inputClass} pl-12`}
+                  value={stock ?? ""}
                   onChange={handleStockChange}
                   placeholder="Ej: 20"
+                  aria-describedby={`${id}-stock-ayuda`}
                 />
               </div>
 
-              <p className="text-[11px] leading-relaxed text-[var(--text-secondary)] px-1">
-                Deja este campo vacío si no quieres
-                administrar el inventario de este
-                producto. Coloca <strong>0</strong> para
-                marcarlo como agotado.
+              <p
+                id={`${id}-stock-ayuda`}
+                className="px-1 text-[11px] leading-relaxed text-[var(--text-secondary)]"
+              >
+                Deja este campo vacío si no quieres administrar el inventario
+                de este producto. Coloca <strong>0</strong> para marcarlo
+                como agotado.
               </p>
 
-              {/* ESTADO DEL STOCK */}
-
-              {producto.stock !== null &&
-                producto.stock !== undefined && (
-                  <div
-                    className={`mt-2 px-4 py-2.5 rounded-xl text-xs font-bold border ${
-                      producto.stock === 0
-                        ? "bg-red-500/10 text-red-500 border-red-500/20"
-                        : producto.stock <= 5
-                        ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
-                        : "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
-                    }`}
-                  >
-                    {producto.stock === 0
-                      ? "Producto agotado"
-                      : producto.stock <= 5
-                      ? `Quedan solo ${producto.stock} unidades`
-                      : `${producto.stock} unidades disponibles`}
-                  </div>
-                )}
+              {tieneStock && (
+                <div
+                  className={`mt-2 rounded-xl border px-4 py-2.5 text-xs font-bold text-[var(--text-primary)] ${
+                    stock === 0
+                      ? "border-red-500/30 bg-red-500/10"
+                      : stock <= 5
+                        ? "border-amber-500/30 bg-amber-500/10"
+                        : "border-emerald-500/30 bg-emerald-500/10"
+                  }`}
+                >
+                  {stock === 0
+                    ? "Producto agotado"
+                    : stock <= 5
+                      ? `Quedan solo ${stock} unidades`
+                      : `${stock} unidades disponibles`}
+                </div>
+              )}
             </div>
 
-            {/* CATEGORÍA */}
-
+            {/* Categoría */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-widest ml-1">
+              <label htmlFor={`${id}-categoria`} className={labelClass}>
                 Categoría
               </label>
 
               <select
-                className="w-full px-4 py-3 bg-[var(--bg-tertiary)] border border-[var(--border-card)] rounded-2xl text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--color-primary)] outline-none transition-all appearance-none cursor-pointer"
+                id={`${id}-categoria`}
+                className={`${inputClass} cursor-pointer`}
                 value={producto.categoria_id}
                 onChange={(e) =>
-                  handleChange({
-                    categoria_id:
-                      e.target.value,
-                  })
+                  handleChange({ categoria_id: e.target.value })
                 }
               >
                 <option value="" disabled>
@@ -343,35 +296,26 @@ const countryData = isCountryCode(normalizedCountryCode)
                 </option>
 
                 {categorias.map((cat) => (
-                  <option
-                    key={cat.id}
-                    value={cat.id}
-                    className="bg-[var(--bg-card)]"
-                  >
+                  <option key={cat.id} value={cat.id}>
                     {cat.nombre}
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* DESCRIPCIÓN */}
-
+            {/* Descripción */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-widest ml-1">
+              <label htmlFor={`${id}-descripcion`} className={labelClass}>
                 Descripción
               </label>
 
               <textarea
-                className="w-full px-4 py-3 bg-[var(--bg-tertiary)] border border-[var(--border-card)] rounded-2xl text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--color-primary)] outline-none transition-all resize-none placeholder:text-[var(--text-secondary)]"
+                id={`${id}-descripcion`}
+                className={`${inputClass} resize-none`}
                 rows={3}
-                value={
-                  producto.descripcion || ""
-                }
+                value={producto.descripcion || ""}
                 onChange={(e) =>
-                  handleChange({
-                    descripcion:
-                      e.target.value,
-                  })
+                  handleChange({ descripcion: e.target.value })
                 }
                 placeholder="Describe tu producto..."
               />
@@ -379,25 +323,23 @@ const countryData = isCountryCode(normalizedCountryCode)
           </div>
         </div>
 
-        {/* ==================================================
-            FOOTER
-        ================================================== */}
-
-        <div className="p-6 border-t border-[var(--border-card)] bg-[var(--bg-secondary)] flex flex-col sm:flex-row gap-3">
-
+        {/* Botones */}
+        <div className="flex shrink-0 flex-col gap-3 border-t border-[var(--border-card)] bg-[var(--bg-secondary)] p-5 sm:flex-row sm:p-6">
           <button
+            type="button"
             onClick={onCancel}
-            className="flex-1 px-6 py-3 bg-[var(--bg-tertiary)] hover:bg-[var(--bg-card-hover)] text-[var(--text-secondary)] font-semibold rounded-2xl transition-all order-2 sm:order-1"
+            className={`order-2 flex-1 rounded-2xl bg-[var(--bg-tertiary)] px-6 py-3 font-semibold text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-card-hover)] hover:text-[var(--text-primary)] sm:order-1 ${focusClass}`}
           >
             Cancelar
           </button>
 
           <button
+            type="button"
             onClick={onSave}
-            className="flex-1 px-6 py-3 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-[var(--color-text-inverse)] font-bold rounded-2xl transition-all shadow-lg flex items-center justify-center gap-2 order-1 sm:order-2"
+            className={`order-1 flex flex-1 items-center justify-center gap-2 rounded-2xl bg-[var(--color-primary)] px-6 py-3 font-bold text-[var(--color-text-inverse)] shadow-sm transition-colors hover:bg-[var(--color-primary-hover)] sm:order-2 ${focusClass}`}
           >
-            <Save className="w-5 h-5" />
-            Guardar Cambios
+            <Save className="h-5 w-5" aria-hidden="true" />
+            Guardar cambios
           </button>
         </div>
       </div>

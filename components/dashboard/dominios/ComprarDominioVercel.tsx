@@ -1,51 +1,95 @@
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Globe2 } from "lucide-react";
+
+const proveedores = [
+  {
+    nombre: "Hostinger",
+    url: "https://www.hostinger.com/es/comprar-dominio",
+  },
+  {
+    nombre: "Vercel",
+    url: "https://vercel.com/domains",
+  },
+  {
+    nombre: "GoDaddy",
+    url: "https://www.godaddy.com/es/dominios",
+  },
+  {
+    nombre: "Namecheap",
+    url: "https://www.namecheap.com/domains/domain-name-search/",
+  },
+];
 
 export default function ComprarDominioVercel() {
   return (
     <section
-      aria-labelledby="comprar-dominio-vercel-titulo"
-      className="mt-6 rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] p-5 sm:p-6"
+      aria-labelledby="comprar-dominio-titulo"
+      className="mt-6 rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] p-5 text-[var(--text-primary)] sm:p-6"
     >
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-        <div className="max-w-2xl">
-          <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-primary)]">
+      <div className="flex items-start gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[var(--border-card)] bg-[var(--bg-secondary)]">
+          <Globe2 size={22} aria-hidden="true" />
+        </div>
+
+        <div className="min-w-0">
+          <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">
             ¿Todavía no tienes un dominio?
           </p>
 
           <h2
-            id="comprar-dominio-vercel-titulo"
-            className="mt-2 text-lg font-bold text-[var(--text-primary)]"
+            id="comprar-dominio-titulo"
+            className="mt-2 text-lg font-bold sm:text-xl"
           >
-            Compra tu dominio en Vercel
+            Encuentra el dominio para tu tienda
           </h2>
 
-          <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">
-            Busca un nombre disponible para tu negocio,
-            cómpralo directamente en Vercel y luego regresa a
-            Catalagox para conectarlo con tu tienda.
-          </p>
-
-          <p className="mt-3 text-xs leading-relaxed text-[var(--text-secondary)] opacity-80">
-            La compra y administración del dominio se realizan
-            directamente con Vercel. Catalagox no interviene en
-            el pago ni en la renovación.
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--text-secondary)]">
+            Busca un nombre disponible en alguno de estos proveedores.
+            Después de comprarlo, regresa a Catalogox para conectarlo
+            con tu tienda.
           </p>
         </div>
+      </div>
 
-        <a
-          href="https://vercel.com/domains"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Buscar un dominio en Vercel, se abre en una pestaña nueva"
-          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-[var(--border-card)] bg-[var(--bg-secondary)] px-5 py-3 text-sm font-bold text-[var(--text-primary)] transition hover:border-[var(--color-primary)] hover:bg-[var(--bg-card-hover)] active:scale-[0.98]"
-        >
-          Buscar dominio en Vercel
+      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {proveedores.map((proveedor) => (
+          <a
+            key={proveedor.nombre}
+            href={proveedor.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Buscar un dominio en ${proveedor.nombre}, se abre en una pestaña nueva`}
+            className="group flex min-h-24 items-center justify-between gap-3 rounded-xl border border-[var(--border-card)] bg-[var(--bg-secondary)] p-4 transition-colors hover:border-[var(--color-primary)] hover:bg-[var(--bg-card-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
+          >
+            <div className="min-w-0">
+              <h3 className="text-sm font-bold text-[var(--text-primary)]">
+                {proveedor.nombre}
+              </h3>
 
-          <ExternalLink
-            size={16}
-            aria-hidden="true"
-          />
-        </a>
+              <p className="mt-1 text-xs text-[var(--text-secondary)]">
+                Buscar dominio
+              </p>
+            </div>
+
+            <ExternalLink
+              size={18}
+              aria-hidden="true"
+              className="shrink-0 text-[var(--text-secondary)] transition-colors group-hover:text-[var(--text-primary)]"
+            />
+          </a>
+        ))}
+      </div>
+
+      <div className="mt-5 border-t border-[var(--border-card)] pt-4">
+        <p className="text-xs leading-relaxed text-[var(--text-secondary)]">
+          Los enlaces se abren en una pestaña nueva. La compra, el pago
+          y la renovación se gestionan directamente con el proveedor
+          que elijas.
+        </p>
+
+        <p className="mt-2 text-xs leading-relaxed text-[var(--text-secondary)]">
+          Antes de comprar, revisa el precio inicial y el costo de
+          renovación del dominio.
+        </p>
       </div>
     </section>
   );

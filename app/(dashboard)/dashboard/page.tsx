@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import IndicadorSuscripcion from "@/components/dashboard/principal/IndicadorSuscripcion";
-
 import {
   MenuSquare,
   Package,
@@ -34,7 +33,6 @@ export default function DashboardPage() {
   const [catalogo, setCatalogo] = useState<Catalogo | null>(null);
   const [productosCount, setProductosCount] = useState(0);
   const [categoriasCount, setCategoriasCount] = useState(0);
-
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -47,10 +45,6 @@ export default function DashboardPage() {
     setErrorMsg("");
 
     try {
-      /*
-       * getUser() valida la sesión directamente con Supabase.
-       * Es más seguro que confiar solamente en getSession().
-       */
       const {
         data: { user },
         error: userError,
@@ -61,23 +55,15 @@ export default function DashboardPage() {
         return;
       }
 
-      /*
-       * Obtenemos la tienda perteneciente al usuario.
-       */
-      const { data: catalogoData, error: catalogoError } = await supabase
-        .from("catalogos")
-        .select("id, nombre, slug, created_at, plan_vence_el")
-        .eq("user_id", user.id)
-        .maybeSingle();
+      const { data: catalogoData, error: catalogoError } =
+        await supabase
+          .from("catalogos")
+          .select("id, nombre, slug, created_at, plan_vence_el")
+          .eq("user_id", user.id)
+          .maybeSingle();
 
-      if (catalogoError) {
-        throw catalogoError;
-      }
+      if (catalogoError) throw catalogoError;
 
-      /*
-       * La creación de tiendas ahora se realiza exclusivamente
-       * mediante el nuevo proceso de onboarding.
-       */
       if (!catalogoData) {
         router.replace("/onboarding?next=%2Fdashboard");
         return;
@@ -85,35 +71,20 @@ export default function DashboardPage() {
 
       setCatalogo(catalogoData);
 
-      /*
-       * Contamos productos y categorías por catalogo_id.
-       * De esta forma todo queda asociado a la tienda correcta.
-       */
       const [productosResult, categoriasResult] = await Promise.all([
         supabase
           .from("productos")
-          .select("id", {
-            count: "exact",
-            head: true,
-          })
+          .select("id", { count: "exact", head: true })
           .eq("catalogo_id", catalogoData.id),
 
         supabase
           .from("categorias")
-          .select("id", {
-            count: "exact",
-            head: true,
-          })
+          .select("id", { count: "exact", head: true })
           .eq("catalogo_id", catalogoData.id),
       ]);
 
-      if (productosResult.error) {
-        throw productosResult.error;
-      }
-
-      if (categoriasResult.error) {
-        throw categoriasResult.error;
-      }
+      if (productosResult.error) throw productosResult.error;
+      if (categoriasResult.error) throw categoriasResult.error;
 
       setProductosCount(productosResult.count ?? 0);
       setCategoriasCount(categoriasResult.count ?? 0);
@@ -124,53 +95,47 @@ export default function DashboardPage() {
       setErrorMsg(
         "No pudimos cargar la información de tu tienda. Inténtalo nuevamente.",
       );
-
       setLoading(false);
     }
   }, [router]);
 
   useEffect(() => {
-    /*
-     * Si el usuario vuelve desde Stripe con success=true,
-     * eliminamos el parámetro de la dirección sin recargar la página.
-     */
     const currentUrl = new URL(window.location.href);
 
     if (currentUrl.searchParams.get("success") === "true") {
       currentUrl.searchParams.delete("success");
 
-      const cleanUrl = `${currentUrl.pathname}${
-        currentUrl.searchParams.toString()
-          ? `?${currentUrl.searchParams.toString()}`
-          : ""
-      }`;
-
-      window.history.replaceState({}, document.title, cleanUrl);
+      window.history.replaceState(
+        window.history.state,
+        document.title,
+        `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`,
+      );
     }
 
     void inicializar();
   }, [inicializar]);
 
-  /*
-   * Pantalla de carga.
-   */
   if (loading) {
     return (
-      <div className="w-full animate-pulse px-4 sm:px-6 lg:px-8">
+      <div
+        role="status"
+        aria-label="Cargando información de tu tienda"
+        className="w-full animate-pulse px-4 sm:px-6 lg:px-8"
+      >
         <div className="mx-auto max-w-6xl space-y-6 md:space-y-10">
-          <div className="h-12 w-64 rounded-xl bg-white/5" />
+          <div className="h-12 w-full max-w-64 rounded-xl bg-[var(--bg-tertiary)]" />
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
               <div
                 key={item}
-                className="flex h-36 flex-col justify-between rounded-2xl border border-white/5 bg-white/5 p-5"
+                className="flex h-36 flex-col justify-between rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] p-5"
               >
-                <div className="h-8 w-8 rounded-lg bg-white/10" />
+                <div className="h-8 w-8 rounded-lg bg-[var(--bg-tertiary)]" />
 
                 <div className="space-y-2">
-                  <div className="h-6 w-1/2 rounded bg-white/10" />
-                  <div className="h-3 w-3/4 rounded bg-white/5" />
+                  <div className="h-6 w-1/2 rounded bg-[var(--bg-tertiary)]" />
+                  <div className="h-3 w-3/4 rounded bg-[var(--bg-tertiary)]" />
                 </div>
               </div>
             ))}
@@ -180,14 +145,14 @@ export default function DashboardPage() {
     );
   }
 
-  /*
-   * Pantalla de error con opción para reintentar.
-   */
   if (errorMsg) {
     return (
       <div className="flex min-h-[60vh] w-full items-center justify-center px-4">
-        <div className="w-full max-w-md rounded-2xl border border-red-500/20 bg-[var(--bg-card)] p-8 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10 text-red-500">
+        <div
+          role="alert"
+          className="w-full max-w-md rounded-2xl border border-red-500/20 bg-[var(--bg-card)] p-8 text-center"
+        >
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10 text-[var(--color-danger)]">
             <AlertCircle className="h-6 w-6" />
           </div>
 
@@ -202,7 +167,7 @@ export default function DashboardPage() {
           <button
             type="button"
             onClick={() => void inicializar()}
-            className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] px-5 py-3 font-semibold text-white transition hover:opacity-90"
+            className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] px-5 py-3 font-semibold text-[var(--color-text-inverse)] transition hover:bg-[var(--color-primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
           >
             <RefreshCw className="h-4 w-4" />
             Volver a intentar
@@ -212,13 +177,7 @@ export default function DashboardPage() {
     );
   }
 
-  /*
-   * Esta condición normalmente no llega a mostrarse porque
-   * los usuarios sin tienda son redirigidos al onboarding.
-   */
-  if (!catalogo) {
-    return null;
-  }
+  if (!catalogo) return null;
 
   const dashboardCards = [
     {
@@ -271,8 +230,14 @@ export default function DashboardPage() {
     },
   ];
 
+  const cardClass =
+    "group relative flex w-full cursor-pointer flex-col justify-between space-y-4 rounded-2xl p-5 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]";
+
+  const labelClass =
+    "text-[11px] font-medium uppercase tracking-wider text-[var(--text-muted)] transition-colors group-hover:text-[var(--text-secondary)]";
+
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-8">
+    <div className="w-full px-4 text-[var(--text-primary)] sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl space-y-6 md:space-y-10">
         <PageHeader
           title="Panel de control"
@@ -280,9 +245,7 @@ export default function DashboardPage() {
           icon={MenuSquare}
           showBackButton={false}
         >
-          <IndicadorSuscripcion
-            planVenceEl={catalogo.plan_vence_el}
-          />
+          <IndicadorSuscripcion planVenceEl={catalogo.plan_vence_el} />
         </PageHeader>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -291,34 +254,24 @@ export default function DashboardPage() {
               key={card.label}
               type="button"
               onClick={card.action}
-              className={`
-                group relative flex w-full cursor-pointer flex-col
-                justify-between space-y-4 rounded-2xl p-5 text-left
-                ${
-                  card.highlight
-                    ? "card-dashboard-highlight"
-                    : "card-dashboard"
-                }
-              `}
+              className={`${cardClass} ${
+                card.highlight
+                  ? "card-dashboard-highlight"
+                  : "card-dashboard"
+              }`}
             >
-              <div className="flex w-full items-center justify-between">
+              <div className="flex w-full items-center justify-between gap-3">
                 <div
-                  className={`
-                    rounded-xl p-2.5 transition-all duration-300
-                    group-hover:scale-110
-                    ${
-                      card.highlight
-                        ? "bg-[var(--color-primary-glow)] text-[var(--color-primary)]"
-                        : "bg-white/5 text-[var(--text-secondary)] group-hover:bg-white/10 group-hover:text-white"
-                    }
-                  `}
+                  className={`shrink-0 rounded-xl p-2.5 transition-all duration-300 group-hover:scale-110 ${
+                    card.highlight
+                      ? "bg-[var(--color-primary-glow)] text-[var(--text-primary)]"
+                      : "bg-[var(--bg-tertiary)] text-[var(--text-secondary)] group-hover:bg-[var(--border-soft)] group-hover:text-[var(--text-primary)]"
+                  }`}
                 >
                   {card.icon}
                 </div>
 
-                <span className="text-[11px] font-medium uppercase tracking-wider text-[var(--text-muted)] transition-colors group-hover:text-[var(--text-secondary)]">
-                  {card.label}
-                </span>
+                <span className={labelClass}>{card.label}</span>
               </div>
 
               <div>
@@ -333,21 +286,19 @@ export default function DashboardPage() {
             </button>
           ))}
 
-          {/* TUTORIAL DE YOUTUBE */}
+          {/* Tutorial de YouTube */}
           <a
             href="https://www.youtube.com/watch?v=RV7S4Pz7XZA&t=26s"
             target="_blank"
             rel="noopener noreferrer"
-            className="card-dashboard group relative flex w-full cursor-pointer flex-col justify-between space-y-4 rounded-2xl p-5 text-left"
+            className={`${cardClass} card-dashboard`}
           >
-            <div className="flex w-full items-center justify-between">
-              <div className="rounded-xl bg-white/5 p-2.5 text-[var(--text-secondary)] transition-all duration-300 group-hover:scale-110 group-hover:bg-red-500/10 group-hover:text-red-500">
+            <div className="flex w-full items-center justify-between gap-3">
+              <div className="shrink-0 rounded-xl bg-[var(--bg-tertiary)] p-2.5 text-[var(--text-secondary)] transition-all duration-300 group-hover:scale-110 group-hover:bg-red-500/10 group-hover:text-[var(--color-danger)]">
                 <Video className="h-5 w-5" />
               </div>
 
-              <span className="text-[11px] font-medium uppercase tracking-wider text-[var(--text-muted)] transition-colors group-hover:text-[var(--text-secondary)]">
-                Tutorial
-              </span>
+              <span className={labelClass}>Tutorial</span>
             </div>
 
             <div>
@@ -361,21 +312,19 @@ export default function DashboardPage() {
             </div>
           </a>
 
-          {/* TIENDA PÚBLICA */}
+          {/* Tienda pública */}
           <a
             href={`/${catalogo.slug}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="card-dashboard-highlight group relative flex w-full cursor-pointer flex-col justify-between space-y-4 rounded-2xl p-5 text-left"
+            className={`${cardClass} card-dashboard-highlight`}
           >
-            <div className="flex w-full items-center justify-between">
-              <div className="rounded-xl bg-[var(--color-primary-glow)] p-2.5 text-[var(--color-primary)] transition-all duration-300 group-hover:scale-110">
+            <div className="flex w-full items-center justify-between gap-3">
+              <div className="shrink-0 rounded-xl bg-[var(--color-primary-glow)] p-2.5 text-[var(--text-primary)] transition-all duration-300 group-hover:scale-110">
                 <Globe className="h-5 w-5" />
               </div>
 
-              <span className="text-[11px] font-medium uppercase tracking-wider text-[var(--text-muted)] transition-colors group-hover:text-[var(--text-secondary)]">
-                Tienda pública
-              </span>
+              <span className={labelClass}>Tienda pública</span>
             </div>
 
             <div>
