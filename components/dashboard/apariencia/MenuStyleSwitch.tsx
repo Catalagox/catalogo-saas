@@ -7,37 +7,50 @@ interface MenuStyleSwitchProps {
   onChange: (value: "lista" | "galeria") => void;
 }
 
+const opciones = [
+  {
+    value: "lista",
+    label: "Lista",
+    icon: LayoutList,
+  },
+  {
+    value: "galeria",
+    label: "Galería",
+    icon: LayoutGrid,
+  },
+] as const;
+
 export default function MenuStyleSwitch({
   value,
   onChange,
 }: MenuStyleSwitchProps) {
   return (
-    <div className="bg-[var(--bg-tertiary)] border border-[var(--border-card)] p-1 rounded-xl flex gap-1 w-fit">
-      {/* LISTA */}
-      <button
-        onClick={() => onChange("lista")}
-        className={`flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition ${
-          value === "lista"
-            ? "bg-[var(--bg-card)] text-[var(--text-primary)] shadow"
-            : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-        }`}
-      >
-        <LayoutList className="w-4 h-4" />
-        <span className="hidden sm:inline">Lista</span>
-      </button>
+    <div
+      role="group"
+      aria-label="Estilo del catálogo"
+      className="flex w-full gap-1 rounded-xl border border-[var(--border-card)] bg-[var(--bg-secondary)] p-1 sm:w-fit"
+    >
+      {opciones.map((opcion) => {
+        const seleccionado = value === opcion.value;
+        const Icon = opcion.icon;
 
-      {/* GALERÍA */}
-      <button
-        onClick={() => onChange("galeria")}
-        className={`flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition ${
-          value === "galeria"
-            ? "bg-[var(--bg-card)] text-[var(--text-primary)] shadow"
-            : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-        }`}
-      >
-        <LayoutGrid className="w-4 h-4" />
-        <span className="hidden sm:inline">Galería</span>
-      </button>
+        return (
+          <button
+            key={opcion.value}
+            type="button"
+            aria-pressed={seleccionado}
+            onClick={() => onChange(opcion.value)}
+            className={`inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] sm:flex-none sm:px-4 ${
+              seleccionado
+                ? "border-[var(--color-primary)] bg-[var(--bg-card)] text-[var(--text-primary)] shadow-sm"
+                : "border-transparent text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)] hover:text-[var(--text-primary)]"
+            }`}
+          >
+            <Icon size={18} className="shrink-0" aria-hidden="true" />
+            <span>{opcion.label}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }

@@ -37,7 +37,7 @@ export default function DashboardLayout({
   const [temaAplicado, setTemaAplicado] =
     useState<TemaAplicado>("light");
 
-  // Aplica la preferencia incluso durante la carga y los errores.
+  // Aplica el tema durante la carga, los errores y el dashboard.
   useEffect(() => {
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     let preferencia: Tema = "light";
@@ -87,12 +87,48 @@ export default function DashboardLayout({
     return () => {
       media.removeEventListener("change", aplicar);
       window.removeEventListener(EVENT_NAME, cambiarPreferencia);
-      window.removeEventListener(
-        "storage",
-        sincronizarAlmacenamiento,
-      );
+      window.removeEventListener("storage", sincronizarAlmacenamiento);
     };
   }, []);
+
+  // Cierra el menú móvil cuando se pasa a escritorio.
+  useEffect(() => {
+    const escritorio = window.matchMedia("(min-width: 1024px)");
+
+    const comprobarPantalla = () => {
+      if (escritorio.matches) setOpen(false);
+    };
+
+    comprobarPantalla();
+    escritorio.addEventListener("change", comprobarPantalla);
+
+    return () => {
+      escritorio.removeEventListener("change", comprobarPantalla);
+    };
+  }, []);
+
+  // Evita desplazar la página de fondo mientras el menú está abierto.
+  useEffect(() => {
+    if (!open) return;
+
+    const overflowBodyAnterior = document.body.style.overflow;
+    const overflowHtmlAnterior = document.documentElement.style.overflow;
+
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    const cerrarConEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+
+    window.addEventListener("keydown", cerrarConEscape);
+
+    return () => {
+      document.body.style.overflow = overflowBodyAnterior;
+      document.documentElement.style.overflow = overflowHtmlAnterior;
+      window.removeEventListener("keydown", cerrarConEscape);
+    };
+  }, [open]);
 
   useEffect(() => {
     let active = true;
@@ -128,14 +164,13 @@ export default function DashboardLayout({
           return;
         }
 
-        const { data: catalogo, error: catalogoError } =
-          await supabase
-            .from("catalogos")
-            .select(
-              "id, suscripcion_activa, plan_vence_el, subscription_status",
-            )
-            .eq("user_id", user.id)
-            .maybeSingle();
+        const { data: catalogo, error: catalogoError } = await supabase
+          .from("catalogos")
+          .select(
+            "id, suscripcion_activa, plan_vence_el, subscription_status",
+          )
+          .eq("user_id", user.id)
+          .maybeSingle();
 
         if (!active) return;
         if (catalogoError) throw catalogoError;
@@ -184,10 +219,7 @@ export default function DashboardLayout({
         setCatalogoId(catalogo.id);
         setLoading(false);
       } catch (error) {
-        console.error(
-          "Error verificando el acceso al dashboard:",
-          error,
-        );
+        console.error("Error verificando el acceso al dashboard:", error);
 
         if (active) {
           setAccessError(
@@ -227,7 +259,7 @@ export default function DashboardLayout({
             aria-label="Cargando tu tienda"
             className="h-1 w-32 overflow-hidden rounded-full bg-[var(--border-card)] sm:w-40"
           >
-            <div className="h-full w-full animate-pulse bg-emerald-500" />
+            <div className="h-full w-full animate-pulse bg-[var(--color-primary)]" />
           </div>
         </div>
       </div>
@@ -241,7 +273,7 @@ export default function DashboardLayout({
         className="dashboard-theme fixed inset-0 z-[9999] flex items-center justify-center bg-[var(--bg-main)] px-4 text-[var(--text-primary)]"
       >
         <div className="w-full max-w-md rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] p-6 text-center shadow-2xl">
-          <h1 className="text-xl font-bold text-[var(--text-primary)]">
+          <h1 className="text-xl font-bold">
             No pudimos cargar tu tienda
           </h1>
 
@@ -252,7 +284,7 @@ export default function DashboardLayout({
           <button
             type="button"
             onClick={() => window.location.reload()}
-            className="mt-6 rounded-xl bg-[var(--color-primary)] px-6 py-3 font-semibold text-[var(--color-text-inverse)] transition hover:bg-[var(--color-primary-hover)]"
+            className="mt-6 rounded-xl bg-[var(--color-primary)] px-6 py-3 font-semibold text-[var(--color-text-inverse)] transition-colors hover:bg-[var(--color-primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
           >
             Intentar nuevamente
           </button>
@@ -267,15 +299,17 @@ export default function DashboardLayout({
     <PedidosNotificacionesProvider catalogoId={catalogoId}>
       <div
         data-theme={temaAplicado}
-        className="dashboard-theme flex min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)]"
+        className="dashboard-theme flex min-h-dvh bg-[var(--bg-main)] text-[var(--text-primary)]"
       >
-        <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-[var(--border-card)] lg:flex">
+        {/* Sidebar de escritorio */}
+        <aside className="sticky top-0 hidden h-dvh min-h-0 w-64 shrink-0 overflow-hidden border-r border-[var(--border-card)] lg:flex">
           <Sidebar />
         </aside>
 
+        {/* Menú móvil */}
         <div
           inert={!open}
-          className={`fixed inset-0 z-50 transition-all duration-300 lg:hidden ${
+          className={`fixed inset-0 z-50 overflow-hidden transition-[visibility] duration-300 lg:hidden ${
             open ? "visible" : "invisible"
           }`}
         >
@@ -290,24 +324,28 @@ export default function DashboardLayout({
 
           <aside
             id="dashboard-menu-movil"
-            className={`relative flex h-full w-72 max-w-[85vw] flex-col border-r border-[var(--border-card)] bg-[var(--bg-secondary)] shadow-2xl transition-transform duration-300 ease-in-out ${
+            aria-label="Menú móvil del dashboard"
+            className={`relative flex h-dvh min-h-0 w-72 max-w-[85vw] flex-col overflow-hidden border-r border-[var(--border-card)] bg-[var(--bg-secondary)] pb-[env(safe-area-inset-bottom)] shadow-2xl transition-transform duration-300 ease-in-out ${
               open ? "translate-x-0" : "-translate-x-full"
             }`}
           >
+            {/* Cabecera fija del menú */}
             <div className="flex shrink-0 items-center justify-between border-b border-[var(--border-card)] px-4 py-4">
-              <Logo size="sm" />
+              
+              <Logo size="sm" variant="dashboard" />
 
               <button
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label="Cerrar menú"
-                className="rounded-xl p-2 text-[var(--text-secondary)] transition hover:bg-[var(--bg-card-hover)] hover:text-[var(--text-primary)]"
+                className="rounded-xl p-2 text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-card-hover)] hover:text-[var(--text-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
               >
-                <X size={20} />
+                <X size={20} aria-hidden="true" />
               </button>
             </div>
 
-            <div className="min-h-0 flex-1">
+            {/* Sidebar gestiona el scroll únicamente dentro de su nav */}
+            <div className="flex min-h-0 flex-1 overflow-hidden">
               <Sidebar closeMenu={() => setOpen(false)} />
             </div>
           </aside>
@@ -315,7 +353,7 @@ export default function DashboardLayout({
 
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-40 flex items-center justify-between border-b border-[var(--border-card)] bg-[var(--bg-main)] px-4 py-4 lg:hidden">
-            <Logo size="sm" />
+            <Logo size="sm" variant="dashboard" />
 
             <button
               type="button"
@@ -323,9 +361,9 @@ export default function DashboardLayout({
               aria-label="Abrir menú"
               aria-expanded={open}
               aria-controls="dashboard-menu-movil"
-              className="rounded-xl border border-[var(--border-card)] bg-[var(--bg-secondary)] p-2 text-[var(--text-primary)] transition hover:bg-[var(--bg-card-hover)]"
+              className="rounded-xl border border-[var(--border-card)] bg-[var(--bg-secondary)] p-2 text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-card-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
             >
-              <Menu size={20} />
+              <Menu size={20} aria-hidden="true" />
             </button>
           </header>
 

@@ -1,10 +1,16 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { supabase } from "@/lib/supabaseClient";
-import ButtonPrimary from "@/components/dashboard/agregar-producto/ButtonPrimary";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+} from "react";
 import { Upload, X, Plus } from "lucide-react";
-import imageCompression from "browser-image-compression"; // 📦 Importamos la librería que ya tienes armada
+import imageCompression from "browser-image-compression";
+import { supabase } from "@/lib/supabaseClient";
 
 type Categoria = {
   id: string;
@@ -18,16 +24,27 @@ type Props = {
   onCreated: () => void;
 };
 
+const campoClassName =
+  "min-h-11 w-full rounded-xl border border-[var(--border-card)] bg-[var(--bg-secondary)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-secondary)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-60";
+
+const labelClassName =
+  "mb-2 block text-sm font-semibold text-[var(--text-primary)]";
+
 export default function CreateProductForm({
   userId,
   catalogoId,
   categorias,
   onCreated,
 }: Props) {
+  const id = useId();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const enviandoRef = useRef(false);
+
   const [loading, setLoading] = useState(false);
   const [imagen, setImagen] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [error, setError] = useState("");
+  const [mensaje, setMensaje] = useState("");
 
   const [producto, setProducto] = useState({
     nombre: "",
@@ -36,29 +53,54 @@ export default function CreateProductForm({
     categoria_id: "",
   });
 
+  useEffect(() => {
+    if (!imagen) {
+      setPreview(null);
+      return;
+    }
+
+    const url = URL.createObjectURL(imagen);
+    setPreview(url);
+
+    return () => URL.revokeObjectURL(url);
+  }, [imagen]);
+
   const handleChange = (
-    e: React.ChangeEvent<
+    event: ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >,
   ) => {
-    setProducto((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
+    const { name, value } = event.target;
+
+    setProducto((actual) => ({
+      ...actual,
+      [name]: value,
     }));
+
+    setError("");
+    setMensaje("");
   };
 
-  const handleImagenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleImagenChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const archivo = event.target.files?.[0];
+    if (!archivo) return;
 
-    setImagen(file);
-    setPreview(URL.createObjectURL(file));
+    setError("");
+    setMensaje("");
+
+    if (!archivo.type.startsWith("image/")) {
+      setError("Selecciona un archivo de imagen.");
+      event.target.value = "";
+      return;
+    }
+
+    setImagen(archivo);
   };
 
-  const eliminarImagen = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.stopPropagation();
+  const eliminarImagen = () => {
     setImagen(null);
-    setPreview(null);
+    setError("");
+    setMensaje("");
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -74,663 +116,382 @@ export default function CreateProductForm({
     });
 
     setImagen(null);
-    setPreview(null);
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   };
 
-  const subirImagen = async (): Promise<string> => {
-    if (!imagen) throw new Error("Debes seleccionar una imagen");
-    if (!userId) throw new Error("Usuario no autenticado");
-
-    // 📊 Métrica 1: Obtener peso original
-    const pesoOriginalMB = (imagen.size / (1024 * 1024)).toFixed(2);
-    console.log(`📸 [Original] Archivo: ${imagen.name} | Peso: ${pesoOriginalMB} MB`);
-
-    // ⚙️ Opciones optimizadas para resolver bloqueos en Android (Archivos masivos/HEIF)
+  const subirImagen = async (archivo: File, propietarioId: string) => {
     const opciones = {
-      maxSizeMB: 0.8,              // Intenta dejar el archivo en menos de ~800KB
-      maxWidthOrHeight: 1200,      // Un rango de 1200px previene errores de desbordamiento en hilos móviles
-      useWebWorker: true,          // Ejecuta el compresor de forma asíncrona sin congelar hilos de UI
-      fileType: "image/webp",      // Fuerza la conversión automática a formato WebP moderno
-      alwaysKeepResolution: false, // Permite redimensionar dinámicamente si el hardware del móvil lo requiere
+      maxSizeMB: 0.8,
+      maxWidthOrHeight: 1200,
+      useWebWorker: true,
+      fileType: "image/webp",
+      alwaysKeepResolution: false,
     };
 
+    let comprimida: File;
+
     try {
-      // 1. Comprimir usando la librería estable (soporta HEIC, PNG, JPG, etc.)
-      let imagenComprimidaFile;
-      
+      comprimida = await imageCompression(archivo, opciones);
+    } catch {
       try {
-        imagenComprimidaFile = await imageCompression(imagen, opciones);
-      } catch (compressionErr) {
-        console.warn("Fallo el worker asíncrono, reintentando de modo directo...", compressionErr);
-        // Fallback: Si el procesador asíncrono del teléfono falla, reintenta en el hilo principal
-        imagenComprimidaFile = await imageCompression(imagen, { ...opciones, useWebWorker: false });
-      }
-
-      // 📊 Métrica 2: Calcular ahorro final
-      const pesoComprimidoKB = (imagenComprimidaFile.size / 1024).toFixed(2);
-      const ahorroPorcentaje = (100 - (imagenComprimidaFile.size / imagen.size) * 100).toFixed(0);
-      
-      console.log(`⚡ [Comprimido WebP] Peso: ${pesoComprimidoKB} KB`);
-      console.log(`🎉 ¡Ahorro del ${ahorroPorcentaje}% para Supabase Storage!`);
-
-      // 2. Definir el nombre del archivo con extensión fija .webp
-      const fileName = `${Date.now()}-${Math.random()
-        .toString(36)
-        .substring(2, 9)}.webp`;
-
-      const filePath = `${userId}/${fileName}`;
-
-      // 3. Subir el archivo optimizado a Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from("productos")
-        .upload(filePath, imagenComprimidaFile, {
-          cacheControl: "public, max-age=31536000, immutable",
-          upsert: false,
-          contentType: "image/webp",
+        comprimida = await imageCompression(archivo, {
+          ...opciones,
+          useWebWorker: false,
         });
-
-      if (uploadError) {
-        throw new Error("Error al subir al storage: " + uploadError.message);
+      } catch {
+        throw new Error(
+          "No pudimos procesar la imagen. Intenta con una imagen JPG, PNG o WebP.",
+        );
       }
-
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("productos").getPublicUrl(filePath);
-
-      return publicUrl;
-    } catch (error: any) {
-      console.error("Error en compresión/subida:", error);
-      throw new Error(error?.message || "No se pudo procesar esta imagen. Intenta con otra.");
-    }
-  };
-
-  const crearProducto = async () => {
-    if (!userId) return alert("Usuario no autenticado");
-
-    const { data: catalogo, error: catalogoError } = await supabase
-      .from("catalogos")
-      .select("suscripcion_activa")
-      .eq("id", catalogoId)
-      .single();
-
-    if (catalogoError) {
-      console.error(catalogoError);
-      return alert("No se pudo validar la suscripción.");
     }
 
-    if (!catalogo?.suscripcion_activa) {
-      return alert(
-        "Tu suscripción está vencida. Debes renovar tu plan para seguir agregando productos."
+    if (comprimida.type !== "image/webp") {
+      throw new Error(
+        "No pudimos convertir la imagen a WebP. Intenta con otra imagen.",
       );
     }
 
-    if (!producto.nombre.trim() || !producto.precio) {
-      return alert("Nombre y precio son obligatorios");
-    }
+    const filePath = `${propietarioId}/${crypto.randomUUID()}.webp`;
 
-    if (!imagen) {
-      return alert("Debes subir una imagen");
-    }
-
-    try {
-      setLoading(true);
-
-      const imagen_url = await subirImagen();
-
-      const { error } = await supabase.from("productos").insert([
-        {
-          user_id: userId,
-          catalogo_id: catalogoId,
-          nombre: producto.nombre.trim(),
-          descripcion: producto.descripcion.trim(),
-          precio: Number(producto.precio),
-          categoria_id: producto.categoria_id || null,
-          imagen_url,
-          disponible: true,
-        },
-      ]);
-
-      if (error) throw error;
-
-      resetForm();
-      onCreated();
-
-      alert("Producto creado correctamente");
-    } catch (err: any) {
-      console.error("Error al crear producto:", err);
-      alert(err?.message || "Ocurrió un error al crear el producto");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="max-w-4xl mx-auto bg-[var(--bg-card)] border border-[var(--border-card)] p-5 md:p-8 rounded-2xl shadow-2xl mb-12">
-      <div className="flex items-center gap-3 mb-8">
-        <div className="p-2 bg-[var(--color-primary)]/10 rounded-lg">
-          <Plus className="w-5 h-5 text-[var(--color-primary)]" />
-        </div>
-
-        <h2 className="text-2xl font-bold text-[var(--text-primary)]">
-          Nuevo Producto
-        </h2>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-        <div className="lg:col-span-2">
-          <label className="block text-sm text-[var(--text-secondary)] mb-3">
-            Imagen de portada
-          </label>
-
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            className={`relative group aspect-square flex flex-col items-center justify-center border-2 border-dashed rounded-2xl cursor-pointer transition ${
-              preview
-                ? "border-transparent bg-[var(--bg-tertiary)]"
-                : "border-[var(--border-card)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)]/5"
-            }`}
-          >
-            {preview ? (
-              <>
-                <img
-                  src={preview}
-                  alt="Vista previa del producto"
-                  className="w-full h-full object-cover rounded-2xl"
-                />
-
-                <button
-                  type="button"
-                  onClick={eliminarImagen}
-                  className="absolute top-3 right-3 p-1.5 bg-[var(--color-danger)] text-white rounded-full"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </>
-            ) : (
-              <div className="text-center p-6">
-                <div className="mb-4 inline-flex p-4 bg-[var(--bg-tertiary)] rounded-full text-[var(--text-secondary)] group-hover:text-[var(--color-primary)] transition">
-                  <Upload className="w-8 h-8" />
-                </div>
-
-                <p className="text-sm font-semibold text-[var(--text-primary)]">
-                  Click para subir
-                </p>
-
-                <p className="text-xs text-[var(--text-secondary)] mt-2">
-                  Cualquier imagen o fotografía
-                </p>
-              </div>
-            )}
-          </div>
-
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleImagenChange}
-          />
-        </div>
-
-        <div className="lg:col-span-3 space-y-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm text-[var(--text-secondary)]">
-                Nombre
-              </label>
-              <input
-                name="nombre"
-                value={producto.nombre}
-                onChange={handleChange}
-                placeholder="Ej: Camiseta de algodón"
-                className="input-dark w-full px-4 py-3 rounded-xl focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm text-[var(--text-secondary)]">
-                Precio
-              </label>
-              <input
-                name="precio"
-                type="number"
-                value={producto.precio}
-                onChange={handleChange}
-                placeholder="0.00"
-                className="input-dark w-full px-4 py-3 rounded-xl focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-sm text-[var(--text-secondary)]">
-              Categoría
-            </label>
-
-            <select
-              name="categoria_id"
-              value={producto.categoria_id}
-              onChange={handleChange}
-              className="input-dark w-full px-4 py-3 rounded-xl focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]"
-            >
-              <option value="">Sin categoría</option>
-
-              {categorias.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.nombre}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="text-sm text-[var(--text-secondary)]">
-              Descripción
-            </label>
-
-            <textarea
-              name="descripcion"
-              rows={4}
-              value={producto.descripcion}
-              onChange={handleChange}
-              placeholder="Describe los detalles de tu producto..."
-              className="input-dark w-full px-4 py-3 rounded-xl focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]"
-            />
-          </div>
-
-          <ButtonPrimary
-            onClick={crearProducto}
-            disabled={loading}
-            className="w-full py-4 rounded-xl font-bold text-lg"
-          >
-            {loading ? "Procesando..." : "Publicar Producto"}
-          </ButtonPrimary>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-
-/*"use client";
-
-import { useState, useRef } from "react";
-import { supabase } from "@/lib/supabaseClient";
-import ButtonPrimary from "@/components/dashboard/agregar-producto/ButtonPrimary";
-import { Upload, X, Plus } from "lucide-react";
-
-type Categoria = {
-  id: string;
-  nombre: string;
-};
-
-type Props = {
-  userId: string | null;
-  catalogoId: string;
-  categorias: Categoria[];
-  onCreated: () => void;
-};
-
-export default function CreateProductForm({
-  userId,
-  catalogoId,
-  categorias,
-  onCreated,
-}: Props) {
-  const [loading, setLoading] = useState(false);
-  const [imagen, setImagen] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const [producto, setProducto] = useState({
-    nombre: "",
-    descripcion: "",
-    precio: "",
-    categoria_id: "",
-  });
-
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >,
-  ) => {
-    setProducto((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  };
-
-  const handleImagenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setImagen(file);
-    setPreview(URL.createObjectURL(file));
-  };
-
-  const eliminarImagen = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.stopPropagation();
-    setImagen(null);
-    setPreview(null);
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
-  const resetForm = () => {
-    setProducto({
-      nombre: "",
-      descripcion: "",
-      precio: "",
-      categoria_id: "",
-    });
-
-    setImagen(null);
-    setPreview(null);
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
-  // ⚡ FUNCIÓN NATIVA PARA COMPRIMIR IMÁGENES A WEBP
-  const comprimirImagen = (archivo: File): Promise<Blob> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(archivo);
-      reader.onload = (event) => {
-        const img = new Image();
-        img.src = event.target?.result as string;
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          let width = img.width;
-          let height = img.height;
-
-          // Redimensionar si la imagen es excesivamente grande
-          const MAX_WIDTH = 1000;
-          const MAX_HEIGHT = 1000;
-
-          if (width > height) {
-            if (width > MAX_WIDTH) {
-              height *= MAX_WIDTH / width;
-              width = MAX_WIDTH;
-            }
-          } else {
-            if (height > MAX_HEIGHT) {
-              width *= MAX_HEIGHT / height;
-              height = MAX_HEIGHT;
-            }
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-
-          const ctx = canvas.getContext("2d");
-          if (!ctx) return reject(new Error("No se pudo obtener el contexto Canvas"));
-          ctx.drawImage(img, 0, 0, width, height);
-
-          // Convertir a WebP con calidad del 75%
-          canvas.toBlob(
-            (blob) => {
-              if (blob) {
-                resolve(blob);
-              } else {
-                reject(new Error("Error al comprimir la imagen"));
-              }
-            },
-            "image/webp",
-            0.75
-          );
-        };
-      };
-      reader.onerror = (error) => reject(error);
-    });
-  };
-
-  const subirImagen = async (): Promise<string> => {
-    if (!imagen) throw new Error("Debes seleccionar una imagen");
-    if (!userId) throw new Error("Usuario no autenticado");
-
-    // 1. Comprimir la imagen antes de iniciar la carga
-    const imagenComprimidaBlob = await comprimirImagen(imagen);
-
-    // 2. Definir el nombre del archivo siempre con extensión .webp
-    const fileName = `${Date.now()}-${Math.random()
-      .toString(36)
-      .substring(2, 9)}.webp`;
-
-    const filePath = `${userId}/${fileName}`;
-
-    // 3. Subir el archivo optimizado con políticas agresivas de caché para el móvil del cliente
     const { error: uploadError } = await supabase.storage
       .from("productos")
-      .upload(filePath, imagenComprimidaBlob, {
-        cacheControl: "public, max-age=31536000, immutable",
+      .upload(filePath, comprimida, {
+        cacheControl: "31536000",
         upsert: false,
         contentType: "image/webp",
       });
 
     if (uploadError) {
-      throw new Error("Error al subir al storage: " + uploadError.message);
+      console.error("Error subiendo imagen:", uploadError);
+      throw new Error("No pudimos subir la imagen. Inténtalo nuevamente.");
     }
 
     const {
       data: { publicUrl },
     } = supabase.storage.from("productos").getPublicUrl(filePath);
 
-    return publicUrl;
+    return { publicUrl, filePath };
   };
 
-  const crearProducto = async () => {
-    if (!userId) return alert("Usuario no autenticado");
+  const crearProducto = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
 
-    // 🔒 Verificar suscripción activa
-    const { data: catalogo, error: catalogoError } = await supabase
-      .from("catalogos")
-      .select("suscripcion_activa")
-      .eq("id", catalogoId)
-      .single();
+    if (enviandoRef.current) return;
 
-    if (catalogoError) {
-      console.error(catalogoError);
-      return alert("No se pudo validar la suscripción.");
+    setError("");
+    setMensaje("");
+
+    if (!userId || !catalogoId) {
+      setError("No pudimos identificar tu tienda. Recarga la página.");
+      return;
     }
 
-    if (!catalogo?.suscripcion_activa) {
-      return alert(
-        "Tu suscripción está vencida. Debes renovar tu plan para seguir agregando productos."
-      );
+    const nombre = producto.nombre.trim();
+    const precio = Number(producto.precio);
+
+    if (!nombre) {
+      setError("Escribe el nombre del producto.");
+      return;
     }
 
-    if (!producto.nombre.trim() || !producto.precio) {
-      return alert("Nombre y precio son obligatorios");
+    if (
+      !producto.precio.trim() ||
+      !Number.isFinite(precio) ||
+      precio < 0
+    ) {
+      setError("Ingresa un precio válido, igual o mayor que cero.");
+      return;
     }
 
     if (!imagen) {
-      return alert("Debes subir una imagen");
+      setError("Selecciona una imagen para el producto.");
+      return;
     }
+
+    enviandoRef.current = true;
+    setLoading(true);
+
+    let rutaSubida: string | null = null;
 
     try {
-      setLoading(true);
+      const { data: catalogo, error: catalogoError } = await supabase
+        .from("catalogos")
+        .select("suscripcion_activa")
+        .eq("id", catalogoId)
+        .eq("user_id", userId)
+        .single();
 
-      const imagen_url = await subirImagen();
+      if (catalogoError) {
+        console.error("Error validando suscripción:", catalogoError);
+        throw new Error("No pudimos validar la suscripción.");
+      }
 
-      const { error } = await supabase.from("productos").insert([
-        {
+      if (!catalogo.suscripcion_activa) {
+        throw new Error(
+          "Tu suscripción está vencida. Renueva tu plan para seguir agregando productos.",
+        );
+      }
+
+      const subida = await subirImagen(imagen, userId);
+      rutaSubida = subida.filePath;
+
+      const { error: insertError } = await supabase
+        .from("productos")
+        .insert({
           user_id: userId,
           catalogo_id: catalogoId,
-          nombre: producto.nombre.trim(),
+          nombre,
           descripcion: producto.descripcion.trim(),
-          precio: Number(producto.precio),
+          precio,
           categoria_id: producto.categoria_id || null,
-          imagen_url,
+          imagen_url: subida.publicUrl,
           disponible: true,
-        },
-      ]);
+        });
 
-      if (error) throw error;
+      if (insertError) {
+        console.error("Error guardando producto:", insertError);
+        throw new Error("No pudimos guardar el producto. Inténtalo nuevamente.");
+      }
+    } catch (err) {
+      if (rutaSubida) {
+        try {
+          const { error: cleanupError } = await supabase.storage
+            .from("productos")
+            .remove([rutaSubida]);
 
-      resetForm();
-      onCreated();
+          if (cleanupError) {
+            console.error("Error eliminando imagen sin producto:", cleanupError);
+          }
+        } catch (cleanupError) {
+          console.error("Error limpiando imagen:", cleanupError);
+        }
+      }
 
-      alert("Producto creado correctamente");
-    } catch (err: any) {
-      console.error("Error al crear producto:", err);
-      alert(err?.message || "Ocurrió un error al crear el producto");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Ocurrió un error al crear el producto.",
+      );
+      return;
     } finally {
+      enviandoRef.current = false;
       setLoading(false);
     }
+
+    resetForm();
+    setMensaje(`Producto “${nombre}” creado correctamente.`);
+    onCreated();
   };
 
   return (
-    <div className="max-w-4xl mx-auto bg-[var(--bg-card)] border border-[var(--border-card)] p-5 md:p-8 rounded-2xl shadow-2xl mb-12">
-      <div className="flex items-center gap-3 mb-8">
-        <div className="p-2 bg-[var(--color-primary)]/10 rounded-lg">
-          <Plus className="w-5 h-5 text-[var(--color-primary)]" />
+    <section
+      aria-labelledby={`${id}-titulo`}
+      className="mx-auto mb-12 w-full max-w-4xl rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] p-5 text-[var(--text-primary)] shadow-sm md:p-8"
+    >
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--bg-secondary)]">
+          <Plus size={22} aria-hidden="true" />
         </div>
 
-        <h2 className="text-2xl font-bold text-[var(--text-primary)]">
-          Nuevo Producto
+        <h2
+          id={`${id}-titulo`}
+          className="text-xl font-bold sm:text-2xl"
+        >
+          Nuevo producto
         </h2>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-        <div className="lg:col-span-2">
-          <label className="block text-sm text-[var(--text-secondary)] mb-3">
-            Imagen de portada
-          </label>
+      <form onSubmit={crearProducto} aria-busy={loading}>
+        <fieldset
+          disabled={loading}
+          className="m-0 min-w-0 border-0 p-0"
+        >
+          <legend className="sr-only">Datos del producto</legend>
 
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            className={`relative group aspect-square flex flex-col items-center justify-center border-2 border-dashed rounded-2xl cursor-pointer transition ${
-              preview
-                ? "border-transparent bg-[var(--bg-tertiary)]"
-                : "border-[var(--border-card)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)]/5"
-            }`}
-          >
-            {preview ? (
-              <>
-                <img
-                  src={preview}
-                  alt="Vista previa del producto"
-                  className="w-full h-full object-cover rounded-2xl"
-                />
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-5 lg:gap-8">
+            <div className="min-w-0 lg:col-span-2">
+              <p className={labelClassName}>Imagen de portada</p>
 
+              <div className="relative">
                 <button
                   type="button"
-                  onClick={eliminarImagen}
-                  className="absolute top-3 right-3 p-1.5 bg-[var(--color-danger)] text-white rounded-full"
+                  onClick={() => fileInputRef.current?.click()}
+                  aria-label={
+                    preview
+                      ? "Cambiar imagen del producto"
+                      : "Seleccionar imagen del producto"
+                  }
+                  className="group flex aspect-square w-full flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-[var(--border-card)] bg-[var(--bg-secondary)] transition-colors hover:border-[var(--color-primary)] hover:bg-[var(--bg-card-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  <X className="w-4 h-4" />
+                  {preview ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={preview}
+                      alt="Vista previa del producto"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span className="block p-6 text-center">
+                      <Upload
+                        className="mx-auto mb-4 h-8 w-8 text-[var(--text-secondary)]"
+                        aria-hidden="true"
+                      />
+
+                      <span className="block text-sm font-semibold">
+                        Seleccionar imagen
+                      </span>
+
+                      <span className="mt-2 block text-xs leading-relaxed text-[var(--text-secondary)]">
+                        La imagen se optimiza antes de subirla.
+                      </span>
+                    </span>
+                  )}
                 </button>
-              </>
-            ) : (
-              <div className="text-center p-6">
-                <div className="mb-4 inline-flex p-4 bg-[var(--bg-tertiary)] rounded-full text-[var(--text-secondary)] group-hover:text-[var(--color-primary)] transition">
-                  <Upload className="w-8 h-8" />
+
+                {preview && (
+                  <button
+                    type="button"
+                    onClick={eliminarImagen}
+                    aria-label="Eliminar imagen seleccionada"
+                    className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-card)] bg-[var(--bg-card)] text-[var(--color-danger)] shadow-sm transition-colors hover:bg-[var(--bg-card-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-danger)] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <X size={18} aria-hidden="true" />
+                  </button>
+                )}
+              </div>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                aria-label="Imagen del producto"
+                className="hidden"
+                onChange={handleImagenChange}
+              />
+
+              {imagen && (
+                <p className="mt-2 break-all text-xs text-[var(--text-secondary)]">
+                  {imagen.name}
+                </p>
+              )}
+            </div>
+
+            <div className="min-w-0 space-y-5 lg:col-span-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label htmlFor={`${id}-nombre`} className={labelClassName}>
+                    Nombre
+                  </label>
+
+                  <input
+                    id={`${id}-nombre`}
+                    name="nombre"
+                    type="text"
+                    required
+                    value={producto.nombre}
+                    onChange={handleChange}
+                    placeholder="Ej.: Camiseta de algodón"
+                    className={campoClassName}
+                  />
                 </div>
 
-                <p className="text-sm font-semibold text-[var(--text-primary)]">
-                  Click para subir
-                </p>
+                <div>
+                  <label htmlFor={`${id}-precio`} className={labelClassName}>
+                    Precio
+                  </label>
 
-                <p className="text-xs text-[var(--text-secondary)] mt-2">
-                  JPG, PNG o WEBP
-                </p>
+                  <input
+                    id={`${id}-precio`}
+                    name="precio"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    inputMode="decimal"
+                    required
+                    value={producto.precio}
+                    onChange={handleChange}
+                    placeholder="0.00"
+                    className={campoClassName}
+                  />
+                </div>
               </div>
-            )}
-          </div>
 
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-            className="hidden"
-            onChange={handleImagenChange}
-          />
-        </div>
+              <div>
+                <label htmlFor={`${id}-categoria`} className={labelClassName}>
+                  Categoría
+                </label>
 
-        <div className="lg:col-span-3 space-y-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm text-[var(--text-secondary)]">
-                Nombre
-              </label>
-              <input
-                name="nombre"
-                value={producto.nombre}
-                onChange={handleChange}
-                placeholder="Ej: Camiseta de algodón"
-                className="input-dark w-full px-4 py-3 rounded-xl focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]"
-              />
+                <select
+                  id={`${id}-categoria`}
+                  name="categoria_id"
+                  value={producto.categoria_id}
+                  onChange={handleChange}
+                  className={campoClassName}
+                >
+                  <option value="">Sin categoría</option>
+
+                  {categorias.map((categoria) => (
+                    <option key={categoria.id} value={categoria.id}>
+                      {categoria.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label
+                  htmlFor={`${id}-descripcion`}
+                  className={labelClassName}
+                >
+                  Descripción
+                  <span className="ml-1 font-normal text-[var(--text-secondary)]">
+                    (opcional)
+                  </span>
+                </label>
+
+                <textarea
+                  id={`${id}-descripcion`}
+                  name="descripcion"
+                  rows={4}
+                  value={producto.descripcion}
+                  onChange={handleChange}
+                  placeholder="Describe los detalles de tu producto..."
+                  className={`${campoClassName} resize-y`}
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] px-5 py-3 text-sm font-bold text-[var(--color-text-inverse)] transition-colors hover:bg-[var(--color-primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Plus size={18} aria-hidden="true" />
+                {loading ? "Procesando..." : "Publicar producto"}
+              </button>
             </div>
-
-            <div>
-              <label className="text-sm text-[var(--text-secondary)]">
-                Precio
-              </label>
-              <input
-                name="precio"
-                type="number"
-                value={producto.precio}
-                onChange={handleChange}
-                placeholder="0.00"
-                className="input-dark w-full px-4 py-3 rounded-xl focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]"
-              />
-            </div>
           </div>
+        </fieldset>
 
-          <div>
-            <label className="text-sm text-[var(--text-secondary)]">
-              Categoría
-            </label>
-
-            <select
-              name="categoria_id"
-              value={producto.categoria_id}
-              onChange={handleChange}
-              className="input-dark w-full px-4 py-3 rounded-xl focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]"
-            >
-              <option value="">Sin categoría</option>
-
-              {categorias.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.nombre}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="text-sm text-[var(--text-secondary)]">
-              Descripción
-            </label>
-
-            <textarea
-              name="descripcion"
-              rows={4}
-              value={producto.descripcion}
-              onChange={handleChange}
-              placeholder="Describe los detalles de tu producto..."
-              className="input-dark w-full px-4 py-3 rounded-xl focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]"
-            />
-          </div>
-
-          <ButtonPrimary
-            onClick={crearProducto}
-            disabled={loading}
-            className="w-full py-4 rounded-xl font-bold text-lg"
+        {error && (
+          <p
+            role="alert"
+            className="mt-5 text-sm leading-relaxed text-[var(--color-danger)]"
           >
-            {loading ? "Procesando..." : "Publicar Producto"}
-          </ButtonPrimary>
-        </div>
-      </div>
-    </div>
-  );
-}*/
+            {error}
+          </p>
+        )}
 
+        {mensaje && (
+          <p
+            role="status"
+            className="mt-5 text-sm leading-relaxed text-[var(--text-primary)]"
+          >
+            {mensaje}
+          </p>
+        )}
+      </form>
+    </section>
+  );
+}

@@ -6,7 +6,7 @@ interface Producto {
   id: string;
   nombre: string;
   precio: number;
-  descripcion?: string;
+  descripcion?: string | null;
   imagen_url: string | null;
   disponible?: boolean;
   slug?: string;
@@ -149,21 +149,24 @@ export default function PhonePreview({
     );
   }, [previewData]);
 
-  // Si cambian colores, logo o productos, se vuelve a enviar la preview.
-  useEffect(() => {
-    setPreviewRecibida(false);
-  }, [previewData]);
-
-  // Recibe los mensajes enviados desde /preview-catalogo.
   useEffect(() => {
     const recibirMensaje = (event: MessageEvent) => {
       if (event.origin !== window.location.origin) return;
 
-      if (event.data?.type === "CATALOGO_PREVIEW_LISTO") {
+      if (event.source !== iframeRef.current?.contentWindow) return;
+
+      if (
+        !event.data ||
+        typeof event.data !== "object"
+      ) {
+        return;
+      }
+
+      if (event.data.type === "CATALOGO_PREVIEW_LISTO") {
         enviarDatos();
       }
 
-      if (event.data?.type === "CATALOGO_PREVIEW_RECIBIDO") {
+      if (event.data.type === "CATALOGO_PREVIEW_RECIBIDO") {
         setPreviewRecibida(true);
       }
     };
@@ -175,43 +178,66 @@ export default function PhonePreview({
     };
   }, [enviarDatos]);
 
-  // Reintenta mientras el iframe termina de cargar y hasta confirmar recepción.
+  // Envía los cambios y reintenta hasta recibir confirmación.
   useEffect(() => {
-    if (previewRecibida) return;
+    setPreviewRecibida(false);
 
     enviarDatos();
 
     const intervalo = window.setInterval(enviarDatos, 300);
 
+    const recibirConfirmacion = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.source !== iframeRef.current?.contentWindow) return;
+
+      if (event.data?.type === "CATALOGO_PREVIEW_RECIBIDO") {
+        window.clearInterval(intervalo);
+      }
+    };
+
+    window.addEventListener("message", recibirConfirmacion);
+
     return () => {
       window.clearInterval(intervalo);
+      window.removeEventListener("message", recibirConfirmacion);
     };
-  }, [previewRecibida, enviarDatos]);
+  }, [enviarDatos]);
 
   return (
-    <div
-      className="
-    w-full max-w-[320px]
-    h-[650px] max-h-[calc(100dvh-2rem)]
-    rounded-[42px]
-    border-[10px] border-zinc-200
-    bg-zinc-200
-    shadow-[0_0_0_2px_rgba(255,255,255,0.25),0_25px_50px_rgba(0,0,0,0.45)]
-    overflow-hidden
-    flex flex-col
-  "
-    >
-      <div className="h-6 shrink-0 flex items-center justify-center bg-zinc-200">
-        <div className="w-28 h-4 rounded-full bg-zinc-900" />
+    <div className="mx-auto w-full max-w-[320px] text-[var(--text-primary)]">
+      <div className="mb-3 flex items-center justify-between gap-3 px-1">
+        <p className="text-sm font-semibold">
+          Vista previa móvil
+        </p>
+
+        <span
+          role="status"
+          className="text-xs text-[var(--text-secondary)]"
+        >
+          {previewRecibida ? "Actualizada" : "Actualizando..."}
+        </span>
       </div>
 
-      <iframe
-        ref={iframeRef}
-        src="/preview-catalogo"
-        title="Vista previa del catálogo"
-        onLoad={enviarDatos}
-        className="w-full flex-1 border-0 bg-white"
-      />
+      <div className="flex h-[650px] max-h-[calc(100dvh-6rem)] min-h-[280px] w-full flex-col overflow-hidden rounded-[42px] border-[10px] border-[var(--border-card)] bg-[var(--bg-secondary)] shadow-xl">
+        <div
+          aria-hidden="true"
+          className="flex h-6 shrink-0 items-center justify-center bg-[var(--bg-secondary)]"
+        >
+          <div className="h-3 w-24 rounded-full bg-[var(--text-primary)]" />
+        </div>
+
+        <iframe
+          ref={iframeRef}
+          src="/preview-catalogo"
+          title="Vista previa de tu tienda en móvil"
+          onLoad={() => {
+            setPreviewRecibida(false);
+            enviarDatos();
+          }}
+          className="min-h-0 w-full flex-1 border-0"
+          style={{ backgroundColor: colorFondo }}
+        />
+      </div>
     </div>
   );
 }

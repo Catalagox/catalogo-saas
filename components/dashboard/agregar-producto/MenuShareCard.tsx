@@ -1,50 +1,131 @@
 "use client";
 
+import { useState } from "react";
 import QRCode from "react-qr-code";
+import { Check, Copy, ExternalLink } from "lucide-react";
 
 export default function MenuShareCard({ slug }: { slug: string }) {
+  const [copiado, setCopiado] = useState(false);
+  const [copiando, setCopiando] = useState(false);
+  const [error, setError] = useState("");
 
-  const menuUrl = `http://localhost:3000/menu/${slug}`;
+  const slugLimpio = slug.trim();
+  const tiendaUrl = `https://www.catalagox.com/${encodeURIComponent(slugLimpio)}`;
 
-  const copiar = () => {
-    navigator.clipboard.writeText(menuUrl);
-    alert("Link copiado");
+  const copiar = async () => {
+    if (copiando) return;
+
+    setCopiando(true);
+    setCopiado(false);
+    setError("");
+
+    try {
+      await navigator.clipboard.writeText(tiendaUrl);
+      setCopiado(true);
+    } catch {
+      setError(
+        "No pudimos copiar el enlace. Puedes seleccionarlo y copiarlo manualmente.",
+      );
+    } finally {
+      setCopiando(false);
+    }
   };
 
-  return (
-    <div className="bg-white p-6 rounded-xl shadow max-w-md">
+  if (!slugLimpio) {
+    return (
+      <div className="w-full max-w-md rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] p-6">
+        <p className="text-sm text-[var(--text-secondary)]">
+          Configura el enlace de tu tienda para poder compartirla.
+        </p>
+      </div>
+    );
+  }
 
-      <h2 className="text-xl font-bold mb-4">
-        Compartir menú
+  return (
+    <section
+      aria-label="Compartir tienda"
+      className="w-full max-w-md rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] p-5 text-[var(--text-primary)] shadow-sm sm:p-6"
+    >
+      <h2 className="text-xl font-bold">
+        Comparte tu tienda
       </h2>
 
-      <div className="flex justify-center mb-4">
-        <QRCode value={menuUrl} size={200} />
-      </div>
-
-      <p className="text-sm mb-4 break-all">
-        {menuUrl}
+      <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">
+        Tus clientes pueden escanear este código QR o abrir el enlace
+        para consultar tus productos.
       </p>
 
-      <div className="flex flex-col gap-3">
+      <div className="my-6 flex justify-center">
+        <div className="w-full max-w-[232px] rounded-xl bg-white p-4">
+          <QRCode
+            value={tiendaUrl}
+            size={200}
+            bgColor="#ffffff"
+            fgColor="#000000"
+            title="Código QR de tu tienda"
+            style={{
+              display: "block",
+              width: "100%",
+              height: "auto",
+            }}
+          />
+        </div>
+      </div>
 
+      <a
+        href={tiendaUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Abrir el enlace de tu tienda en una pestaña nueva"
+        className="mb-5 block break-all rounded-xl border border-[var(--border-card)] bg-[var(--bg-secondary)] p-3 text-center text-sm text-[var(--text-primary)] underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
+      >
+        {tiendaUrl}
+      </a>
+
+      <div className="flex flex-col gap-3">
         <a
-          href={`/menu/${slug}`}
+          href={tiendaUrl}
           target="_blank"
-          className="bg-green-600 text-white py-2 rounded-lg text-center"
+          rel="noopener noreferrer"
+          aria-label="Ver tienda, se abre en una pestaña nueva"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] px-4 py-2.5 text-sm font-bold text-[var(--color-text-inverse)] transition-colors hover:bg-[var(--color-primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
         >
-          Ver menú
+          <ExternalLink size={18} aria-hidden="true" />
+          Ver tienda
         </a>
 
         <button
-          onClick={copiar}
-          className="border py-2 rounded-lg"
+          type="button"
+          onClick={() => void copiar()}
+          disabled={copiando}
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[var(--border-card)] bg-[var(--bg-secondary)] px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-card-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Copiar link
-        </button>
+          {copiado ? (
+            <Check size={18} aria-hidden="true" />
+          ) : (
+            <Copy size={18} aria-hidden="true" />
+          )}
 
+          {copiando
+            ? "Copiando..."
+            : copiado
+              ? "Enlace copiado"
+              : "Copiar enlace"}
+        </button>
       </div>
 
-    </div>
+      <p role="status" className="sr-only">
+        {copiado ? "Enlace copiado correctamente." : ""}
+      </p>
+
+      {error && (
+        <p
+          role="alert"
+          className="mt-3 text-sm leading-relaxed text-[var(--color-danger)]"
+        >
+          {error}
+        </p>
+      )}
+    </section>
   );
 }

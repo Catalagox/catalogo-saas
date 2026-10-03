@@ -148,7 +148,7 @@ export default function Sidebar({ closeMenu }: Props) {
   return (
     <div className="flex h-full min-h-0 w-full flex-col overflow-hidden border-r border-[var(--border-card)] bg-[var(--bg-secondary)] text-[var(--text-primary)]">
       <div className="hidden shrink-0 border-b border-[var(--border-card)] px-6 py-5 lg:block">
-        <Logo size="md" />
+        <Logo size="md" variant="dashboard" />
       </div>
 
       <nav

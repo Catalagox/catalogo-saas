@@ -4,50 +4,55 @@ import Link from "next/link";
 import Image from "next/image";
 
 interface LogoProps {
+  // Se conserva para que los usos existentes sigan funcionando.
   scrolled?: boolean;
   size?: "sm" | "md" | "lg";
   href?: string;
+  variant?: "marketing" | "dashboard";
 }
 
+const sizes = {
+  sm: {
+    box: "h-10 w-10",
+    text: "text-lg",
+  },
+  md: {
+    box: "h-14 w-14",
+    text: "text-2xl",
+  },
+  lg: {
+    box: "h-14 w-14",
+    text: "text-3xl",
+  },
+};
+
 export default function Logo({
-  scrolled = false,
   size = "md",
   href = "/",
+  variant = "marketing",
 }: LogoProps) {
-  const textColor = scrolled ? "text-slate-900" : "text-white";
-
-  const sizes = {
-    sm: {
-      box: "w-10 h-10",
-      text: "text-lg",
-    },
-    md: {
-      box: "w-14 h-14",
-      text: "text-2xl",
-    },
-    lg: {
-      box: "w-14 h-14",
-      text: "text-3xl",
-    },
-  };
-
   return (
     <Link
       href={href}
-      className="flex items-center gap-1 group transition-transform hover:scale-105"
+      aria-label="Catalagox, ir al inicio"
+      className="inline-flex shrink-0 items-center gap-1 rounded-lg transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-current"
     >
-      <div className={`relative ${sizes[size].box} overflow-hidden`}>
+      <div className={`relative shrink-0 ${sizes[size].box}`}>
         <Image
           src="/Logotipo-fondo-trasparente4.png"
-          alt="Catalagox"
+          alt=""
           fill
+          sizes={size === "sm" ? "40px" : "56px"}
           className="object-contain"
           priority
         />
       </div>
 
       <span
-        className={`font-black tracking-tighter transition-colors ${sizes[size].text} ${textColor}`}
+        className={`font-black tracking-tighter ${sizes[size].text}`}
+        style={{
+          color: variant === "dashboard" ? "#22c55e" : "#000000",
+        }}
       >
         Catalagox
       </span>

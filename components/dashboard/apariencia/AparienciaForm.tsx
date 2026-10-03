@@ -1,5 +1,7 @@
 "use client";
 
+import { useId } from "react";
+import { Save } from "lucide-react";
 import MenuStyleSwitch from "@/components/dashboard/apariencia/MenuStyleSwitch";
 import ColorPicker from "./ColorPicker";
 
@@ -40,8 +42,6 @@ interface Props {
   colorTarjeta: string;
   setColorTarjeta: (v: string) => void;
 
- 
-
   colorLupa: string;
   setColorLupa: (v: string) => void;
 
@@ -56,6 +56,9 @@ interface Props {
 
   guardar: () => void;
 }
+
+const panelClassName =
+  "space-y-5 rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] p-5 shadow-sm sm:p-6";
 
 export default function AparienciaForm({
   nombre,
@@ -82,132 +85,217 @@ export default function AparienciaForm({
   setColorHamburguesa,
   colorTarjeta,
   setColorTarjeta,
-  
   colorLupa,
   setColorLupa,
-
   colorFondoCategoria,
-setColorFondoCategoria,
-
-colorTextoCategoria,
-setColorTextoCategoria,
-
-colorBorderCategoria,
-setColorBorderCategoria,
+  setColorFondoCategoria,
+  colorTextoCategoria,
+  setColorTextoCategoria,
+  colorBorderCategoria,
+  setColorBorderCategoria,
   guardar,
 }: Props) {
+  const id = useId();
+
+  const secciones = [
+    {
+      clave: "encabezado",
+      titulo: "Encabezado",
+      descripcion: "Personaliza la parte superior de tu tienda.",
+      colores: [
+        {
+          label: "Fondo del encabezado",
+          value: colorHeader,
+          onChange: setColorHeader,
+        },
+        {
+          label: "Texto del encabezado",
+          value: colorTextHeader,
+          onChange: setColorTextHeader,
+        },
+        {
+          label: "Borde inferior del encabezado",
+          value: colorBorderHeader,
+          onChange: setColorBorderHeader,
+        },
+        {
+          label: "Icono del menú",
+          value: colorHamburguesa,
+          onChange: setColorHamburguesa,
+        },
+        {
+          label: "Icono de búsqueda",
+          value: colorLupa,
+          onChange: setColorLupa,
+        },
+      ],
+    },
+    {
+      clave: "catalogo",
+      titulo: "Productos y botones",
+      descripcion: "Define los colores del contenido de tu tienda.",
+      colores: [
+        {
+          label: "Fondo de la página",
+          value: colorFondo,
+          onChange: setColorFondo,
+        },
+        {
+          label: "Color principal de los botones",
+          value: colorPrimario,
+          onChange: setColorPrimario,
+        },
+        {
+          label: "Fondo de las tarjetas",
+          value: colorTarjeta,
+          onChange: setColorTarjeta,
+        },
+        {
+          label: "Texto del catálogo",
+          value: colorTexto,
+          onChange: setColorTexto,
+        },
+        {
+          label: "Precios",
+          value: colorPrecio,
+          onChange: setColorPrecio,
+        },
+      ],
+    },
+    {
+      clave: "categorias",
+      titulo: "Categorías",
+      descripcion: "Personaliza los fondos, textos y bordes de las categorías.",
+      colores: [
+        {
+          label: "Fondo de las categorías",
+          value: colorFondoCategoria,
+          onChange: setColorFondoCategoria,
+        },
+        {
+          label: "Texto de las categorías",
+          value: colorTextoCategoria,
+          onChange: setColorTextoCategoria,
+        },
+        {
+          label: "Borde de las categorías",
+          value: colorBorderCategoria,
+          onChange: setColorBorderCategoria,
+        },
+      ],
+    },
+    {
+      clave: "pie",
+      titulo: "Pie de página",
+      descripcion: "Personaliza la parte inferior de tu tienda.",
+      colores: [
+        {
+          label: "Fondo del pie de página",
+          value: colorFooter,
+          onChange: setColorFooter,
+        },
+      ],
+    },
+  ];
+
   return (
-    <div className="space-y-6 w-full max-w-4xl mx-auto pb-24 sm:pb-6 animate-in fade-in duration-200">
-      
-      {/* 🟢 CONFIGURACIÓN GENERAL */}
-      <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-5 sm:p-6 space-y-5 shadow-sm">
-        <div className="flex items-center gap-2">
-          <div className="w-1 h-4 rounded-full bg-[var(--color-primary)]" />
-          <h3 className="text-xs sm:text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider">
-            Configuración General
-          </h3>
+    <div className="mx-auto w-full max-w-4xl space-y-6 pb-[calc(6rem+env(safe-area-inset-bottom))] text-[var(--text-primary)] sm:pb-6">
+      <section
+        aria-labelledby={`${id}-general`}
+        className={panelClassName}
+      >
+        <div className="border-b border-[var(--border-card)] pb-4">
+          <h2 id={`${id}-general`} className="text-lg font-bold">
+            Configuración general
+          </h2>
+
+          <p className="mt-1 text-sm leading-relaxed text-[var(--text-secondary)]">
+            Configura el nombre y la presentación de tu tienda.
+          </p>
         </div>
-        
-        <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-[var(--text-secondary)] px-0.5">
-            Nombre del menú / catálogo
+
+        <div className="space-y-2">
+          <label
+            htmlFor={`${id}-nombre`}
+            className="block text-sm font-semibold"
+          >
+            Nombre de la tienda
           </label>
+
           <input
+            id={`${id}-nombre`}
+            type="text"
             value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
+            onChange={(event) => setNombre(event.target.value)}
             placeholder="Nombre de tu negocio"
-            className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-card)] text-[var(--text-primary)] rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] placeholder:text-[var(--text-secondary)]/50 text-sm sm:text-base transition-all"
+            className="min-h-11 w-full rounded-xl border border-[var(--border-card)] bg-[var(--bg-secondary)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-secondary)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
           />
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-[var(--border-card)]/40">
+        <div className="flex flex-col gap-4 border-t border-[var(--border-card)] pt-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h4 className="text-sm font-bold text-[var(--text-primary)]">Estilo del catálogo</h4>
-            <p className="text-xs text-[var(--text-secondary)]">Formato visual para renderizar tus productos</p>
+            <h3 className="text-sm font-semibold">
+              Estilo del catálogo
+            </h3>
+
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">
+              Elige cómo se muestran tus productos.
+            </p>
           </div>
-          <div className="w-full sm:w-auto bg-[var(--bg-tertiary)] p-1 rounded-xl border border-[var(--border-card)] shrink-0">
-            <MenuStyleSwitch value={estiloMenu} onChange={setEstiloMenu} />
+
+          <div className="w-full shrink-0 rounded-xl border border-[var(--border-card)] bg-[var(--bg-secondary)] p-1 sm:w-auto">
+            <MenuStyleSwitch
+              value={estiloMenu}
+              onChange={setEstiloMenu}
+            />
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* 🔹 SECCIÓN: HEADER */}
-      <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-5 sm:p-6 space-y-4 shadow-sm">
-        <div className="flex items-center gap-2 border-b border-[var(--border-card)]/40 pb-3">
-          <span className="text-sm">✨</span>
-          <h3 className="text-xs sm:text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider">
-            Parte Superior (Header)
-          </h3>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ColorPicker label="Color de fondo header" value={colorHeader} onChange={setColorHeader} />
-          <ColorPicker label="Color de texto herder" value={colorTextHeader} onChange={setColorTextHeader} />
-          <ColorPicker label="Color borde inferior" value={colorBorderHeader} onChange={setColorBorderHeader} />
-          <ColorPicker label="Color icono hamburguesa" value={colorHamburguesa} onChange={setColorHamburguesa} />
-          <ColorPicker label="Color lupa búsqueda" value={colorLupa} onChange={setColorLupa} />
-        </div>
-      </div>
-
-      {/* 🔹 SECCIÓN: MAIN / CUERPO */}
-      <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-5 sm:p-6 space-y-4 shadow-sm">
-        <div className="flex items-center gap-2 border-b border-[var(--border-card)]/40 pb-3">
-          <span className="text-sm">🎨</span>
-          <h3 className="text-xs sm:text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider">
-            Cuerpo del Catálogo (Main)
-          </h3>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-<ColorPicker
-  label="Color de fondo categorías"
-  value={colorFondoCategoria}
-  onChange={setColorFondoCategoria}
-/>
-
-<ColorPicker
-  label="Color de texto categorías"
-  value={colorTextoCategoria}
-  onChange={setColorTextoCategoria}
-/>
-
-<ColorPicker
-  label="Color del borde categorías"
-  value={colorBorderCategoria}
-  onChange={setColorBorderCategoria}
-/>
-          <ColorPicker label="Color de fondo main" value={colorFondo} onChange={setColorFondo} />
-          <ColorPicker label="Color principal (Botones)" value={colorPrimario} onChange={setColorPrimario} />
-          <ColorPicker label="Color de fondo tarjetas" value={colorTarjeta} onChange={setColorTarjeta} />
-      
-          <ColorPicker label="Color de texto main" value={colorTexto} onChange={setColorTexto} />
-          <ColorPicker label="Color de precios" value={colorPrecio} onChange={setColorPrecio} />
-          
-        </div>
-      </div>
-
-      {/* 🔹 SECCIÓN: FOOTER */}
-      <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-5 sm:p-6 space-y-4 shadow-sm">
-        <div className="flex items-center gap-2 border-b border-[var(--border-card)]/40 pb-3">
-          <span className="text-sm">🏁</span>
-          <h3 className="text-xs sm:text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider">
-            Parte Inferior (Footer)
-          </h3>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ColorPicker label="Color footer" value={colorFooter} onChange={setColorFooter} />
-        </div>
-      </div>
-
-      {/* BOTÓN ACCIÓN FIJO EN CELULARES / CONTROL TOTAL */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[var(--bg-page)] via-[var(--bg-page)] to-transparent sm:static sm:p-0 sm:bg-none z-50">
-        <button
-          onClick={guardar}
-          className="w-full bg-[var(--color-primary)] hover:brightness-105 active:scale-[0.99] text-[var(--color-text-inverse)] py-3.5 rounded-xl font-bold transition shadow-lg sm:shadow-md tracking-wide text-sm sm:text-base"
+      {secciones.map((seccion) => (
+        <section
+          key={seccion.clave}
+          aria-labelledby={`${id}-${seccion.clave}`}
+          className={panelClassName}
         >
-          Guardar Cambios Estéticos
-        </button>
-      </div>
+          <div className="border-b border-[var(--border-card)] pb-4">
+            <h2
+              id={`${id}-${seccion.clave}`}
+              className="text-lg font-bold"
+            >
+              {seccion.titulo}
+            </h2>
 
+            <p className="mt-1 text-sm leading-relaxed text-[var(--text-secondary)]">
+              {seccion.descripcion}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {seccion.colores.map((color) => (
+              <ColorPicker
+                key={color.label}
+                label={color.label}
+                value={color.value}
+                onChange={color.onChange}
+              />
+            ))}
+          </div>
+        </section>
+      ))}
+
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--border-card)] bg-[var(--bg-main)] p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:static sm:border-0 sm:bg-transparent sm:p-0">
+        <div className="mx-auto w-full max-w-4xl">
+          <button
+            type="button"
+            onClick={guardar}
+            className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] px-5 py-3 text-sm font-bold text-[var(--color-text-inverse)] transition-colors hover:bg-[var(--color-primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
+          >
+            <Save size={18} aria-hidden="true" />
+            Guardar apariencia
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

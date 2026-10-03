@@ -677,3 +677,12 @@
   border-color: var(--dashboard-card-hover-border);
   box-shadow: var(--dashboard-card-hover-shadow);
 }
+
+
+.dashboard-theme {
+  --dashboard-logo-color: #15803d;
+}
+
+.dashboard-theme[data-theme="dark"] {
+  --dashboard-logo-color: #4ade80;
+}
