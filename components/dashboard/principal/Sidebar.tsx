@@ -20,6 +20,7 @@ import {
   PlusCircle,
   HelpCircle,
   Globe2,
+  FileText,
 } from "lucide-react";
 
 type Props = {
@@ -58,9 +59,14 @@ const links = [
     icon: QrCode,
   },
   {
-    name: "Apariencia",
-    href: "/dashboard/apariencia",
+    name: "Tienda online",
+    href: "/dashboard/tienda-online",
     icon: Palette,
+  },
+  {
+    name: "Páginas",
+    href: "/dashboard/paginas",
+    icon: FileText,
   },
   {
     name: "Estadísticas",

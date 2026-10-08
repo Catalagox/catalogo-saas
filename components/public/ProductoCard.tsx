@@ -4,20 +4,10 @@ import Link from "next/link";
 
 import Price from "@/components/ui/Price";
 import OptimizedImage from "@/components/public/OptimizedImage";
-
-interface Producto {
-  id: string;
-  nombre: string;
-  descripcion?: string | null;
-  precio: number;
-  imagen_url?: string | null;
-  disponible?: boolean | null;
-  stock?: number | null;
-  slug: string;
-}
+import type { ProductoTienda } from "@/lib/tienda-diseno/types";
 
 interface ProductoCardProps {
-  producto: Producto;
+  producto: ProductoTienda;
   countryCode?: string;
   isPriority?: boolean;
   rutaBase: string;
@@ -29,26 +19,14 @@ export default function ProductoCard({
   isPriority = false,
   rutaBase,
 }: ProductoCardProps) {
-  /*
-   * Quitamos cualquier barra sobrante del final.
-   *
-   * Catalagox:
-   * rutaBase = "/mi-tienda"
-   *
-   * Dominio personalizado:
-   * rutaBase = ""
-   */
   const baseNormalizada =
-    rutaBase === "/"
-      ? ""
-      : rutaBase.replace(/\/+$/, "");
+    rutaBase === "/" ? "" : rutaBase.replace(/\/+$/, "");
 
   const productoSlug = producto.slug
     .trim()
     .replace(/^\/+|\/+$/g, "");
 
-  const hrefProducto =
-    `${baseNormalizada}/${productoSlug}`;
+  const hrefProducto = `${baseNormalizada}/${productoSlug}`;
 
   const stockAdministrado =
     typeof producto.stock === "number" &&
@@ -56,88 +34,88 @@ export default function ProductoCard({
 
   const productoAgotado =
     producto.disponible === false ||
-    (stockAdministrado &&
-      Number(producto.stock) <= 0);
+    (stockAdministrado && Number(producto.stock) <= 0);
 
   return (
     <Link
       href={hrefProducto}
       aria-label={`Ver producto: ${producto.nombre}`}
-      data-producto-disponible={
-        productoAgotado ? "false" : "true"
-      }
-      className={`
-        group
-        flex
-        cursor-pointer
-        items-center
-        gap-4
-        rounded-none
-        border
-        border-white/10
-        bg-[var(--color-card)]
-        p-3
-        outline-none
-        transition-all
-        duration-300
-        touch-manipulation
-        active:scale-[0.98]
-        active:bg-white/[0.02]
-        md:hover:border-[var(--color-categoria)]
-        ${
-          productoAgotado
-            ? "opacity-75"
-            : ""
-        }
-      `}
+      data-producto-disponible={productoAgotado ? "false" : "true"}
+      className={`group flex h-full min-w-0 cursor-pointer items-center gap-3 border-solid p-3 outline-none transition-colors duration-200 touch-manipulation focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 sm:gap-4 ${
+        productoAgotado ? "opacity-75" : ""
+      }`}
+      style={{
+        backgroundColor: "var(--color-card)",
+        borderRadius: "var(--tienda-card-radius, 16px)",
+        borderWidth: "var(--tienda-card-border-width, 0px)",
+        borderColor: "var(--tienda-card-border-color, #e5e7eb)",
+        boxShadow: "var(--tienda-card-shadow, none)",
+      }}
     >
-      {/* IMAGEN DEL PRODUCTO */}
-      {producto.imagen_url ? (
-        <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-none bg-white/[0.01]">
+      {/* Imagen */}
+      <div
+        className="relative w-20 shrink-0 overflow-hidden bg-black/5 sm:w-24"
+        style={{
+          aspectRatio: "var(--tienda-image-ratio, 1 / 1)",
+          borderRadius: "var(--tienda-card-radius, 16px)",
+        }}
+      >
+        {producto.imagen_url ? (
           <OptimizedImage
             src={producto.imagen_url}
             alt={producto.nombre}
             fill
-            sizes="96px"
+            sizes="(max-width: 639px) 80px, 96px"
             priority={isPriority}
-            className={`
-              object-cover
-              transition-transform
-              duration-500
-              ${
-                productoAgotado
-                  ? "grayscale-[35%]"
-                  : "md:group-hover:scale-110"
-              }
-            `}
+            containerClassName="h-full w-full"
+            className={`transition-transform duration-500 ${
+              productoAgotado
+                ? "grayscale-[35%]"
+                : "motion-safe:md:group-hover:scale-105"
+            }`}
           />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center p-2 text-center text-xs text-[var(--color-text)]">
+            <span className="opacity-60">Sin imagen</span>
+          </div>
+        )}
 
-          {productoAgotado && (
-            <div className="absolute inset-x-0 bottom-0 bg-black/70 px-2 py-1 text-center text-[10px] font-bold uppercase tracking-wide text-white">
-              Agotado
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-none bg-white/10 text-xs text-[var(--color-text)]">
-          Sin imagen
-        </div>
-      )}
+        {productoAgotado && (
+          <div className="absolute inset-x-0 bottom-0 z-20 bg-black/75 px-2 py-1 text-center text-[10px] font-bold uppercase tracking-wide text-white">
+            Agotado
+          </div>
+        )}
+      </div>
 
-      {/* INFORMACIÓN DEL PRODUCTO */}
+      {/* Información */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <h3 className="truncate text-base font-semibold leading-tight text-[var(--color-text)]">
+        <h3
+          className="break-words font-semibold leading-tight text-[var(--color-text)]"
+          style={{
+            fontSize: "var(--tienda-font-size, 16px)",
+          }}
+        >
           {producto.nombre}
         </h3>
 
         {producto.descripcion && (
-          <p className="mt-1 line-clamp-2 text-sm text-[var(--color-text)] opacity-70">
+          <p
+            className="mt-1 line-clamp-2 break-words leading-relaxed text-[var(--color-text)] opacity-70"
+            style={{
+              fontSize: "calc(var(--tienda-font-size, 16px) * 0.875)",
+            }}
+          >
             {producto.descripcion}
           </p>
         )}
 
-        <div className="mt-2 flex items-end justify-between gap-3">
-          <span className="text-sm font-bold text-[var(--color-price)]">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+          <span
+            className="break-words font-bold text-[var(--color-price)]"
+            style={{
+              fontSize: "var(--tienda-font-size, 16px)",
+            }}
+          >
             <Price
               amount={producto.precio}
               countryCode={countryCode}
@@ -145,24 +123,16 @@ export default function ProductoCard({
           </span>
 
           <span
-            className={`
-              shrink-0
-              rounded-md
-              px-2
-              py-1
-              text-[10px]
-              font-semibold
-              transition
-              ${
-                productoAgotado
-                  ? "bg-white/10 text-[var(--color-text)] opacity-70"
-                  : "bg-[var(--color-price)]/20 text-[var(--color-price)] md:opacity-0 md:group-hover:opacity-100"
-              }
-            `}
+            className={`rounded-md bg-black/5 px-2 py-1 font-semibold ${
+              productoAgotado
+                ? "text-[var(--color-text)] opacity-70"
+                : "text-[var(--color-price)]"
+            }`}
+            style={{
+              fontSize: "calc(var(--tienda-font-size, 16px) * 0.75)",
+            }}
           >
-            {productoAgotado
-              ? "Sin stock"
-              : "Ver producto"}
+            {productoAgotado ? "Sin stock" : "Ver producto"}
           </span>
         </div>
       </div>

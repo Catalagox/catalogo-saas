@@ -2,14 +2,16 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Menu, X } from "lucide-react";
+
 import { supabase } from "@/lib/supabaseClient";
 import Sidebar from "@/components/dashboard/principal/Sidebar";
 import Logo from "@/components/marketing/ui/Logo";
 import { InstalarAppBanner } from "@/components/dashboard/InstalarAppBanner";
 import { NuevaFuncionDominioBanner } from "@/components/dashboard/NuevaFuncionDominioBanner";
 import PedidosNotificacionesProvider from "@/components/dashboard/pedidos/PedidosNotificaciones";
+import { NuevoEditorTiendaBanner } from "@/components/dashboard/NuevoEditorTiendaBanner";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -20,6 +22,7 @@ type TemaAplicado = "light" | "dark";
 
 const STORAGE_KEY = "catalogox-dashboard-theme";
 const EVENT_NAME = "catalogox-dashboard-theme-change";
+const RUTA_EDITOR = "/dashboard/tienda-online/editor";
 
 function esTema(value: unknown): value is Tema {
   return value === "light" || value === "dark" || value === "system";
@@ -29,6 +32,11 @@ export default function DashboardLayout({
   children,
 }: DashboardLayoutProps) {
   const router = useRouter();
+  const pathname = usePathname();
+
+  const esEditor =
+    pathname === RUTA_EDITOR ||
+    pathname.startsWith(`${RUTA_EDITOR}/`);
 
   const [loading, setLoading] = useState(true);
   const [accessError, setAccessError] = useState("");
@@ -37,7 +45,7 @@ export default function DashboardLayout({
   const [temaAplicado, setTemaAplicado] =
     useState<TemaAplicado>("light");
 
-  // Aplica el tema durante la carga, los errores y el dashboard.
+  // Mantiene el tema también durante la carga y dentro del editor.
   useEffect(() => {
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     let preferencia: Tema = "light";
@@ -91,6 +99,11 @@ export default function DashboardLayout({
     };
   }, []);
 
+  // Cierra el menú al cambiar de página.
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
   // Cierra el menú móvil cuando se pasa a escritorio.
   useEffect(() => {
     const escritorio = window.matchMedia("(min-width: 1024px)");
@@ -107,9 +120,9 @@ export default function DashboardLayout({
     };
   }, []);
 
-  // Evita desplazar la página de fondo mientras el menú está abierto.
+  // En el editor se desplazan sus paneles, no la página de fondo.
   useEffect(() => {
-    if (!open) return;
+    if (!open && !esEditor) return;
 
     const overflowBodyAnterior = document.body.style.overflow;
     const overflowHtmlAnterior = document.documentElement.style.overflow;
@@ -128,8 +141,9 @@ export default function DashboardLayout({
       document.documentElement.style.overflow = overflowHtmlAnterior;
       window.removeEventListener("keydown", cerrarConEscape);
     };
-  }, [open]);
+  }, [open, esEditor]);
 
+  // Conserva la comprobación de usuario, tienda y suscripción.
   useEffect(() => {
     let active = true;
 
@@ -296,84 +310,97 @@ export default function DashboardLayout({
   if (!catalogoId) return null;
 
   return (
-    <PedidosNotificacionesProvider catalogoId={catalogoId}>
-      <div
-        data-theme={temaAplicado}
-        className="dashboard-theme flex min-h-dvh bg-[var(--bg-main)] text-[var(--text-primary)]"
-      >
-        {/* Sidebar de escritorio */}
-        <aside className="sticky top-0 hidden h-dvh min-h-0 w-64 shrink-0 overflow-hidden border-r border-[var(--border-card)] lg:flex">
-          <Sidebar />
-        </aside>
+    <div
+      data-theme={temaAplicado}
+      className={`dashboard-theme bg-[var(--bg-main)] text-[var(--text-primary)] ${
+        esEditor
+          ? "fixed inset-0 flex h-dvh min-h-0 w-full flex-col overflow-hidden"
+          : "min-h-dvh"
+      }`}
+    >
+      <PedidosNotificacionesProvider catalogoId={catalogoId}>
+        <NuevoEditorTiendaBanner />
 
-        {/* Menú móvil */}
-        <div
-          inert={!open}
-          className={`fixed inset-0 z-50 overflow-hidden transition-[visibility] duration-300 lg:hidden ${
-            open ? "visible" : "invisible"
-          }`}
-        >
-          <button
-            type="button"
-            aria-label="Cerrar menú"
-            className={`absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-300 ${
-              open ? "opacity-100" : "opacity-0"
-            }`}
-            onClick={() => setOpen(false)}
-          />
-
-          <aside
-            id="dashboard-menu-movil"
-            aria-label="Menú móvil del dashboard"
-            className={`relative flex h-dvh min-h-0 w-72 max-w-[85vw] flex-col overflow-hidden border-r border-[var(--border-card)] bg-[var(--bg-secondary)] pb-[env(safe-area-inset-bottom)] shadow-2xl transition-transform duration-300 ease-in-out ${
-              open ? "translate-x-0" : "-translate-x-full"
-            }`}
-          >
-            {/* Cabecera fija del menú */}
-            <div className="flex shrink-0 items-center justify-between border-b border-[var(--border-card)] px-4 py-4">
-              
-              <Logo size="sm" variant="dashboard" />
-
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                aria-label="Cerrar menú"
-                className="rounded-xl p-2 text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-card-hover)] hover:text-[var(--text-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
-              >
-                <X size={20} aria-hidden="true" />
-              </button>
-            </div>
-
-            {/* Sidebar gestiona el scroll únicamente dentro de su nav */}
-            <div className="flex min-h-0 flex-1 overflow-hidden">
-              <Sidebar closeMenu={() => setOpen(false)} />
-            </div>
-          </aside>
-        </div>
-
-        <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-40 flex items-center justify-between border-b border-[var(--border-card)] bg-[var(--bg-main)] px-4 py-4 lg:hidden">
-            <Logo size="sm" variant="dashboard" />
-
-            <button
-              type="button"
-              onClick={() => setOpen(true)}
-              aria-label="Abrir menú"
-              aria-expanded={open}
-              aria-controls="dashboard-menu-movil"
-              className="rounded-xl border border-[var(--border-card)] bg-[var(--bg-secondary)] p-2 text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-card-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
-            >
-              <Menu size={20} aria-hidden="true" />
-            </button>
-          </header>
-
-          <main className="mx-auto w-full max-w-[1600px] flex-1 p-4 md:p-6 lg:p-10">
-            <InstalarAppBanner />
-            <NuevaFuncionDominioBanner />
+        {esEditor ? (
+          <main className="h-full min-h-0 w-full flex-1 overflow-hidden">
             {children}
           </main>
-        </div>
-      </div>
-    </PedidosNotificacionesProvider>
+        ) : (
+          <div className="flex min-h-dvh">
+            {/* Sidebar de escritorio */}
+            <aside className="sticky top-0 hidden h-dvh min-h-0 w-64 shrink-0 overflow-hidden border-r border-[var(--border-card)] lg:flex">
+              <Sidebar />
+            </aside>
+
+            {/* Menú móvil */}
+            <div
+              inert={!open}
+              className={`fixed inset-0 z-50 overflow-hidden transition-[visibility] duration-300 lg:hidden ${
+                open ? "visible" : "invisible"
+              }`}
+            >
+              <button
+                type="button"
+                aria-label="Cerrar menú"
+                className={`absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-300 ${
+                  open ? "opacity-100" : "opacity-0"
+                }`}
+                onClick={() => setOpen(false)}
+              />
+
+              <aside
+                id="dashboard-menu-movil"
+                aria-label="Menú móvil del dashboard"
+                className={`relative flex h-dvh min-h-0 w-72 max-w-[85vw] flex-col overflow-hidden border-r border-[var(--border-card)] bg-[var(--bg-secondary)] pb-[env(safe-area-inset-bottom)] shadow-2xl transition-transform duration-300 ease-in-out ${
+                  open ? "translate-x-0" : "-translate-x-full"
+                }`}
+              >
+                {/* Cabecera fija del menú */}
+                <div className="flex shrink-0 items-center justify-between border-b border-[var(--border-card)] px-4 py-4">
+                  <Logo size="sm" variant="dashboard" />
+
+                  <button
+                    type="button"
+                    onClick={() => setOpen(false)}
+                    aria-label="Cerrar menú"
+                    className="rounded-xl p-2 text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-card-hover)] hover:text-[var(--text-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
+                  >
+                    <X size={20} aria-hidden="true" />
+                  </button>
+                </div>
+
+                {/* Solo el nav interno del sidebar tiene scroll */}
+                <div className="flex min-h-0 flex-1 overflow-hidden">
+                  <Sidebar closeMenu={() => setOpen(false)} />
+                </div>
+              </aside>
+            </div>
+
+            <div className="flex min-w-0 flex-1 flex-col">
+              <header className="sticky top-0 z-40 flex items-center justify-between border-b border-[var(--border-card)] bg-[var(--bg-main)] px-4 py-4 lg:hidden">
+                <Logo size="sm" variant="dashboard" />
+
+                <button
+                  type="button"
+                  onClick={() => setOpen(true)}
+                  aria-label="Abrir menú"
+                  aria-expanded={open}
+                  aria-controls="dashboard-menu-movil"
+                  className="rounded-xl border border-[var(--border-card)] bg-[var(--bg-secondary)] p-2 text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-card-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
+                >
+                  <Menu size={20} aria-hidden="true" />
+                </button>
+              </header>
+
+              <main className="mx-auto w-full max-w-[1600px] flex-1 p-4 md:p-6 lg:p-10">
+                <InstalarAppBanner />
+                <NuevaFuncionDominioBanner />
+                {children}
+              </main>
+            </div>
+          </div>
+        )}
+      </PedidosNotificacionesProvider>
+    </div>
   );
 }

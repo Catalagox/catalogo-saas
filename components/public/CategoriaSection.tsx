@@ -3,26 +3,10 @@
 import { useMemo } from "react";
 
 import ProductoCard from "@/components/public/ProductoCard";
-
-interface Producto {
-  id: string;
-  nombre: string;
-  descripcion?: string | null;
-  precio: number;
-  imagen_url?: string | null;
-  disponible?: boolean | null;
-  stock?: number | null;
-  slug: string;
-}
-
-interface Categoria {
-  id: string;
-  nombre: string;
-  productos: Producto[];
-}
+import type { CategoriaTienda } from "@/lib/tienda-diseno/types";
 
 interface CategoriaSectionProps {
-  categoria: Categoria;
+  categoria: CategoriaTienda;
   countryCode?: string;
   rutaBase: string;
   isFirstCategory?: boolean;
@@ -34,65 +18,50 @@ export default function CategoriaSection({
   rutaBase,
   isFirstCategory = false,
 }: CategoriaSectionProps) {
+  const productos = categoria.productos;
+
   const productosValidos = useMemo(() => {
-    if (
-      !categoria ||
-      !Array.isArray(categoria.productos)
-    ) {
-      return [];
-    }
+    if (!Array.isArray(productos)) return [];
 
-    return categoria.productos.filter(
-      (producto) => {
-        if (
-          !producto ||
-          !producto.id ||
-          !producto.nombre?.trim() ||
-          !producto.slug?.trim()
-        ) {
-          return false;
-        }
+    return productos.filter((producto) => {
+      if (
+        !producto ||
+        !producto.id ||
+        !producto.nombre?.trim() ||
+        !producto.slug?.trim()
+      ) {
+        return false;
+      }
 
-        const precio =
-          Number(producto.precio);
+      const precio = Number(producto.precio);
 
-        return (
-          Number.isFinite(precio) &&
-          precio >= 0
-        );
-      },
-    );
-  }, [categoria.productos]);
+      return Number.isFinite(precio) && precio >= 0;
+    });
+  }, [productos]);
 
-  if (productosValidos.length === 0) {
-    return null;
-  }
+  if (productosValidos.length === 0) return null;
 
   return (
-    <div className="py-6">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {productosValidos.map(
-          (producto, indice) => {
-            const esPrioritario =
-              isFirstCategory && indice < 4;
-
-            return (
-              <div
-                key={producto.id}
-                id={`prod-${producto.id}`}
-                className="scroll-mt-24"
-              >
-                <ProductoCard
-                  producto={producto}
-                  countryCode={countryCode}
-                  rutaBase={rutaBase}
-                  isPriority={esPrioritario}
-                />
-              </div>
-            );
-          },
-        )}
-      </div>
+    <div
+      className="grid min-w-0 grid-cols-1 md:grid-cols-2"
+      style={{
+        gap: "var(--tienda-product-gap, 24px)",
+      }}
+    >
+      {productosValidos.map((producto, indice) => (
+        <div
+          key={producto.id}
+          id={`prod-${producto.id}`}
+          className="min-w-0 scroll-mt-24"
+        >
+          <ProductoCard
+            producto={producto}
+            countryCode={countryCode}
+            rutaBase={rutaBase}
+            isPriority={isFirstCategory && indice < 4}
+          />
+        </div>
+      ))}
     </div>
   );
 }

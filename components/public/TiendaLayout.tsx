@@ -1,11 +1,18 @@
 "use client";
 
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
+
 import { CartProvider, useCart } from "@/context/CartContext";
+
 import TiendaHeader from "@/components/public/TiendaHeader";
 import TiendaFooter from "@/components/public/TiendaFooter";
 import CartDrawer from "@/components/public/CartDrawer";
 import MisPedidosPanel from "@/components/public/MisPedidosPanel";
+
+import { normalizarConfig } from "@/lib/tienda-diseno/config";
+import { crearTemaTienda } from "@/lib/tienda-diseno/theme";
+
+import type { ConfigDiseno } from "@/lib/tienda-diseno/types";
 
 type Categoria = {
   id: string;
@@ -25,6 +32,9 @@ type Catalogo = {
   slug?: string | null;
   whatsapp?: string | null;
   pais_code?: string | null;
+
+  estilo_menu?: "lista" | "galeria" | null;
+
   color_primario?: string | null;
   color_fondo?: string | null;
   color_header?: string | null;
@@ -40,6 +50,7 @@ type Catalogo = {
   color_fondo_categoria?: string | null;
   color_texto_categoria?: string | null;
   color_border_categoria?: string | null;
+
   instagram?: string | null;
   facebook?: string | null;
   tiktok?: string | null;
@@ -50,44 +61,58 @@ type Props = {
   catalogo: Catalogo;
   categorias: Categoria[];
   rutaBase: string;
+  config?: ConfigDiseno;
   children: ReactNode;
 };
 
-function ContenidoTienda({ catalogo, categorias, rutaBase, children }: Props) {
+function ContenidoTienda({
+  catalogo,
+  categorias,
+  rutaBase,
+  config,
+  children,
+}: Props) {
   const { cantidadTotal } = useCart();
+
   const [carritoAbierto, setCarritoAbierto] = useState(false);
   const [pedidosAbiertos, setPedidosAbiertos] = useState(false);
 
-  const tema = {
-    "--color-bg": catalogo.color_fondo ?? "#fefefe",
-    "--color-header": catalogo.color_header ?? "#2c2c2c",
-    "--color-text-header": catalogo.color_text_header ?? "#ffffff",
-    "--color-border-header": catalogo.color_border_header ?? "rgba(255,255,255,0.1)",
-    "--color-footer": catalogo.color_footer ?? "#111827",
-    "--color-text": catalogo.color_texto ?? "#4f4d4d",
-    "--color-price": catalogo.color_precio ?? "#22c55e",
-    "--color-hamburguesa": catalogo.color_hamburguesa ?? "#ffffff",
-    "--color-card": catalogo.color_tarjeta ?? "#ffffff10",
-    "--color-categoria": catalogo.color_categoria ?? "#eae9e9",
-    "--color-primary": catalogo.color_primario ?? "#f97316",
-    "--color-lupa": catalogo.color_lupa ?? "#ffffff",
-    "--color-fondo-categoria": catalogo.color_fondo_categoria ?? "#ffffff",
-    "--color-texto-categoria": catalogo.color_texto_categoria ?? "#111827",
-    "--color-border-categoria": catalogo.color_border_categoria ?? "#e5e7eb",
-  } as CSSProperties;
+  // El respaldo mantiene compatibles las llamadas antiguas.
+  const configAplicada = useMemo(
+    () => normalizarConfig(config ?? catalogo),
+    [config, catalogo],
+  );
+
+  const tema = useMemo(() => crearTemaTienda(configAplicada), [configAplicada]);
+
+  const catalogoVisual = {
+    ...catalogo,
+    ...configAplicada,
+  };
 
   return (
     <div
       className="relative flex min-h-screen w-full flex-col bg-[var(--color-bg)] text-[var(--color-text)]"
-      style={tema}
+      style={{
+        ...tema,
+        fontFamily: "var(--tienda-font-family)",
+        fontSize: "var(--tienda-font-size)",
+      }}
     >
       <TiendaHeader
-        catalogo={catalogo}
+        catalogo={catalogoVisual}
         categorias={categorias}
         rutaBase={rutaBase}
+        config={config}
         cartCount={cantidadTotal}
-        onOpenCart={() => { setPedidosAbiertos(false); setCarritoAbierto(true); }}
-        onOpenOrders={() => { setCarritoAbierto(false); setPedidosAbiertos(true); }}
+        onOpenCart={() => {
+          setPedidosAbiertos(false);
+          setCarritoAbierto(true);
+        }}
+        onOpenOrders={() => {
+          setCarritoAbierto(false);
+          setPedidosAbiertos(true);
+        }}
       />
 
       {children}

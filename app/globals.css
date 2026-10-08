@@ -686,3 +686,10 @@
 .dashboard-theme[data-theme="dark"] {
   --dashboard-logo-color: #4ade80;
 }
+
+
+.editor-preview[data-modo-seleccion="activo"][data-seleccion="destacados"]
+  [data-editor-section="destacados"] {
+  outline: 2px solid #2563eb;
+  outline-offset: -2px;
+}

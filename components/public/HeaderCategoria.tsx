@@ -15,27 +15,22 @@ export default function EncabezadoCategoria({
 }: EncabezadoCategoriaProps) {
   const colorTexto =
     colorTextoCategoria?.trim() ||
-    "var(--color-texto-categoria)";
-
-  const tieneCantidadValida =
-    typeof totalProductos === "number" &&
-    Number.isFinite(totalProductos);
+    "var(--color-texto-categoria, #111827)";
 
   const cantidadProductos =
-    tieneCantidadValida
-      ? Math.max(
-          0,
-          Math.floor(totalProductos),
-        )
+    typeof totalProductos === "number" &&
+    Number.isFinite(totalProductos)
+      ? Math.max(0, Math.floor(totalProductos))
       : null;
 
   return (
-    <header className="mb-5 flex min-w-0 items-baseline gap-2 px-4 md:px-1">
+    <header className="mb-5 flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1 px-4 md:px-1">
       <h2
         id={id}
-        className="min-w-0 break-words text-lg font-bold leading-tight tracking-tight md:text-xl"
+        className="min-w-0 break-words font-bold leading-tight tracking-tight"
         style={{
           color: colorTexto,
+          fontSize: "var(--tienda-title-size, 20px)",
         }}
       >
         {nombre}
@@ -44,11 +39,12 @@ export default function EncabezadoCategoria({
       {cantidadProductos !== null && (
         <span
           aria-label={`${cantidadProductos} ${
-            cantidadProductos === 1
-              ? "producto"
-              : "productos"
+            cantidadProductos === 1 ? "producto" : "productos"
           }`}
-          className="shrink-0 text-xs font-medium text-[var(--color-text)] opacity-55"
+          className="shrink-0 font-medium text-[var(--color-text)] opacity-60"
+          style={{
+            fontSize: "calc(var(--tienda-font-size, 16px) * 0.75)",
+          }}
         >
           {cantidadProductos}
         </span>

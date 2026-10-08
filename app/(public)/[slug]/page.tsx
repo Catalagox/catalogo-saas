@@ -1,9 +1,13 @@
 import { cache } from "react";
 import { headers } from "next/headers";
 import type { Metadata } from "next";
+
 import { createClient } from "@/lib/supabase/server";
+import { obtenerDisenoPublicado } from "@/lib/tienda-diseno/server";
+
 import TiendaClient from "@/components/public/TiendaClient";
 import TiendaLayout from "@/components/public/TiendaLayout";
+
 interface PageProps {
   params: Promise<{
     slug: string;
@@ -12,39 +16,27 @@ interface PageProps {
     qr?: string;
   }>;
 }
-export const revalidate = 60;
-const DEFAULT_THEME = {
-  pais_code: "PE",
-  color_primario: "#f97316",
-  color_fondo: "#ffffff",
-  color_header: "#1e1f1e",
-  color_text_header: "#ffffff",
-  color_border_header: "rgba(255,255,255,0.1)",
-  color_footer: "#111827",
-  color_texto: "#ffffff",
-  color_precio: "#22c55e",
-  color_hamburguesa: "#ffffff",
-  color_tarjeta: "#ffffff10",
-  color_categoria: "#ffffff",
-  color_lupa: "#ffffff",
-  color_fondo_categoria: "#ffffff",
-  color_texto_categoria: "#111827",
-  color_border_categoria: "#e5e7eb",
-};
+
+// Consulta el diseño publicado en cada visita.
+export const dynamic = "force-dynamic";
+
 function getLogoUrl(logoPath?: string | null): string {
   if (!logoPath) {
     return "https://catalagox.com/default-share-image.png";
   }
+
   if (logoPath.startsWith("http://") || logoPath.startsWith("https://")) {
     return logoPath;
   }
+
   const archivoCodificado = encodeURIComponent(logoPath);
+
   return `https://yhlqooguctlzorinsxde.supabase.co/storage/v1/object/public/logos/${archivoCodificado}`;
 }
+
 function limpiarHost(valor: string | null): string {
-  if (!valor) {
-    return "";
-  }
+  if (!valor) return "";
+
   return valor
     .split(",")[0]
     .trim()
@@ -52,6 +44,7 @@ function limpiarHost(valor: string | null): string {
     .split(":")[0]
     .replace(/\.$/, "");
 }
+
 function esDominioDeCatalagox(host: string): boolean {
   return (
     !host ||
@@ -62,20 +55,26 @@ function esDominioDeCatalagox(host: string): boolean {
     host.endsWith(".vercel.app")
   );
 }
+
 async function obtenerHostActual(): Promise<string> {
   const headersList = await headers();
+
   return limpiarHost(
     headersList.get("x-forwarded-host") ?? headersList.get("host"),
   );
 }
+
 function obtenerUrlTienda(host: string, slug: string): string {
   if (!esDominioDeCatalagox(host)) {
     return `https://${host}`;
   }
+
   return `https://catalagox.com/${slug}`;
 }
+
 const getCatalogo = cache(async (slug: string) => {
   const supabase = await createClient();
+
   const { data, error } = await supabase
     .from("catalogos")
     .select(
@@ -114,48 +113,56 @@ const getCatalogo = cache(async (slug: string) => {
     )
     .eq("slug", slug)
     .maybeSingle();
-  if (error || !data) {
+
+  if (error) {
+    console.error("Error cargando la tienda:", error);
     return null;
   }
+
+  if (!data) return null;
+
   const { data: accesoGratis, error: accesoGratisError } = await supabase.rpc(
-  "catalogo_con_acceso_gratis",
-  { p_catalogo_id: data.id },
-);
+    "catalogo_con_acceso_gratis",
+    {
+      p_catalogo_id: data.id,
+    },
+  );
 
-if (accesoGratisError) {
-  console.error("Error comprobando el acceso gratis:", accesoGratisError);
-  return null;
-}
+  if (accesoGratisError) {
+    console.error("Error comprobando el acceso gratis:", accesoGratisError);
+    return null;
+  }
 
-const fechaVencimiento = data.plan_vence_el
-  ? new Date(data.plan_vence_el)
-  : null;
+  const fechaVencimiento = data.plan_vence_el
+    ? new Date(data.plan_vence_el)
+    : null;
 
-const vencida =
-  !fechaVencimiento ||
-  Number.isNaN(fechaVencimiento.getTime()) ||
-  fechaVencimiento.getTime() < Date.now();
+  const vencida =
+    !fechaVencimiento ||
+    Number.isNaN(fechaVencimiento.getTime()) ||
+    fechaVencimiento.getTime() < Date.now();
 
-const suscripcionPermitida =
-  data.subscription_status === "active" ||
-  data.subscription_status === "trialing" ||
-  data.subscription_status === "trial";
+  const suscripcionPermitida =
+    data.subscription_status === "active" ||
+    data.subscription_status === "trialing" ||
+    data.subscription_status === "trial";
 
-const accesoPorSuscripcion =
-  data.suscripcion_activa &&
-  suscripcionPermitida &&
-  !vencida;
+  const accesoPorSuscripcion =
+    data.suscripcion_activa && suscripcionPermitida && !vencida;
 
-if (!accesoPorSuscripcion && accesoGratis !== true) {
-  return null;
-}
+  if (!accesoPorSuscripcion && accesoGratis !== true) {
+    return null;
+  }
+
   return {
     ...data,
     logoUrl: getLogoUrl(data.logo),
   };
 });
+
 const getCategoriasConProductos = cache(async (catalogoId: string) => {
   const supabase = await createClient();
+
   const { data, error } = await supabase
     .from("categorias")
     .select(
@@ -176,40 +183,52 @@ const getCategoriasConProductos = cache(async (catalogoId: string) => {
     )
     .eq("catalogo_id", catalogoId)
     .order("created_at");
+
   if (error) {
     console.error("Error cargando categorías:", error);
     return null;
   }
+
   return data;
 });
+
 async function registrarEstadistica(userId: string, isQr: boolean) {
   try {
     const supabase = await createClient();
+
     const inserts = [
       {
         user_id: userId,
         tipo: "menu_view",
       },
     ];
+
     if (isQr) {
       inserts.push({
         user_id: userId,
         tipo: "qr_scan",
       });
     }
-    await supabase.from("estadisticas").insert(inserts);
+
+    const { error } = await supabase.from("estadisticas").insert(inserts);
+
+    if (error) {
+      console.error("Error registrando estadística:", error);
+    }
   } catch (error) {
     console.error("Error registrando estadística:", error);
   }
 }
+
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const [{ slug }, host] = await Promise.all([params, obtenerHostActual()]);
-  if (!slug) {
-    return {};
-  }
+
+  if (!slug) return {};
+
   const catalogo = await getCatalogo(slug);
+
   if (!catalogo) {
     return {
       title: "Tienda no encontrada",
@@ -219,10 +238,15 @@ export async function generateMetadata({
       },
     };
   }
+
   const slugTienda = catalogo.slug || slug;
   const urlTienda = obtenerUrlTienda(host, slugTienda);
   const titulo = `${catalogo.nombre} | Tienda Online`;
-  const descripcion = `Descubre los productos, precios y novedades de ${catalogo.nombre}. Compra o realiza tu pedido directamente desde su tienda online.`;
+
+  const descripcion =
+    `Descubre los productos, precios y novedades de ${catalogo.nombre}. ` +
+    "Compra o realiza tu pedido directamente desde su tienda online.";
+
   return {
     metadataBase: new URL(urlTienda),
     title: titulo,
@@ -272,16 +296,20 @@ export async function generateMetadata({
     },
   };
 }
+
 export default async function TiendaPage({ params, searchParams }: PageProps) {
   const [{ slug }, { qr }, host] = await Promise.all([
     params,
     searchParams,
     obtenerHostActual(),
   ]);
+
   if (!slug) {
     return <div className="p-10 text-center">Enlace de tienda inválido</div>;
   }
+
   const catalogoDB = await getCatalogo(slug);
+
   if (!catalogoDB) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-[var(--bg-main)] p-6 text-center text-[var(--text-primary)]">
@@ -301,38 +329,44 @@ export default async function TiendaPage({ params, searchParams }: PageProps) {
             />
           </svg>
         </div>
+
         <h1 className="mb-2 text-xl font-bold">Tienda no disponible</h1>
+
         <p className="max-w-sm text-sm text-[var(--text-secondary)]">
           Esta tienda no existe o la suscripción del comercio no está activa.
         </p>
       </div>
     );
   }
-  const catalogo = {
-    ...DEFAULT_THEME,
-    ...catalogoDB,
-    logo: catalogoDB.logoUrl,
-  };
-  const [, categorias] = await Promise.all([
-    registrarEstadistica(catalogo.user_id, Boolean(qr)),
-    getCategoriasConProductos(catalogo.id),
+
+  const [diseno, categorias] = await Promise.all([
+    obtenerDisenoPublicado(catalogoDB.id, catalogoDB),
+    getCategoriasConProductos(catalogoDB.id),
   ]);
+
   if (!categorias) {
     return (
       <div className="p-10 text-center">Error al cargar los productos</div>
     );
   }
-  const urlTienda = obtenerUrlTienda(host, catalogo.slug || slug);
-  /*
-   * En Catalagox los productos viven debajo del slug:
-   * /mi-tienda/mi-producto
-   *
-   * En un dominio personalizado parten desde la raíz:
-   * /mi-producto
-   */
-  const rutaBase = esDominioDeCatalagox(host)
-    ? `/${catalogo.slug || slug}`
-    : "";
+
+  // Los datos del negocio vienen de catalogos.
+  // El formato y los colores vienen del diseño publicado.
+  const catalogo = {
+    ...catalogoDB,
+    ...diseno.config,
+    pais_code: catalogoDB.pais_code ?? "PE",
+    logo: catalogoDB.logoUrl,
+  };
+
+  await registrarEstadistica(catalogo.user_id, Boolean(qr));
+
+  const slugTienda = catalogo.slug || slug;
+  const urlTienda = obtenerUrlTienda(host, slugTienda);
+
+  // En dominios propios, las rutas parten desde la raíz.
+  const rutaBase = esDominioDeCatalagox(host) ? `/${slugTienda}` : "";
+
   const schemaOrgJSONLD = {
     "@context": "https://schema.org",
     "@type": "OnlineStore",
@@ -355,7 +389,9 @@ export default async function TiendaPage({ params, searchParams }: PageProps) {
       : undefined,
     areaServed: catalogo.pais_code,
   };
-  const schemaSeguro = JSON.stringify(schemaOrgJSONLD).replace(/</g, "\u003c");
+
+  const schemaSeguro = JSON.stringify(schemaOrgJSONLD).replace(/</g, "\\u003c");
+
   return (
     <div
       className="relative min-h-screen w-full transition-colors duration-300"
@@ -369,10 +405,19 @@ export default async function TiendaPage({ params, searchParams }: PageProps) {
           __html: schemaSeguro,
         }}
       />
-      <TiendaLayout key={catalogo.id} catalogo={catalogo} categorias={categorias} rutaBase={rutaBase}>
+
+      <TiendaLayout
+        key={catalogo.id}
+        catalogo={catalogo}
+        categorias={categorias}
+        rutaBase={rutaBase}
+        config={diseno.config}
+      >
         <TiendaClient
           catalogo={catalogo}
           categorias={categorias}
+          plantilla={diseno.plantilla}
+          config={diseno.config}
           countryCode={catalogo.pais_code}
           rutaBase={rutaBase}
         />
