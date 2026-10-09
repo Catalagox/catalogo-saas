@@ -21,8 +21,42 @@ export default function VistaPreviaTienda({
 
   const [recarga, setRecarga] = useState(0);
 
+  const prepararVistaPrevia = () => {
+    const iframe = iframeRef.current;
+
+    if (!iframe) return;
+
+    try {
+      const documento = iframe.contentDocument;
+
+      if (documento) {
+        documento.documentElement.style.setProperty(
+          "overflow",
+          "hidden",
+          "important",
+        );
+
+        documento.body?.style.setProperty(
+          "overflow",
+          "hidden",
+          "important",
+        );
+
+        iframe.contentWindow?.scrollTo(0, 0);
+      }
+    } catch (error) {
+      console.error(
+        "No se pudo preparar la vista previa:",
+        error,
+      );
+    }
+
+    enviarRef.current?.();
+  };
+
   useEffect(() => {
     const requestId = crypto.randomUUID();
+
     let confirmado = false;
     let intentos = 0;
     let intervalo: number | undefined;
@@ -106,16 +140,18 @@ export default function VistaPreviaTienda({
 
   return (
     <div
-      className="relative h-[520px] w-full overflow-hidden bg-[var(--bg-tertiary)] sm:h-[640px] xl:h-[720px]"
+      className="relative h-[420px] w-full overflow-hidden bg-[var(--bg-tertiary)] sm:h-[520px] xl:h-[600px]"
       aria-busy={estado === "cargando"}
     >
       <iframe
         key={recarga}
         ref={iframeRef}
         src="/preview-editor"
-        title="Vista previa de tu tienda"
-        onLoad={() => enviarRef.current?.()}
-        className="block h-full w-full border-0 bg-white"
+        title="Vista previa de la parte superior de tu tienda"
+        scrolling="no"
+        tabIndex={-1}
+        onLoad={prepararVistaPrevia}
+        className="pointer-events-none block h-full w-full select-none border-0 bg-white"
       />
 
       {estado === "cargando" && (

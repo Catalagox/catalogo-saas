@@ -222,11 +222,11 @@ export default function DashboardPage() {
     },
     {
       icon: <Palette className="h-5 w-5" />,
-      label: "Apariencia",
+      label: "Tienda online",
       value: "Personalizar",
       subtext: "Cambia los colores y el diseño de tu tienda",
       highlight: false,
-      action: () => irA("/dashboard/apariencia"),
+      action: () => irA("/dashboard/tienda-online"),
     },
   ];
 
