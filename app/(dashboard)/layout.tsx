@@ -9,7 +9,7 @@ import { supabase } from "@/lib/supabaseClient";
 import Sidebar from "@/components/dashboard/principal/Sidebar";
 import Logo from "@/components/marketing/ui/Logo";
 import { InstalarAppBanner } from "@/components/dashboard/InstalarAppBanner";
-import { NuevaFuncionDominioBanner } from "@/components/dashboard/NuevaFuncionDominioBanner";
+
 import PedidosNotificacionesProvider from "@/components/dashboard/pedidos/PedidosNotificaciones";
 import { NuevoEditorTiendaBanner } from "@/components/dashboard/NuevoEditorTiendaBanner";
 
@@ -394,7 +394,7 @@ export default function DashboardLayout({
 
               <main className="mx-auto w-full max-w-[1600px] flex-1 p-4 md:p-6 lg:p-10">
                 <InstalarAppBanner />
-                <NuevaFuncionDominioBanner />
+                
                 {children}
               </main>
             </div>
