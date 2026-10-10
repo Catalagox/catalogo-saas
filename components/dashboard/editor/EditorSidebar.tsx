@@ -22,6 +22,8 @@ import type {
 } from "@/lib/tienda-diseno/types";
 interface EditorSidebarProps {
   catalogoId: string;
+  logo?: string | null;
+  onLogoActualizado?: (logo: string) => void;
   config: ConfigDiseno;
   categorias: CategoriaTienda[];
   plantilla: PlantillaId;
@@ -155,6 +157,8 @@ function CampoDeColor({
 }
 export default function EditorSidebar({
   catalogoId,
+  logo,
+  onLogoActualizado,
   config,
   categorias,
   plantilla,
@@ -231,6 +235,9 @@ export default function EditorSidebar({
         ) : seccionSeleccionada === "encabezado" ? (
           <EditorEncabezado
             catalogoId={catalogoId}
+            logo={logo}
+            onLogoActualizado={onLogoActualizado}
+            onSubiendoImagenChange={onSubiendoImagenChange}
             categorias={categorias}
             config={config}
             onCambiarConfig={onCambiarConfig}

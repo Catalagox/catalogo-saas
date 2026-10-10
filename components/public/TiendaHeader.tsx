@@ -124,7 +124,6 @@ export default function TiendaHeader({
   const firmaPaginas = [...new Set(idsPaginas)].sort().join(",");
   const identidadTienda = tienda.id || tienda.slug?.trim() || "";
   const clavePaginas = `${identidadTienda}:${firmaPaginas}`;
-
   // Si el padre proporciona páginas, no se realizan consultas adicionales.
   // Como respaldo, carga únicamente referencias publicadas de esta tienda.
   useEffect(() => {
@@ -154,7 +153,6 @@ export default function TiendaHeader({
     void cargarPaginas();
     return () => { activo = false; };
   }, [paginas, firmaPaginas, identidadTienda, clavePaginas, tienda.id, tienda.slug]);
-
   const enlacesNavegacion = crearEnlacesNavegacion({
     navegacion: diseno.navegacion,
     categorias: categoriasSeguras,
@@ -164,7 +162,6 @@ export default function TiendaHeader({
   const enlacesMovil = diseno.navegacion.modo === "automatica" && !opciones.mostrar_navegacion
     ? enlacesNavegacion.filter((e) => e.id === "auto-inicio")
     : enlacesNavegacion;
-
   const logo = tienda.logo?.trim();
   const tieneLogo = opciones.mostrar_logo && Boolean(logo);
   // Conserva el nombre como respaldo cuando aún no hay logo.
@@ -465,7 +462,7 @@ export default function TiendaHeader({
           )}
           {mostrarAccesos && (
             <div
-              className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-[var(--header-gap)]"
+              className="ml-auto flex shrink-0 flex-row-reverse flex-wrap items-center justify-end gap-[var(--header-gap)] lg:flex-row"
               style={{ maxWidth: "100%" }}
             >
               {opciones.mostrar_buscador && (
@@ -500,7 +497,7 @@ export default function TiendaHeader({
                   onClick={abrirPedidos}
                   aria-label="Mis pedidos"
                   title="Mis pedidos"
-                  className={`${CLASE_BOTON} gap-2`}
+                  className={`${CLASE_BOTON} hidden gap-2 lg:inline-flex`}
                   style={{ color: opciones.color_pedidos }}
                 >
                   <ClipboardList

@@ -1,5 +1,8 @@
 "use client";
-import { useId } from "react";
+import { useId, useRef, useState, type ChangeEvent } from "react";
+import { Loader2 } from "lucide-react";
+import imageCompression from "browser-image-compression";
+import { supabase } from "@/lib/supabaseClient";
 import EditorNavegacion from "@/components/dashboard/editor/EditorNavegacion";
 import {
   esColorValido,
@@ -12,6 +15,9 @@ import type {
 } from "@/lib/tienda-diseno/types";
 interface Props {
   catalogoId?: string;
+  logo?: string | null;
+  onLogoActualizado?: (logo: string) => void;
+  onSubiendoImagenChange?: (subiendo: boolean) => void;
   categorias?: CategoriaTienda[];
   config: ConfigDiseno;
   onCambiarConfig: (config: ConfigDiseno) => void;
@@ -226,12 +232,79 @@ function ControlSeleccion<T extends string | number>({
 }
 export default function EditorEncabezado({
   catalogoId,
+  logo,
+  onLogoActualizado,
+  onSubiendoImagenChange,
   categorias = [],
   config,
   onCambiarConfig,
   disabled = false,
 }: Props) {
   const id = useId();
+  const [subiendoLogo, setSubiendoLogo] = useState(false);
+  const [mensajeLogo, setMensajeLogo] = useState("");
+  const [errorLogo, setErrorLogo] = useState("");
+  const subidaRef = useRef(false);
+
+  const subirLogo = async (event: ChangeEvent<HTMLInputElement>) => {
+    const archivo = event.currentTarget.files?.[0];
+    event.currentTarget.value = "";
+    if (!archivo || disabled || subidaRef.current || !catalogoId) return;
+    setMensajeLogo("");
+    setErrorLogo("");
+    if (!["image/png", "image/jpeg", "image/webp"].includes(archivo.type)) {
+      setErrorLogo("Selecciona una imagen PNG, JPG o WebP.");
+      return;
+    }
+    if (archivo.size > 5 * 1024 * 1024) {
+      setErrorLogo("La imagen debe pesar como máximo 5 MB.");
+      return;
+    }
+    subidaRef.current = true;
+    setSubiendoLogo(true);
+    onSubiendoImagenChange?.(true);
+    try {
+      const { data: { user }, error: errorUsuario } = await supabase.auth.getUser();
+      if (errorUsuario || !user) throw new Error("Inicia sesión nuevamente para subir el logo.");
+      const { data: tienda, error: errorTienda } = await supabase
+        .from("catalogos").select("id, logo")
+        .eq("id", catalogoId).eq("user_id", user.id).single();
+      if (errorTienda || !tienda) throw new Error("No pudimos comprobar tu tienda.");
+      const comprimido = await imageCompression(archivo, {
+        maxSizeMB: 0.2,
+        maxWidthOrHeight: 500,
+        useWebWorker: true,
+        fileType: archivo.type,
+      });
+      const extension = comprimido.type === "image/png" ? "png"
+        : comprimido.type === "image/webp" ? "webp" : "jpg";
+      const ruta = `${user.id}/${crypto.randomUUID()}.${extension}`;
+      const { error: errorSubida } = await supabase.storage.from("logos")
+        .upload(ruta, comprimido, { upsert: false, contentType: comprimido.type });
+      if (errorSubida) throw errorSubida;
+      const { data: imagen } = supabase.storage.from("logos").getPublicUrl(ruta);
+      let consulta = supabase.from("catalogos").update({ logo: imagen.publicUrl })
+        .eq("id", catalogoId).eq("user_id", user.id);
+      consulta = tienda.logo === null ? consulta.is("logo", null) : consulta.eq("logo", tienda.logo);
+      const { data: guardado, error: errorGuardado } = await consulta.select("id, logo").maybeSingle();
+      if (errorGuardado) throw errorGuardado;
+      if (!guardado || guardado.logo !== imagen.publicUrl) {
+        throw new Error("El logo cambió desde otra ventana. Recarga el editor e inténtalo otra vez.");
+      }
+      onLogoActualizado?.(imagen.publicUrl);
+      setMensajeLogo("Logo actualizado correctamente.");
+      // Conserva el archivo anterior: otras ventanas pueden estar utilizándolo.
+    } catch (error: unknown) {
+      setErrorLogo(error instanceof Error ? error.message
+        : typeof error === "object" && error !== null && "message" in error
+          ? String(error.message) : "No pudimos subir el logo. Inténtalo nuevamente.");
+    } finally {
+      subidaRef.current = false;
+      setSubiendoLogo(false);
+      onSubiendoImagenChange?.(false);
+    }
+  };
+
   const valores = normalizarConfig(config).encabezado;
   // Conserva los valores que se están escribiendo.
   // La vista previa utiliza la configuración normalizada.
@@ -306,7 +379,7 @@ export default function EditorEncabezado({
     "cursor-pointer text-sm font-bold";
   return (
     <fieldset
-      disabled={disabled}
+      disabled={disabled || subiendoLogo}
       className="space-y-4"
     >
       <legend className="sr-only">
@@ -357,14 +430,41 @@ export default function EditorEncabezado({
           Logo
         </summary>
         <div className="mt-4 space-y-4">
+          {logo && (
+            <div className="flex min-h-24 items-center justify-center rounded-xl border border-[var(--border-card)] bg-[var(--bg-tertiary)] p-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={logo} alt="Logo actual de tu tienda" className="max-h-24 max-w-full object-contain" />
+            </div>
+          )}
+          <label htmlFor={`${id}-logo`} className="block text-sm font-semibold">
+            {logo ? "Cambiar logotipo" : "Subir logotipo"}
+          </label>
+          <input
+            id={`${id}-logo`}
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            disabled={disabled || subiendoLogo || !catalogoId || !onLogoActualizado}
+            onChange={(event) => void subirLogo(event)}
+            className="block w-full min-w-0 text-xs text-[var(--text-secondary)] file:mr-2 file:rounded-lg file:border-0 file:bg-[var(--color-primary)] file:px-3 file:py-3 file:font-semibold file:text-[var(--color-text-inverse)] disabled:opacity-50"
+          />
+          {subiendoLogo && (
+            <p role="status" className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+              <Loader2 size={16} className="animate-spin" aria-hidden="true" /> Preparando y subiendo logo…
+            </p>
+          )}
+          {mensajeLogo && <p role="status" className="text-xs text-[var(--text-primary)]">{mensajeLogo}</p>}
+          {errorLogo && <p role="alert" className="text-xs text-[var(--color-danger)]">{errorLogo}</p>}
+          <p className="text-xs leading-relaxed text-[var(--text-secondary)]">
+            PNG, JPG o WebP, hasta 5 MB. El logo se actualiza al subirlo, también en tu tienda pública.
+          </p>
           {booleano("mostrar_logo", "Mostrar logo")}
           {numero("ancho_logo", "Ancho en computadora", 40, 360)}
           {numero("alto_logo", "Altura en computadora", 24, 140)}
           {numero("ancho_logo_movil", "Ancho en teléfono", 40, 200)}
           {numero("alto_logo_movil", "Altura en teléfono", 24, 100)}
           <p className="text-xs leading-relaxed text-[var(--text-secondary)]">
-            El logo conserva sus proporciones. Puedes subirlo
-            desde los ajustes de tu negocio.
+            El logo conserva sus proporciones. Ajusta su tamaño
+            para computadora y teléfono con estos controles.
           </p>
         </div>
       </details>

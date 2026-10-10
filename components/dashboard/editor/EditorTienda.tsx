@@ -59,6 +59,9 @@ export default function EditorTienda({
   datosIniciales,
   borradorUpdatedAt,
 }: EditorTiendaProps) {
+  const [logoTienda, setLogoTienda] = useState(datosIniciales.tienda.logo ?? null);
+  const cambiarLogo = useCallback((logo: string) => setLogoTienda(logo), []);
+
   const [config, setConfig] = useState<ConfigDiseno>(() => ({
     ...datosIniciales.config,
   }));
@@ -95,7 +98,6 @@ export default function EditorTienda({
     movido: boolean;
   } | null>(null);
   const omitirClickRef = useRef(false);
-
   const limitesPanel = () => {
     const pantalla = window.visualViewport?.height ?? window.innerHeight;
     return {
@@ -104,7 +106,6 @@ export default function EditorTienda({
       maximo: Math.max(200, pantalla * 0.68),
     };
   };
-
   const iniciarArrastre = (event: ReactPointerEvent<HTMLButtonElement>) => {
     if (subiendoImagenRef.current || event.button !== 0) return;
     const altura = panelRef.current?.getBoundingClientRect().height ?? 64;
@@ -120,7 +121,6 @@ export default function EditorTienda({
     setArrastrando(true);
     setAlturaArrastre(altura);
   };
-
   const moverPanel = (event: ReactPointerEvent<HTMLButtonElement>) => {
     const gesto = gestoRef.current;
     if (!gesto || gesto.pointerId !== event.pointerId) return;
@@ -130,7 +130,6 @@ export default function EditorTienda({
     gesto.altura = Math.min(maximo, Math.max(minimo, gesto.inicioAltura + desplazamiento));
     setAlturaArrastre(gesto.altura);
   };
-
   const terminarArrastre = (event: ReactPointerEvent<HTMLButtonElement>) => {
     const gesto = gestoRef.current;
     if (!gesto || gesto.pointerId !== event.pointerId) return;
@@ -150,7 +149,6 @@ export default function EditorTienda({
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
   };
-
   const ocupado = operacion !== null;
   const bloqueado = ocupado || subiendoImagen;
   const hayCambios = firmaConfig(config) !== firmaGuardada;
@@ -162,9 +160,10 @@ export default function EditorTienda({
   const datosPreview = useMemo<DatosRenderTienda>(
     () => ({
       ...datosIniciales,
+      tienda: { ...datosIniciales.tienda, logo: logoTienda },
       config: normalizarConfig(config, datosIniciales.config),
     }),
-    [datosIniciales, config],
+    [datosIniciales, config, logoTienda],
   );
   const cambiarEstadoSubida = useCallback((subiendo: boolean) => {
     subiendoImagenRef.current = subiendo;
@@ -672,6 +671,8 @@ export default function EditorTienda({
           >
             <EditorSidebar
               catalogoId={datosIniciales.tienda.id}
+              logo={logoTienda}
+              onLogoActualizado={cambiarLogo}
               config={config}
               categorias={datosIniciales.categorias}
               plantilla={datosIniciales.plantilla}
