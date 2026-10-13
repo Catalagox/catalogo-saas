@@ -2,257 +2,159 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import Logo from "@/components/marketing/ui/Logo";
 import SelectorTema from "@/components/dashboard/principal/SelectorTema";
 import { usePedidosNotificaciones } from "@/components/dashboard/pedidos/PedidosNotificaciones";
-import {
-  LayoutDashboard,
-  Package,
-  ShoppingBag,
-  Settings,
-  LogOut,
-  QrCode,
-  Tags,
-  Palette,
-  BarChart3,
-  PlusCircle,
-  HelpCircle,
-  Globe2,
-  FileText,
-} from "lucide-react";
+import { LayoutDashboard, Package, ShoppingBag, Settings, LogOut, QrCode, Tags, Palette, BarChart3, PlusCircle, HelpCircle, Globe2, FileText, ChevronUp, CreditCard } from "lucide-react";
 
-type Props = {
-  closeMenu?: () => void;
+type EstadoPlan = {
+  nombrePlan?: string | null;
+  planVenceEl: string | null;
+  subscriptionStatus: string | null;
+  accesoGratisVenceEl: string | null;
 };
-
+type Props = { closeMenu?: () => void; estadoPlan?: EstadoPlan | null };
 const links = [
-  {
-    name: "Principal",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    name: "Agregar producto",
-    href: "/dashboard/agregar-producto",
-    icon: PlusCircle,
-  },
-  {
-    name: "Productos",
-    href: "/dashboard/productos",
-    icon: Package,
-  },
-  {
-    name: "Pedidos",
-    href: "/dashboard/pedidos",
-    icon: ShoppingBag,
-  },
-  {
-    name: "Categorías",
-    href: "/dashboard/categorias",
-    icon: Tags,
-  },
-  {
-    name: "QR del catálogo",
-    href: "/dashboard/qr",
-    icon: QrCode,
-  },
-  {
-    name: "Tienda online",
-    href: "/dashboard/tienda-online",
-    icon: Palette,
-  },
-  {
-    name: "Páginas",
-    href: "/dashboard/paginas",
-    icon: FileText,
-  },
-  {
-    name: "Estadísticas",
-    href: "/dashboard/estadistica",
-    icon: BarChart3,
-  },
-  {
-    name: "Ajustes",
-    href: "/dashboard/ajustes",
-    icon: Settings,
-  },
-  {
-    name: "Dominio personalizado",
-    href: "/dashboard/ajustes/dominios",
-    icon: Globe2,
-  },
-  {
-    name: "Ayuda",
-    href: "/contacto",
-    icon: HelpCircle,
-  },
+  { name: "Principal", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Agregar producto", href: "/dashboard/agregar-producto", icon: PlusCircle },
+  { name: "Productos", href: "/dashboard/productos", icon: Package },
+  { name: "Pedidos", href: "/dashboard/pedidos", icon: ShoppingBag },
+  { name: "Categorías", href: "/dashboard/categorias", icon: Tags },
+  { name: "QR del catálogo", href: "/dashboard/qr", icon: QrCode },
+  { name: "Tienda online", href: "/dashboard/tienda-online", icon: Palette },
+  { name: "Páginas", href: "/dashboard/paginas", icon: FileText },
+  { name: "Estadísticas", href: "/dashboard/estadistica", icon: BarChart3 },
+  { name: "Ajustes", href: "/dashboard/ajustes", icon: Settings },
+  { name: "Dominio personalizado", href: "/dashboard/ajustes/dominios", icon: Globe2 },
+  { name: "Ayuda", href: "/contacto", icon: HelpCircle },
 ];
 
-export default function Sidebar({ closeMenu }: Props) {
+export default function Sidebar({ closeMenu, estadoPlan }: Props) {
   const pathname = usePathname();
   const notificaciones = usePedidosNotificaciones();
-
   const [userEmail, setUserEmail] = useState("");
   const [userName, setUserName] = useState("");
-
+  const [ahora, setAhora] = useState<number | null>(null);
+  const [temaAbierto, setTemaAbierto] = useState(false);
+  const [cuentaAbierta, setCuentaAbierta] = useState(false);
+  const [cerrando, setCerrando] = useState(false);
+  const [errorSesion, setErrorSesion] = useState("");
+  const cuentaRef = useRef<HTMLDivElement>(null);
+  const botonRef = useRef<HTMLButtonElement>(null);
+  const panelId = useId();
   const pedidosNuevos = notificaciones?.pedidosNuevos ?? 0;
 
   useEffect(() => {
     let activo = true;
-
-    const cargarUsuario = async () => {
+    void (async () => {
       try {
-        const {
-          data: { user },
-          error,
-        } = await supabase.auth.getUser();
-
-        if (error) {
-          console.error("No se pudo cargar el usuario:", error);
-          return;
-        }
-
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error) throw error;
         if (!activo || !user) return;
-
         setUserEmail(user.email || "");
-        setUserName(user.user_metadata?.name || "");
-      } catch (error) {
-        console.error("Error cargando el usuario:", error);
-      }
-    };
-
-    void cargarUsuario();
-
-    return () => {
-      activo = false;
-    };
+        setUserName(user.user_metadata?.name || user.user_metadata?.full_name || "");
+      } catch (error) { console.error("Error cargando el usuario:", error); }
+    })();
+    return () => { activo = false; };
   }, []);
 
-  const cerrarSesion = async () => {
-    closeMenu?.();
+  useEffect(() => {
+    setAhora(Date.now());
+    const intervalo = window.setInterval(() => setAhora(Date.now()), 60_000);
+    return () => window.clearInterval(intervalo);
+  }, []);
+  useEffect(() => { setCuentaAbierta(false); setTemaAbierto(false); }, [pathname]);
+  useEffect(() => { if (!cuentaAbierta) setTemaAbierto(false); }, [cuentaAbierta]);
+  useEffect(() => {
+    if (!cuentaAbierta) return;
+    const cerrarFuera = (event: PointerEvent) => {
+      if (!cuentaRef.current?.contains(event.target as Node)) setCuentaAbierta(false);
+    };
+    const cerrarConEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.stopPropagation();
+        setCuentaAbierta(false);
+        botonRef.current?.focus();
+      }
+    };
+    document.addEventListener("pointerdown", cerrarFuera);
+    cuentaRef.current?.addEventListener("keydown", cerrarConEscape);
+    const elemento = cuentaRef.current;
+    return () => {
+      document.removeEventListener("pointerdown", cerrarFuera);
+      elemento?.removeEventListener("keydown", cerrarConEscape);
+    };
+  }, [cuentaAbierta]);
 
+  const navegar = () => { setCuentaAbierta(false); closeMenu?.(); };
+  const cerrarSesion = async () => {
+    if (cerrando) return;
+    setCerrando(true);
+    setErrorSesion("");
     try {
       const { error } = await supabase.auth.signOut();
-
-      if (error) {
-        console.error("No se pudo cerrar la sesión:", error);
-        return;
-      }
-
+      if (error) throw error;
+      closeMenu?.();
       window.location.href = "/";
     } catch (error) {
-      console.error("Error cerrando la sesión:", error);
+      console.error("No se pudo cerrar la sesión:", error);
+      setErrorSesion("No pudimos cerrar la sesión. Inténtalo nuevamente.");
+      setCerrando(false);
     }
   };
-
-  const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-    userName || userEmail || "Usuario",
-  )}&background=111827&color=fff`;
+  const fechaGratis = estadoPlan?.accesoGratisVenceEl
+    ? new Date(estadoPlan.accesoGratisVenceEl).getTime() : NaN;
+  const fechaPlan = estadoPlan?.planVenceEl
+    ? new Date(estadoPlan.planVenceEl).getTime() : NaN;
+  const accesoGratis = ahora !== null && Number.isFinite(fechaGratis) && fechaGratis > ahora;
+  // Usa el nombre real si se proporciona; no deduce precio ni periodicidad.
+  const nombrePlan = estadoPlan?.nombrePlan?.trim() || (
+    accesoGratis ? "Acceso gratuito" :
+    estadoPlan?.subscriptionStatus === "active" ? "Plan de pago" :
+    estadoPlan?.subscriptionStatus === "trialing" ? "Prueba gratuita" :
+    estadoPlan?.subscriptionStatus === "past_due" || estadoPlan?.subscriptionStatus === "canceled" ? "Suscripción" :
+    ahora !== null && Number.isFinite(fechaPlan) && fechaPlan > ahora ? "Prueba gratuita" : "Mi plan"
+  );
+  const itemClass = "flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-card-hover)] hover:text-[var(--text-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)]";
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col overflow-hidden border-r border-[var(--border-card)] bg-[var(--bg-secondary)] text-[var(--text-primary)]">
-      <div className="hidden shrink-0 border-b border-[var(--border-card)] px-6 py-5 lg:block">
-        <Logo size="md" variant="dashboard" />
-      </div>
-
-      <nav
-        aria-label="Menú del dashboard"
-        className="sidebar-scroll min-h-0 flex-1 space-y-1 overflow-x-hidden overflow-y-auto overscroll-contain px-3 py-4 sm:px-4"
-      >
-        {links.map((link) => {
+      <div className="hidden shrink-0 border-b border-[var(--border-card)] px-6 py-5 lg:block"><Logo size="md" variant="dashboard" /></div>
+      <nav aria-label="Menú del dashboard" className="sidebar-scroll min-h-0 flex-1 space-y-1 overflow-x-hidden overflow-y-auto overscroll-contain px-3 py-4 sm:px-4">
+        {links.map(link => {
           const Icon = link.icon;
           const active = pathname === link.href;
-
           return (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={closeMenu}
-              aria-current={active ? "page" : undefined}
-              title={link.name}
-              className={`flex min-h-11 items-center gap-3 rounded-xl px-4 py-2.5 text-sm transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--color-primary)] ${
-                active
-                  ? "bg-[var(--color-primary)] font-semibold text-[var(--color-text-inverse)]"
-                  : "text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)] hover:text-[var(--text-primary)]"
-              }`}
-            >
-              <Icon size={19} className="shrink-0" />
-
-              <span className="min-w-0 truncate">
-                {link.name}
-              </span>
-
-              {link.href === "/dashboard/pedidos" &&
-                pedidosNuevos > 0 && (
-                  <span
-                    className="ml-auto inline-flex min-w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500 px-1.5 py-0.5 text-xs font-bold text-black"
-                    aria-label={`${pedidosNuevos} pedidos nuevos`}
-                  >
-                    {pedidosNuevos > 99 ? "99+" : pedidosNuevos}
-                  </span>
-                )}
+            <Link key={link.href} href={link.href} onClick={navegar} aria-current={active ? "page" : undefined} title={link.name}
+              className={`flex min-h-11 items-center gap-3 rounded-xl px-4 py-2.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--color-primary)] ${active ? "bg-[var(--color-primary)] font-semibold text-[var(--color-text-inverse)]" : "text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)] hover:text-[var(--text-primary)]"}`}>
+              <Icon size={19} className="shrink-0" aria-hidden="true" />
+              <span className="min-w-0 truncate">{link.name}</span>
+              {link.href === "/dashboard/pedidos" && pedidosNuevos > 0 && <span className="ml-auto inline-flex min-w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500 px-1.5 py-0.5 text-xs font-bold text-black" aria-label={`${pedidosNuevos} pedidos nuevos`}>{pedidosNuevos > 99 ? "99+" : pedidosNuevos}</span>}
             </Link>
           );
         })}
       </nav>
-
-      <div className="shrink-0 border-t border-[var(--border-card)] bg-[var(--bg-secondary)] p-4">
-        <SelectorTema />
-
-        <div className="mb-4 flex items-center gap-3">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={avatar}
-            alt=""
-            className="h-10 w-10 shrink-0 rounded-full"
-          />
-
-          <div className="flex min-w-0 flex-col">
-            <span className="truncate text-sm font-semibold text-[var(--text-primary)]">
-              {userName || "Usuario"}
-            </span>
-
-            <span className="truncate text-xs text-[var(--text-secondary)]">
-              {userEmail}
-            </span>
-          </div>
+      <div className="shrink-0 border-t border-[var(--border-card)] bg-[var(--bg-secondary)] p-3">
+        <div ref={cuentaRef} className="relative" onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setCuentaAbierta(false); }}>
+          {cuentaAbierta && (
+            <div id={panelId} aria-label="Opciones de cuenta" className="absolute bottom-full left-0 right-0 z-20 mb-2 max-h-[min(65dvh,360px)] overflow-y-auto overscroll-contain rounded-2xl border border-[var(--border-card)] bg-[var(--bg-secondary)] p-2 shadow-xl">
+              <Link href="/dashboard/ajustes#suscripcion" onClick={navegar} className={itemClass}><CreditCard size={17} aria-hidden="true" />Gestionar plan</Link>
+              <button type="button" aria-expanded={temaAbierto} aria-controls={`${panelId}-tema`} onClick={() => setTemaAbierto(v => !v)} className={itemClass}><Palette size={17} aria-hidden="true" />Tema del panel<ChevronUp size={14} aria-hidden="true" className={`ml-auto transition-transform ${temaAbierto ? "" : "rotate-180"}`} /></button>
+              {temaAbierto && <div id={`${panelId}-tema`} className="px-3 pt-2"><SelectorTema /></div>}
+              <div className="my-1 border-t border-[var(--border-card)]" />
+              <button type="button" onClick={() => void cerrarSesion()} disabled={cerrando} className={`${itemClass} hover:text-[var(--color-danger)] disabled:opacity-60`}><LogOut size={17} aria-hidden="true" />{cerrando ? "Cerrando sesión…" : "Cerrar sesión"}</button>
+              {errorSesion && <p role="alert" className="px-3 py-2 text-xs text-[var(--color-danger)]">{errorSesion}</p>}
+            </div>
+          )}
+          <button ref={botonRef} type="button" aria-expanded={cuentaAbierta} aria-controls={panelId} onClick={() => setCuentaAbierta(v => !v)} title={userEmail || userName || "Mi cuenta"} className="flex min-h-11 w-full items-center gap-2 rounded-xl px-3 py-2 text-left transition-colors hover:bg-[var(--bg-card-hover)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)]">
+            <span className="flex min-w-0 flex-1 flex-col"><span className="truncate text-sm font-semibold">{userEmail || userName || "Mi cuenta"}</span><span className="truncate text-xs text-[var(--text-secondary)]">{nombrePlan}</span></span>
+            <ChevronUp size={17} aria-hidden="true" className={`shrink-0 transition-transform ${cuentaAbierta ? "rotate-180" : ""}`} />
+          </button>
         </div>
-
-        <button
-          type="button"
-          onClick={cerrarSesion}
-          className="flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-[var(--text-secondary)] transition-colors duration-200 hover:bg-[var(--color-danger)] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
-        >
-          <LogOut size={16} />
-          Cerrar sesión
-        </button>
       </div>
-
-      <style>{`
-        .sidebar-scroll {
-          scrollbar-width: thin;
-          scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
-        }
-
-        .sidebar-scroll::-webkit-scrollbar {
-          width: 6px;
-        }
-
-        .sidebar-scroll::-webkit-scrollbar-track {
-          background: transparent;
-        }
-
-        .sidebar-scroll::-webkit-scrollbar-thumb {
-          background: rgba(148, 163, 184, 0.35);
-          border-radius: 999px;
-        }
-
-        .sidebar-scroll:hover::-webkit-scrollbar-thumb {
-          background: rgba(148, 163, 184, 0.6);
-        }
-      `}</style>
+      <style>{`.sidebar-scroll { scrollbar-width: thin; scrollbar-color: rgba(148,163,184,.35) transparent; } .sidebar-scroll::-webkit-scrollbar { width: 6px; } .sidebar-scroll::-webkit-scrollbar-track { background: transparent; } .sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(148,163,184,.35); border-radius: 999px; }`}</style>
     </div>
   );
 }

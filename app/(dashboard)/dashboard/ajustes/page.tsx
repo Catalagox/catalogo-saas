@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import Link from "next/link";
+import SelectorTema from "@/components/dashboard/principal/SelectorTema";
 import { ArrowRight, Globe2, Settings } from "lucide-react";
 // Importación de subcomponentes visuales
 import FormNombreMenu from "@/components/dashboard/ajustes/FormNombreMenu";
@@ -42,7 +43,7 @@ export default function AjustesPage() {
         facebook,
         tiktok,
         youtube,
-        pais_code   
+        pais_code  
       `,
       )
       .eq("user_id", user.id)
@@ -195,6 +196,11 @@ export default function AjustesPage() {
         showBackButton={true}
       />
       <div className="max-w-2xl mx-auto space-y-8">
+        <section id="apariencia" className="scroll-mt-24 rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] p-5 sm:p-6">
+          <h2 className="text-xl font-semibold text-[var(--text-primary)]">Apariencia del panel</h2>
+          <p className="mt-2 mb-5 text-sm text-[var(--text-secondary)]">Elige cómo quieres ver tu panel de control.</p>
+          <div className="max-w-sm"><SelectorTema /></div>
+        </section>
         {/* DOMINIO PERSONALIZADO */}
         <Link
           href="/dashboard/ajustes/dominios"
@@ -246,7 +252,7 @@ export default function AjustesPage() {
           cambiarPassword={cambiarPassword}
         />
         {/* CUENTA */}
-        <div className="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 space-y-6">
+        <div id="cuenta" className="scroll-mt-24 bg-[var(--bg-card)] border border-[var(--border-card)] rounded-2xl p-6 space-y-6">
           <h2 className="text-xl font-semibold text-[var(--text-primary)]">
             Cuenta
           </h2>
@@ -259,7 +265,7 @@ export default function AjustesPage() {
                 {email}
               </div>
             </div>
-            <div className="border-t border-[var(--border-card)] pt-4">
+            <div id="suscripcion" className="scroll-mt-24 border-t border-[var(--border-card)] pt-4">
               <p className="text-sm font-medium text-[var(--text-primary)] mb-2">
                 Suscripción y Facturación
               </p>

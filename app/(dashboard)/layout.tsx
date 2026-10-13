@@ -1,55 +1,44 @@
 "use client";
-
 import { useEffect, useState, type ReactNode } from "react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { Menu, X } from "lucide-react";
-
 import { supabase } from "@/lib/supabaseClient";
 import Sidebar from "@/components/dashboard/principal/Sidebar";
 import Logo from "@/components/marketing/ui/Logo";
 import { InstalarAppBanner } from "@/components/dashboard/InstalarAppBanner";
-
 import PedidosNotificacionesProvider from "@/components/dashboard/pedidos/PedidosNotificaciones";
 import { NuevoEditorTiendaBanner } from "@/components/dashboard/NuevoEditorTiendaBanner";
-
 interface DashboardLayoutProps {
   children: ReactNode;
 }
-
 type Tema = "light" | "dark" | "system";
 type TemaAplicado = "light" | "dark";
-
 const STORAGE_KEY = "catalogox-dashboard-theme";
 const EVENT_NAME = "catalogox-dashboard-theme-change";
 const RUTA_EDITOR = "/dashboard/tienda-online/editor";
-
 function esTema(value: unknown): value is Tema {
   return value === "light" || value === "dark" || value === "system";
 }
-
 export default function DashboardLayout({
   children,
 }: DashboardLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
-
   const esEditor =
     pathname === RUTA_EDITOR ||
     pathname.startsWith(`${RUTA_EDITOR}/`);
-
   const [loading, setLoading] = useState(true);
   const [accessError, setAccessError] = useState("");
   const [open, setOpen] = useState(false);
+  const [estadoPlan, setEstadoPlan] = useState<{ planVenceEl: string | null; subscriptionStatus: string | null; accesoGratisVenceEl: string | null } | null>(null);
   const [catalogoId, setCatalogoId] = useState<string | null>(null);
   const [temaAplicado, setTemaAplicado] =
     useState<TemaAplicado>("light");
-
   // Mantiene el tema también durante la carga y dentro del editor.
   useEffect(() => {
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     let preferencia: Tema = "light";
-
     const aplicar = () => {
       setTemaAplicado(
         preferencia === "system"
@@ -59,7 +48,6 @@ export default function DashboardLayout({
           : preferencia,
       );
     };
-
     const leerPreferencia = () => {
       try {
         const guardado = localStorage.getItem(STORAGE_KEY);
@@ -67,117 +55,89 @@ export default function DashboardLayout({
       } catch {
         preferencia = "light";
       }
-
       aplicar();
     };
-
     const cambiarPreferencia = (event: Event) => {
       const valor = (event as CustomEvent<unknown>).detail;
-
       if (esTema(valor)) {
         preferencia = valor;
         aplicar();
       }
     };
-
     const sincronizarAlmacenamiento = (event: StorageEvent) => {
       if (event.key === STORAGE_KEY || event.key === null) {
         leerPreferencia();
       }
     };
-
     leerPreferencia();
-
     media.addEventListener("change", aplicar);
     window.addEventListener(EVENT_NAME, cambiarPreferencia);
     window.addEventListener("storage", sincronizarAlmacenamiento);
-
     return () => {
       media.removeEventListener("change", aplicar);
       window.removeEventListener(EVENT_NAME, cambiarPreferencia);
       window.removeEventListener("storage", sincronizarAlmacenamiento);
     };
   }, []);
-
   // Cierra el menú al cambiar de página.
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
-
   // Cierra el menú móvil cuando se pasa a escritorio.
   useEffect(() => {
     const escritorio = window.matchMedia("(min-width: 1024px)");
-
     const comprobarPantalla = () => {
       if (escritorio.matches) setOpen(false);
     };
-
     comprobarPantalla();
     escritorio.addEventListener("change", comprobarPantalla);
-
     return () => {
       escritorio.removeEventListener("change", comprobarPantalla);
     };
   }, []);
-
   // En el editor se desplazan sus paneles, no la página de fondo.
   useEffect(() => {
     if (!open && !esEditor) return;
-
     const overflowBodyAnterior = document.body.style.overflow;
     const overflowHtmlAnterior = document.documentElement.style.overflow;
-
     document.body.style.overflow = "hidden";
     document.documentElement.style.overflow = "hidden";
-
     const cerrarConEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
     };
-
     window.addEventListener("keydown", cerrarConEscape);
-
     return () => {
       document.body.style.overflow = overflowBodyAnterior;
       document.documentElement.style.overflow = overflowHtmlAnterior;
       window.removeEventListener("keydown", cerrarConEscape);
     };
   }, [open, esEditor]);
-
   // Conserva la comprobación de usuario, tienda y suscripción.
   useEffect(() => {
     let active = true;
-
     const checkUser = async () => {
       try {
         setAccessError("");
-
         const params = new URLSearchParams(window.location.search);
-
         if (params.get("success") === "true") {
           router.refresh();
-
           const url = new URL(window.location.href);
           url.searchParams.delete("success");
-
           window.history.replaceState(
             window.history.state,
             document.title,
             `${url.pathname}${url.search}${url.hash}`,
           );
         }
-
         const {
           data: { user },
           error: userError,
         } = await supabase.auth.getUser();
-
         if (!active) return;
-
         if (userError || !user) {
           router.replace("/auth?redirect=%2Fdashboard");
           return;
         }
-
         const { data: catalogo, error: catalogoError } = await supabase
           .from("catalogos")
           .select(
@@ -185,43 +145,33 @@ export default function DashboardLayout({
           )
           .eq("user_id", user.id)
           .maybeSingle();
-
         if (!active) return;
         if (catalogoError) throw catalogoError;
-
         if (!catalogo) {
           router.replace("/onboarding?next=%2Fdashboard");
           return;
         }
-
         const { data: accesoGratis, error: accesoGratisError } =
           await supabase
             .from("accesos_gratis")
             .select("vence_el")
             .eq("catalogo_id", catalogo.id)
             .maybeSingle();
-
         if (!active) return;
         if (accesoGratisError) throw accesoGratisError;
-
         const ahora = Date.now();
-
         const promocionValida =
           accesoGratis?.vence_el != null &&
           new Date(accesoGratis.vence_el).getTime() > ahora;
-
         const trialValido =
           catalogo.plan_vence_el != null &&
           new Date(catalogo.plan_vence_el).getTime() > ahora;
-
         const stripeActivo =
           catalogo.subscription_status === "active" ||
           catalogo.subscription_status === "trialing";
-
         const stripeEnProblema =
           catalogo.subscription_status === "past_due" ||
           catalogo.subscription_status === "canceled";
-
         if (
           !promocionValida &&
           (stripeEnProblema || (!stripeActivo && !trialValido))
@@ -229,12 +179,11 @@ export default function DashboardLayout({
           router.replace("/suscripcion");
           return;
         }
-
+        setEstadoPlan({ planVenceEl: catalogo.plan_vence_el, subscriptionStatus: catalogo.subscription_status, accesoGratisVenceEl: accesoGratis?.vence_el ?? null });
         setCatalogoId(catalogo.id);
         setLoading(false);
       } catch (error) {
         console.error("Error verificando el acceso al dashboard:", error);
-
         if (active) {
           setAccessError(
             "No pudimos verificar el acceso a tu tienda. Revisa tu conexión e inténtalo nuevamente.",
@@ -243,14 +192,11 @@ export default function DashboardLayout({
         }
       }
     };
-
     void checkUser();
-
     return () => {
       active = false;
     };
   }, [router]);
-
   if (loading) {
     return (
       <div
@@ -267,7 +213,6 @@ export default function DashboardLayout({
               priority
             />
           </div>
-
           <div
             role="status"
             aria-label="Cargando tu tienda"
@@ -279,7 +224,6 @@ export default function DashboardLayout({
       </div>
     );
   }
-
   if (accessError) {
     return (
       <div
@@ -290,11 +234,9 @@ export default function DashboardLayout({
           <h1 className="text-xl font-bold">
             No pudimos cargar tu tienda
           </h1>
-
           <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">
             {accessError}
           </p>
-
           <button
             type="button"
             onClick={() => window.location.reload()}
@@ -306,9 +248,7 @@ export default function DashboardLayout({
       </div>
     );
   }
-
   if (!catalogoId) return null;
-
   return (
     <div
       data-theme={temaAplicado}
@@ -320,7 +260,6 @@ export default function DashboardLayout({
     >
       <PedidosNotificacionesProvider catalogoId={catalogoId}>
         <NuevoEditorTiendaBanner />
-
         {esEditor ? (
           <main className="h-full min-h-0 w-full flex-1 overflow-hidden">
             {children}
@@ -329,9 +268,8 @@ export default function DashboardLayout({
           <div className="flex min-h-dvh">
             {/* Sidebar de escritorio */}
             <aside className="sticky top-0 hidden h-dvh min-h-0 w-64 shrink-0 overflow-hidden border-r border-[var(--border-card)] lg:flex">
-              <Sidebar />
+              <Sidebar estadoPlan={estadoPlan} />
             </aside>
-
             {/* Menú móvil */}
             <div
               inert={!open}
@@ -347,7 +285,6 @@ export default function DashboardLayout({
                 }`}
                 onClick={() => setOpen(false)}
               />
-
               <aside
                 id="dashboard-menu-movil"
                 aria-label="Menú móvil del dashboard"
@@ -358,7 +295,6 @@ export default function DashboardLayout({
                 {/* Cabecera fija del menú */}
                 <div className="flex shrink-0 items-center justify-between border-b border-[var(--border-card)] px-4 py-4">
                   <Logo size="sm" variant="dashboard" />
-
                   <button
                     type="button"
                     onClick={() => setOpen(false)}
@@ -368,18 +304,15 @@ export default function DashboardLayout({
                     <X size={20} aria-hidden="true" />
                   </button>
                 </div>
-
                 {/* Solo el nav interno del sidebar tiene scroll */}
                 <div className="flex min-h-0 flex-1 overflow-hidden">
-                  <Sidebar closeMenu={() => setOpen(false)} />
+                  <Sidebar estadoPlan={estadoPlan} closeMenu={() => setOpen(false)} />
                 </div>
               </aside>
             </div>
-
             <div className="flex min-w-0 flex-1 flex-col">
               <header className="sticky top-0 z-40 flex items-center justify-between border-b border-[var(--border-card)] bg-[var(--bg-main)] px-4 py-4 lg:hidden">
                 <Logo size="sm" variant="dashboard" />
-
                 <button
                   type="button"
                   onClick={() => setOpen(true)}
@@ -391,10 +324,8 @@ export default function DashboardLayout({
                   <Menu size={20} aria-hidden="true" />
                 </button>
               </header>
-
               <main className="mx-auto w-full max-w-[1600px] flex-1 p-4 md:p-6 lg:p-10">
                 <InstalarAppBanner />
-                
                 {children}
               </main>
             </div>
