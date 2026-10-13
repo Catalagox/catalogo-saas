@@ -382,13 +382,7 @@ export default async function ProductoPage({ params }: PageProps) {
                   </div>
                 </div>
 
-                {producto.descripcion && (
-                  <div>
-                    <p className="whitespace-pre-line text-[15px] leading-7 opacity-70 sm:text-base">
-                      {producto.descripcion}
-                    </p>
-                  </div>
-                )}
+                
 
                 {/* Stock, compartir y carrito */}
                 <div
@@ -416,6 +410,14 @@ export default async function ProductoPage({ params }: PageProps) {
                     colorPrimario={colorPrimario}
                   />
                 </div>
+
+                {producto.descripcion && (
+                  <div>
+                    <p className="whitespace-pre-line text-[15px] leading-7 opacity-70 sm:text-base">
+                      {producto.descripcion}
+                    </p>
+                  </div>
+                )}
 
                 {/* Beneficios */}
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

@@ -1,30 +1,23 @@
 "use client";
-
 import { useId, useMemo } from "react";
-
 import {
   esColorValido,
   normalizarConfig,
 } from "@/lib/tienda-diseno/config";
-
 import type {
   ConfigCatalogo,
   ConfigDiseno,
   ConfigTitulosCategoria,
 } from "@/lib/tienda-diseno/types";
-
 interface Props {
   config: ConfigDiseno;
   onCambiarConfig: (config: ConfigDiseno) => void;
   disabled?: boolean;
 }
-
 const CLASE_INPUT =
   "min-h-11 w-full rounded-xl border border-[var(--border-card)] bg-[var(--bg-tertiary)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-60";
-
 const CLASE_GRUPO =
   "rounded-xl border border-[var(--border-card)] p-4";
-
 function Rango({
   label,
   value,
@@ -39,14 +32,12 @@ function Rango({
   onChange: (value: number) => void;
 }) {
   const id = useId();
-
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-3">
         <label htmlFor={id} className="text-sm font-medium">
           {label}
         </label>
-
         <output
           htmlFor={id}
           className="shrink-0 text-xs text-[var(--text-secondary)]"
@@ -54,7 +45,6 @@ function Rango({
           {value} px
         </output>
       </div>
-
       <input
         id={id}
         type="range"
@@ -68,7 +58,6 @@ function Rango({
     </div>
   );
 }
-
 function Casilla({
   label,
   value,
@@ -81,7 +70,6 @@ function Casilla({
   return (
     <label className="flex min-h-11 cursor-pointer items-center justify-between gap-4 text-sm font-medium">
       {label}
-
       <input
         type="checkbox"
         checked={value}
@@ -91,7 +79,6 @@ function Casilla({
     </label>
   );
 }
-
 function Selector({
   label,
   value,
@@ -104,13 +91,11 @@ function Selector({
   onChange: (value: string) => void;
 }) {
   const id = useId();
-
   return (
     <div className="space-y-2">
       <label htmlFor={id} className="block text-sm font-medium">
         {label}
       </label>
-
       <select
         id={id}
         value={value}
@@ -126,7 +111,6 @@ function Selector({
     </div>
   );
 }
-
 function Color({
   label,
   value,
@@ -139,19 +123,16 @@ function Color({
   const id = useId();
   const valido = esColorValido(value);
   const hex = value.trim();
-
   const colorNativo = /^#[\da-f]{6}([\da-f]{2})?$/i.test(hex)
     ? hex.slice(0, 7)
     : /^#[\da-f]{3,4}$/i.test(hex)
       ? `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}`
       : "#ffffff";
-
   return (
     <div className="space-y-2">
       <label htmlFor={id} className="block text-sm font-medium">
         {label}
       </label>
-
       <div className="flex items-center gap-2">
         <input
           type="color"
@@ -163,12 +144,10 @@ function Color({
               : /^#[\da-f]{4}$/i.test(hex)
                 ? `${hex[4]}${hex[4]}`
                 : "";
-
             onChange(`${event.target.value}${alpha}`);
           }}
           className="h-11 w-12 shrink-0 cursor-pointer rounded-lg border border-[var(--border-card)] bg-transparent p-1"
         />
-
         <input
           id={id}
           type="text"
@@ -181,7 +160,6 @@ function Color({
           className={`${CLASE_INPUT} min-w-0 font-mono`}
         />
       </div>
-
       {!valido && (
         <p
           id={`${id}-error`}
@@ -193,7 +171,6 @@ function Color({
     </div>
   );
 }
-
 export default function EditorCatalogo({
   config,
   onCambiarConfig,
@@ -203,12 +180,10 @@ export default function EditorCatalogo({
     () => normalizarConfig(config).catalogo,
     [config],
   );
-
   const cambiarCatalogo = (
     cambios: Partial<Omit<ConfigCatalogo, "titulos">>,
   ) => {
     if (disabled) return;
-
     onCambiarConfig({
       ...config,
       catalogo: {
@@ -222,12 +197,10 @@ export default function EditorCatalogo({
       },
     });
   };
-
   const cambiarTitulos = (
     cambios: Partial<ConfigTitulosCategoria>,
   ) => {
     if (disabled) return;
-
     onCambiarConfig({
       ...config,
       catalogo: {
@@ -241,9 +214,7 @@ export default function EditorCatalogo({
       },
     });
   };
-
   const titulos = catalogo.titulos;
-
   return (
     <fieldset
       disabled={disabled}
@@ -252,12 +223,42 @@ export default function EditorCatalogo({
       <legend className="mb-4 text-sm font-bold">
         Diseño del catálogo
       </legend>
-
+      <div className={CLASE_GRUPO}>
+        <h3 className="text-sm font-semibold">Columnas en móvil</h3>
+        <p className="mt-1 text-xs leading-relaxed text-[var(--text-secondary)]">
+          Elige cuántos productos mostrar por fila en teléfonos.
+        </p>
+        <div role="group" aria-label="Columnas de productos en móvil" className="mt-3 grid grid-cols-2 gap-2">
+          {([1, 2] as const).map((columnas) => (
+            <button
+              key={columnas}
+              type="button"
+              aria-pressed={catalogo.columnas_movil === columnas}
+              disabled={disabled}
+              onClick={() => cambiarCatalogo({ columnas_movil: columnas })}
+              className={`flex min-h-11 flex-col items-center justify-center gap-2 rounded-xl border px-3 py-3 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-60 ${
+                catalogo.columnas_movil === columnas
+                  ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-[var(--color-text-inverse)]"
+                  : "border-[var(--border-card)] bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)]"
+              }`}
+            >
+              <span aria-hidden="true" className={`grid w-9 gap-1 ${columnas === 2 ? "grid-cols-2" : "grid-cols-1"}`}>
+                {Array.from({ length: columnas * 2 }, (_, index) => (
+                  <span key={index} className="h-3 rounded-sm border border-current opacity-70" />
+                ))}
+              </span>
+              {columnas === 1 ? "1 columna" : "2 columnas"}
+            </button>
+          ))}
+        </div>
+        <p className="mt-3 text-xs leading-relaxed text-[var(--text-secondary)]">
+          Usa la vista móvil del editor para comprobarlo. Guarda el borrador y publica para aplicarlo a tu tienda.
+        </p>
+      </div>
       <details open className={CLASE_GRUPO}>
         <summary className="cursor-pointer text-sm font-semibold">
           Fondo del catálogo
         </summary>
-
         <div className="mt-4 space-y-4">
           <Casilla
             label="Usar el fondo general de la tienda"
@@ -266,7 +267,6 @@ export default function EditorCatalogo({
               cambiarCatalogo({ heredar_fondo: valor })
             }
           />
-
           {!catalogo.heredar_fondo && (
             <Color
               label="Color de fondo"
@@ -279,18 +279,15 @@ export default function EditorCatalogo({
               }
             />
           )}
-
           <p className="text-xs leading-relaxed text-[var(--text-secondary)]">
             Este fondo se aplica a la sección de productos.
           </p>
         </div>
       </details>
-
       <details className={CLASE_GRUPO}>
         <summary className="cursor-pointer text-sm font-semibold">
           Ancho y márgenes
         </summary>
-
         <div className="mt-4 space-y-4">
           <Casilla
             label="Ocupar todo el ancho"
@@ -299,7 +296,6 @@ export default function EditorCatalogo({
               cambiarCatalogo({ ancho_completo: valor })
             }
           />
-
           {!catalogo.ancho_completo && (
             <Rango
               label="Ancho máximo"
@@ -311,7 +307,6 @@ export default function EditorCatalogo({
               }
             />
           )}
-
           <Rango
             label="Espacio lateral en escritorio y tablet"
             value={catalogo.margen_horizontal}
@@ -321,7 +316,6 @@ export default function EditorCatalogo({
               cambiarCatalogo({ margen_horizontal: valor })
             }
           />
-
           <Rango
             label="Espacio lateral en móvil"
             value={catalogo.margen_horizontal_movil}
@@ -331,7 +325,6 @@ export default function EditorCatalogo({
               cambiarCatalogo({ margen_horizontal_movil: valor })
             }
           />
-
           <Rango
             label="Espacio superior"
             value={catalogo.padding_superior}
@@ -341,7 +334,6 @@ export default function EditorCatalogo({
               cambiarCatalogo({ padding_superior: valor })
             }
           />
-
           <Rango
             label="Espacio inferior"
             value={catalogo.padding_inferior}
@@ -353,12 +345,10 @@ export default function EditorCatalogo({
           />
         </div>
       </details>
-
       <details className={CLASE_GRUPO}>
         <summary className="cursor-pointer text-sm font-semibold">
           Columnas de productos
         </summary>
-
         <div className="mt-4 space-y-4">
           <Selector
             label="Escritorio"
@@ -371,7 +361,6 @@ export default function EditorCatalogo({
             ]}
             onChange={(valor) => {
               const columnas = Number(valor);
-
               if (
                 columnas === 2 ||
                 columnas === 3 ||
@@ -384,7 +373,6 @@ export default function EditorCatalogo({
               }
             }}
           />
-
           <Selector
             label="Tablet"
             value={String(catalogo.columnas_tablet)}
@@ -395,7 +383,6 @@ export default function EditorCatalogo({
             ]}
             onChange={(valor) => {
               const columnas = Number(valor);
-
               if (
                 columnas === 1 ||
                 columnas === 2 ||
@@ -405,30 +392,12 @@ export default function EditorCatalogo({
               }
             }}
           />
-
-          <Selector
-            label="Móvil"
-            value={String(catalogo.columnas_movil)}
-            opciones={[
-              ["1", "1 columna"],
-              ["2", "2 columnas"],
-            ]}
-            onChange={(valor) => {
-              const columnas = Number(valor);
-
-              if (columnas === 1 || columnas === 2) {
-                cambiarCatalogo({ columnas_movil: columnas });
-              }
-            }}
-          />
         </div>
       </details>
-
       <details className={CLASE_GRUPO}>
         <summary className="cursor-pointer text-sm font-semibold">
           Títulos de las categorías
         </summary>
-
         <div className="mt-4 space-y-4">
           <Casilla
             label="Mostrar títulos"
@@ -437,7 +406,6 @@ export default function EditorCatalogo({
               cambiarTitulos({ mostrar: valor })
             }
           />
-
           {titulos.mostrar && (
             <>
               <Casilla
@@ -447,7 +415,6 @@ export default function EditorCatalogo({
                   cambiarTitulos({ mostrar_cantidad: valor })
                 }
               />
-
               <Color
                 label="Color del título"
                 value={
@@ -458,7 +425,6 @@ export default function EditorCatalogo({
                   cambiarTitulos({ color: valor })
                 }
               />
-
               <Selector
                 label="Alineación"
                 value={titulos.alineacion}
@@ -477,7 +443,6 @@ export default function EditorCatalogo({
                   }
                 }}
               />
-
               <Selector
                 label="Tipo de letra"
                 value={titulos.fuente}
@@ -498,7 +463,6 @@ export default function EditorCatalogo({
                   }
                 }}
               />
-
               <Rango
                 label="Tamaño en escritorio y tablet"
                 value={titulos.tamano}
@@ -508,7 +472,6 @@ export default function EditorCatalogo({
                   cambiarTitulos({ tamano: valor })
                 }
               />
-
               <Rango
                 label="Tamaño en móvil"
                 value={titulos.tamano_movil}
@@ -518,7 +481,6 @@ export default function EditorCatalogo({
                   cambiarTitulos({ tamano_movil: valor })
                 }
               />
-
               <Selector
                 label="Grosor de la letra"
                 value={String(titulos.peso)}
@@ -532,7 +494,6 @@ export default function EditorCatalogo({
                 ]}
                 onChange={(valor) => {
                   const peso = Number(valor);
-
                   if (
                     peso === 400 ||
                     peso === 500 ||
@@ -545,7 +506,6 @@ export default function EditorCatalogo({
                   }
                 }}
               />
-
               <Rango
                 label="Separación entre título y productos"
                 value={titulos.separacion_inferior}
