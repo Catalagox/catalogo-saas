@@ -87,6 +87,10 @@ export interface ConfigEspaciado {
 }
 export type AlineacionPortada = "izquierda" | "centro" | "derecha";
 export interface ConfigPortada {
+  mostrar_titulo?: boolean;
+  mostrar_descripcion?: boolean;
+  ajustar_altura_contenido?: boolean;
+  alto_minimo?: number;
   titulo: string;
   descripcion: string;
   imagen_url: string | null;

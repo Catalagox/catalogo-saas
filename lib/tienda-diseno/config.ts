@@ -381,6 +381,10 @@ const ENCABEZADO: Grupo<ConfigEncabezado> = {
 };
 const PORTADA: Grupo<ConfigPortadaCompleta> = {
   inicial: {
+    mostrar_titulo: true,
+    mostrar_descripcion: true,
+    ajustar_altura_contenido: false,
+    alto_minimo: 80,
     titulo: "",
     descripcion: "",
     imagen_url: null,
@@ -407,6 +411,10 @@ const PORTADA: Grupo<ConfigPortadaCompleta> = {
     sombra_texto: false,
   },
   reglas: {
+    mostrar_titulo: { ...reglaBooleano, opcional: true },
+    mostrar_descripcion: { ...reglaBooleano, opcional: true },
+    ajustar_altura_contenido: { ...reglaBooleano, opcional: true },
+    alto_minimo: reglaNumero(0, 400, true),
     titulo: {
       valida: (value) => esTextoHasta(value, 120),
     },

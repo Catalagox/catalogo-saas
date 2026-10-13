@@ -12,6 +12,7 @@ import EditorCatalogo from "@/components/dashboard/editor/EditorCatalogo";
 import {
   SECCIONES_EDITOR,
   esColorValido,
+  normalizarConfig,
   type CampoColor,
 } from "@/lib/tienda-diseno/config";
 import type {
@@ -176,6 +177,19 @@ export default function EditorSidebar({
   const seccion = SECCIONES_EDITOR.find(
     (item) => item.id === seccionSeleccionada,
   );
+  const secciones = normalizarConfig(config).secciones;
+  const categoriasVisibles = secciones.some(
+    (item) => item.id === "categorias" && item.visible,
+  );
+  const cambiarVisibilidadCategorias = (visible: boolean) => {
+    if (disabled) return;
+    onCambiarConfig({
+      ...config,
+      secciones: secciones.map((item) =>
+        item.id === "categorias" ? { ...item, visible } : item,
+      ),
+    });
+  };
   const cambiarColor = (campo: CampoColor, valor: string) => {
     if (disabled) return;
     onCambiarConfig({
@@ -264,6 +278,29 @@ export default function EditorSidebar({
           />
         ) : (
           <div className="space-y-6">
+            {seccionSeleccionada === "categorias" && (
+              <section aria-label="Visibilidad de la barra de categorías" className="rounded-xl border border-[var(--border-card)] bg-[var(--bg-card)] p-4">
+                <label className="flex min-h-11 cursor-pointer items-center justify-between gap-3">
+                  <span className="text-sm font-semibold">Mostrar barra de categorías</span>
+                  <input
+                    type="checkbox"
+                    role="switch"
+                    checked={categoriasVisibles}
+                    disabled={disabled}
+                    onChange={(event) => cambiarVisibilidadCategorias(event.target.checked)}
+                    className="h-5 w-5 shrink-0 accent-[var(--color-primary)] disabled:cursor-not-allowed"
+                  />
+                </label>
+                <p className="mt-2 text-xs leading-relaxed text-[var(--text-secondary)]">
+                  {categoriasVisibles
+                    ? "La barra de categorías está activada."
+                    : "La barra de categorías está oculta."}
+                  {plantilla === "moderna" ? " En Moderna aparece debajo de la portada." : ""}
+                  {" "}Guarda el borrador y publica para aplicar el cambio.
+                </p>
+              </section>
+            )}
+
             {seccionSeleccionada === "catalogo" && plantilla === "clasica" && (
               <fieldset disabled={disabled} className="space-y-3">
                 <legend className="mb-3 text-sm font-semibold">

@@ -323,6 +323,16 @@ export default function EditorPortada({
       />
       <div className={separador}>
         <h3 className="text-sm font-bold">Imagen y altura</h3>
+        <label className="flex min-h-11 items-center justify-between gap-3 text-sm font-semibold">
+          Ajustar altura al contenido
+          <input type="checkbox" checked={valores.ajustar_altura_contenido} onChange={(event) => cambiar({ ajustar_altura_contenido: event.target.checked })} className="h-5 w-5 shrink-0 accent-[var(--color-primary)]" />
+        </label>
+        {valores.ajustar_altura_contenido && (
+          <ControlNumero nombre="Altura mínima del banner" value={valores.alto_minimo} min={0} max={400} onChange={(value) => cambiar({ alto_minimo: value })} />
+        )}
+        <p className="text-xs leading-relaxed text-[var(--text-secondary)]">
+          Al ajustar al contenido, la portada se reduce hasta la altura mínima elegida. Si lo desactivas, utiliza las alturas de computadora y teléfono.
+        </p>
         <ControlColor
           nombre="Color de la capa sobre la imagen"
           value={portada.color_superposicion ?? valores.color_superposicion}
@@ -369,6 +379,10 @@ export default function EditorPortada({
         />
       </div>
       <div className={separador} data-portada-control="titulo">
+        <label className="flex min-h-11 items-center justify-between gap-3 text-sm font-semibold">
+          Mostrar título
+          <input type="checkbox" checked={valores.mostrar_titulo} onChange={(event) => cambiar({ mostrar_titulo: event.target.checked })} className="h-5 w-5 shrink-0 accent-[var(--color-primary)]" />
+        </label>
         <label className="block text-sm font-semibold">Alineación del contenido de portada</label>
         <select value={portada.alineacion} className={CLASE_INPUT} onChange={(event) => {
           const value = event.target.value;
@@ -406,6 +420,10 @@ export default function EditorPortada({
         />
       </div>
       <div className={separador} data-portada-control="descripcion">
+        <label className="flex min-h-11 items-center justify-between gap-3 text-sm font-semibold">
+          Mostrar descripción
+          <input type="checkbox" checked={valores.mostrar_descripcion} onChange={(event) => cambiar({ mostrar_descripcion: event.target.checked })} className="h-5 w-5 shrink-0 accent-[var(--color-primary)]" />
+        </label>
         <label className="block text-sm font-semibold">Alineación del contenido de portada</label>
         <select value={portada.alineacion} className={CLASE_INPUT} onChange={(event) => {
           const value = event.target.value;

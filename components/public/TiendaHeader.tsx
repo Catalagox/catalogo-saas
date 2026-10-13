@@ -179,7 +179,15 @@ export default function TiendaHeader({
   const cantidad = Number.isFinite(cartCount)
     ? Math.max(0, Math.floor(cartCount))
     : 0;
+  const cantidadAccesosMovil = Number(opciones.mostrar_buscador) + Number(mostrarCarrito);
+  const anchoBotonMovil = Math.max(44, opciones.tamano_iconos_movil + 16);
+  const espacioLateralMovil = Math.max(
+    opciones.mostrar_menu ? anchoBotonMovil : 0,
+    cantidadAccesosMovil * anchoBotonMovil + Math.max(0, cantidadAccesosMovil - 1) * opciones.separacion_iconos,
+  );
+
   const variablesHeader: Record<`--header-${string}`, string> = {
+    "--header-lateral-movil": `${espacioLateralMovil}px`,
     "--header-alto": `${opciones.alto_escritorio}px`,
     "--header-alto-movil": `${opciones.alto_movil}px`,
     "--header-padding": `${opciones.padding_horizontal}px`,
@@ -393,7 +401,7 @@ export default function TiendaHeader({
         style={estiloHeader}
       >
         <div
-          className="mx-auto flex min-h-[var(--header-alto-movil)] w-full min-w-0 flex-wrap items-center gap-x-3 gap-y-2 px-[var(--header-padding-movil)] py-2 lg:min-h-[var(--header-alto)] lg:px-[var(--header-padding)]"
+          className="mx-auto grid grid-cols-[var(--header-lateral-movil)_minmax(0,1fr)_var(--header-lateral-movil)] min-h-[var(--header-alto-movil)] w-full min-w-0 items-center gap-y-2 lg:flex lg:flex-wrap lg:gap-x-3 px-[var(--header-padding-movil)] py-2 lg:min-h-[var(--header-alto)] lg:px-[var(--header-padding)]"
           style={{ maxWidth: opciones.ancho_contenido }}
         >
           {opciones.mostrar_menu && (
@@ -408,7 +416,7 @@ export default function TiendaHeader({
               aria-haspopup="dialog"
               aria-expanded={menuAbierto}
               aria-controls={`${id}-menu`}
-              className={`${CLASE_BOTON} lg:hidden`}
+              className={`${CLASE_BOTON} col-start-1 row-start-1 justify-self-start lg:hidden`}
               style={{ color: opciones.color_menu }}
             >
               <MenuIcon
@@ -421,10 +429,10 @@ export default function TiendaHeader({
             <Link
               href={inicioTienda}
               aria-label={`Ir al inicio de ${tienda.nombre}`}
-              className={`flex min-w-0 items-center gap-3 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-current ${
+              className={`col-start-2 row-start-1 flex min-w-0 items-center justify-center gap-1.5 rounded-lg outline-none lg:gap-3 focus-visible:ring-2 focus-visible:ring-current ${
                 marcaCentrada
-                  ? "flex-1 justify-center"
-                  : "flex-1 justify-start lg:flex-none"
+                  ? "lg:flex-1 lg:justify-center"
+                  : "lg:flex-none lg:justify-start"
               }`}
             >
               {tieneLogo && logo && (
@@ -462,7 +470,7 @@ export default function TiendaHeader({
           )}
           {mostrarAccesos && (
             <div
-              className="ml-auto flex shrink-0 flex-row-reverse flex-wrap items-center justify-end gap-[var(--header-gap)] lg:flex-row"
+              className="col-start-3 row-start-1 ml-auto flex min-w-0 shrink-0 flex-row-reverse items-center justify-end gap-[var(--header-gap)] lg:flex-row lg:flex-wrap"
               style={{ maxWidth: "100%" }}
             >
               {opciones.mostrar_buscador && (
