@@ -19,6 +19,7 @@ import type {
   ConfigDiseno,
   PlantillaId,
   SeccionEditor,
+  ElementoPortada,
 } from "@/lib/tienda-diseno/types";
 interface EditorSidebarProps {
   catalogoId: string;
@@ -28,6 +29,8 @@ interface EditorSidebarProps {
   categorias: CategoriaTienda[];
   plantilla: PlantillaId;
   seccionSeleccionada: SeccionEditor | null;
+  elementoSeleccionado?: ElementoPortada | null;
+  revisionSeleccion?: number;
   onSeleccionarSeccion: (seccion: SeccionEditor | null) => void;
   onCambiarConfig: (config: ConfigDiseno) => void;
   disabled?: boolean;
@@ -163,6 +166,8 @@ export default function EditorSidebar({
   categorias,
   plantilla,
   seccionSeleccionada,
+  elementoSeleccionado = null,
+  revisionSeleccion = 0,
   onSeleccionarSeccion,
   onCambiarConfig,
   disabled = false,
@@ -195,15 +200,12 @@ export default function EditorSidebar({
             <ChevronLeft size={17} aria-hidden="true" />
             Todas las secciones
           </button>
-        ) : (
-          <Paintbrush
-            size={21}
-            className="mb-3 text-[var(--color-primary)]"
-            aria-hidden="true"
-          />
-        )}
-        <h2 className="text-base font-bold">
-          {seccion?.nombre ?? "Personalizar tienda"}
+        ) : null}
+        <h2 className="flex items-center gap-2 text-base font-bold">
+          {!seccionSeleccionada && (
+            <Paintbrush size={20} className="shrink-0 text-[var(--color-primary)]" aria-hidden="true" />
+          )}
+          {seccionSeleccionada === "portada" && elementoSeleccionado ? elementoSeleccionado === "titulo" ? "Título principal · H1" : elementoSeleccionado === "descripcion" ? "Descripción · P" : "Botón de portada" : seccion?.nombre ?? "Personalizar tienda"}
         </h2>
         <p className="mt-1 text-xs leading-relaxed text-[var(--text-secondary)]">
           {seccionSeleccionada
@@ -246,6 +248,8 @@ export default function EditorSidebar({
         ) : seccionSeleccionada === "portada" ? (
           <EditorPortada
             catalogoId={catalogoId}
+            elementoSeleccionado={elementoSeleccionado}
+            revisionSeleccion={revisionSeleccion}
             config={config}
             onCambiarConfig={onCambiarConfig}
             disabled={disabled}

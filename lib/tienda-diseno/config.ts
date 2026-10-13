@@ -79,7 +79,7 @@ export function esSeccionEditor(
 export function esElementoPortada(
   value: unknown,
 ): value is ElementoPortada {
-  return value === "titulo" || value === "descripcion";
+  return value === "titulo" || value === "descripcion" || value === "boton";
 }
 export function esColorValido(
   value: unknown,
@@ -418,7 +418,7 @@ const PORTADA: Grupo<ConfigPortadaCompleta> = {
       normaliza: (value) =>
         typeof value === "string" ? value.trim() : null,
     },
-    alineacion: reglaOpciones(["izquierda", "centro"]),
+    alineacion: reglaOpciones(["izquierda", "centro", "derecha"]),
     color_fondo: reglaColor,
     color_texto: reglaColor,
     mostrar_boton: reglaBooleano,
@@ -485,14 +485,12 @@ const NAVEGACION_INICIAL: ConfigNavegacion = {
   modo: "automatica",
   enlaces: [],
 };
-
 function esIdReferencia(value: unknown): value is string {
   return (
     typeof value === "string" &&
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
   );
 }
-
 function esUrlExterna(value: unknown): value is string {
   if (
     typeof value !== "string" ||
@@ -501,10 +499,8 @@ function esUrlExterna(value: unknown): value is string {
     /[\u0000-\u0020\u007f]/.test(value.trim()) ||
     value.includes("\\")
   ) return false;
-
   const url = value.trim();
   if (!/^https?:\/\//i.test(url)) return false;
-
   try {
     const resultado = new URL(url);
     return (
@@ -517,7 +513,6 @@ function esUrlExterna(value: unknown): value is string {
     return false;
   }
 }
-
 function esEnlaceMenu(value: unknown): value is EnlaceMenuTienda {
   if (
     !esObjeto(value) ||
@@ -529,7 +524,6 @@ function esEnlaceMenu(value: unknown): value is EnlaceMenuTienda {
     value.etiqueta.length > 80 ||
     typeof value.visible !== "boolean"
   ) return false;
-
   switch (value.tipo) {
     case "inicio":
     case "catalogo":
@@ -544,7 +538,6 @@ function esEnlaceMenu(value: unknown): value is EnlaceMenuTienda {
       return false;
   }
 }
-
 function sonEnlacesMenu(value: unknown): value is EnlaceMenuTienda[] {
   if (!Array.isArray(value) || value.length > 30) return false;
   const ids = new Set<string>();
@@ -556,7 +549,6 @@ function sonEnlacesMenu(value: unknown): value is EnlaceMenuTienda[] {
   }
   return true;
 }
-
 function copiarEnlaceMenu(enlace: EnlaceMenuTienda): EnlaceMenuTienda {
   const base = {
     id: enlace.id.trim(),
@@ -575,7 +567,6 @@ function copiarEnlaceMenu(enlace: EnlaceMenuTienda): EnlaceMenuTienda {
       return { ...base, tipo: "externo", url: enlace.url.trim(), nueva_pestana: enlace.nueva_pestana };
   }
 }
-
 function normalizarNavegacion(
   value: unknown,
   respaldo?: unknown,
@@ -588,10 +579,8 @@ function normalizarNavegacion(
   const enlaces = sonEnlacesMenu(origen.enlaces)
     ? origen.enlaces
     : sonEnlacesMenu(base.enlaces) ? base.enlaces : NAVEGACION_INICIAL.enlaces;
-
   return { modo, enlaces: enlaces.map(copiarEnlaceMenu) };
 }
-
 function validarNavegacion(value: unknown, errores: string[]): void {
   // El grupo es opcional en las configuraciones anteriores.
   if (value === undefined) return;
@@ -608,7 +597,6 @@ function validarNavegacion(value: unknown, errores: string[]): void {
     );
   }
 }
-
 const SECCIONES_INICIALES: ConfigSeccionContenido[] = [
   { id: "portada", visible: false },
   { id: "destacados", visible: false },
@@ -1035,7 +1023,6 @@ export function validarConfig(
     errores,
   );
   validarNavegacion(value.navegacion, errores);
-
   errores.push(...CATALOGO.validar(value.catalogo));
   if (
     value.secciones !== undefined &&

@@ -1,43 +1,37 @@
 "use client";
-
-import { useId } from "react";
-
+import { useEffect, useId, useRef } from "react";
 import EditorImagenPortada from "@/components/dashboard/editor/EditorImagenPortada";
-
 import {
   esColorValido,
   normalizarConfig,
 } from "@/lib/tienda-diseno/config";
-
 import type {
   ConfigDiseno,
   ConfigPortada,
   FuentePortada,
   PesoTextoPortada,
+  ElementoPortada,
 } from "@/lib/tienda-diseno/types";
-
 interface Props {
   catalogoId: string;
+  elementoSeleccionado?: ElementoPortada | null;
+  revisionSeleccion?: number;
   config: ConfigDiseno;
   onCambiarConfig: (config: ConfigDiseno) => void;
   disabled: boolean;
   onSubiendoImagenChange?: (subiendo: boolean) => void;
 }
-
 const CLASE_INPUT =
   "min-h-11 w-full rounded-xl border border-[var(--border-card)] bg-[var(--bg-tertiary)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-60";
-
 const FUENTES: { value: FuentePortada; nombre: string }[] = [
   { value: "heredar", nombre: "Fuente general de la tienda" },
   { value: "sistema", nombre: "Moderna — sistema" },
   { value: "serif", nombre: "Clásica — serif" },
   { value: "monoespaciada", nombre: "Monoespaciada" },
 ];
-
 const PESOS: PesoTextoPortada[] = [
   400, 500, 600, 700, 800, 900,
 ];
-
 function ControlNumero({
   nombre,
   value,
@@ -54,7 +48,6 @@ function ControlNumero({
   onChange: (value: number) => void;
 }) {
   const id = useId();
-
   return (
     <div className="space-y-2">
       <label
@@ -62,12 +55,10 @@ function ControlNumero({
         className="flex items-center justify-between gap-3 text-sm"
       >
         <span>{nombre}</span>
-
         <span className="shrink-0 text-[var(--text-secondary)]">
           {value} {unidad}
         </span>
       </label>
-
       <input
         id={id}
         type="range"
@@ -83,7 +74,6 @@ function ControlNumero({
     </div>
   );
 }
-
 function ControlColor({
   nombre,
   value,
@@ -96,29 +86,24 @@ function ControlColor({
   const id = useId();
   const hex = value.trim();
   const valido = esColorValido(value);
-
   const colorNativo = /^#[\da-f]{6}([\da-f]{2})?$/i.test(hex)
     ? hex.slice(0, 7)
     : /^#[\da-f]{3,4}$/i.test(hex)
       ? `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}`
       : "#ffffff";
-
   const cambiarPaleta = (color: string) => {
     const alpha = /^#[\da-f]{8}$/i.test(hex)
       ? hex.slice(7)
       : /^#[\da-f]{4}$/i.test(hex)
         ? `${hex[4]}${hex[4]}`
         : "";
-
     onChange(`${color}${alpha}`);
   };
-
   return (
     <div className="space-y-2">
       <label htmlFor={id} className="block text-sm">
         {nombre}
       </label>
-
       <div className="flex items-center gap-3">
         <input
           type="color"
@@ -129,7 +114,6 @@ function ControlColor({
           }
           className="h-11 w-11 shrink-0 cursor-pointer rounded-lg"
         />
-
         <input
           id={id}
           type="text"
@@ -144,7 +128,6 @@ function ControlColor({
           className={`${CLASE_INPUT} min-w-0 font-mono`}
         />
       </div>
-
       {!valido && (
         <p
           id={`${id}-error`}
@@ -156,7 +139,6 @@ function ControlColor({
     </div>
   );
 }
-
 function ControlTipografia({
   nombre,
   fuente,
@@ -185,16 +167,13 @@ function ControlTipografia({
   onColor: (value: string) => void;
 }) {
   const id = useId();
-
   return (
     <div className="space-y-4">
       <h3 className="text-sm font-bold">{nombre}</h3>
-
       <div className="space-y-2">
         <label htmlFor={`${id}-fuente`} className="block text-sm">
           Tipo de letra
         </label>
-
         <select
           id={`${id}-fuente`}
           value={fuente}
@@ -202,7 +181,6 @@ function ControlTipografia({
             const opcion = FUENTES.find(
               (item) => item.value === event.target.value,
             );
-
             if (opcion) onFuente(opcion.value);
           }}
           className={CLASE_INPUT}
@@ -214,12 +192,10 @@ function ControlTipografia({
           ))}
         </select>
       </div>
-
       <div className="space-y-2">
         <label htmlFor={`${id}-peso`} className="block text-sm">
           Grosor de la letra
         </label>
-
         <select
           id={`${id}-peso`}
           value={peso}
@@ -227,7 +203,6 @@ function ControlTipografia({
             const opcion = PESOS.find(
               (item) => item === Number(event.target.value),
             );
-
             if (opcion !== undefined) onPeso(opcion);
           }}
           className={CLASE_INPUT}
@@ -239,7 +214,6 @@ function ControlTipografia({
           ))}
         </select>
       </div>
-
       <ControlNumero
         nombre="Tamaño en computadora"
         value={tamano}
@@ -247,7 +221,6 @@ function ControlTipografia({
         max={descripcion ? 40 : 120}
         onChange={onTamano}
       />
-
       <ControlNumero
         nombre="Tamaño en teléfono"
         value={tamanoMovil}
@@ -255,7 +228,6 @@ function ControlTipografia({
         max={descripcion ? 32 : 72}
         onChange={onTamanoMovil}
       />
-
       <ControlColor
         nombre="Color de la letra"
         value={color}
@@ -264,35 +236,41 @@ function ControlTipografia({
     </div>
   );
 }
-
 export default function EditorPortada({
   catalogoId,
+  elementoSeleccionado = null,
+  revisionSeleccion = 0,
   config,
   onCambiarConfig,
   disabled,
   onSubiendoImagenChange,
 }: Props) {
+  const controlesRef = useRef<HTMLFieldSetElement>(null);
+  useEffect(() => {
+    if (!elementoSeleccionado) return;
+    const frame = window.requestAnimationFrame(() => {
+      const elemento = controlesRef.current?.querySelector<HTMLElement>(`[data-portada-control="${elementoSeleccionado}"]`);
+      elemento?.scrollIntoView({ block: "start", behavior: "auto" });
+      elemento?.querySelector<HTMLElement>("input, textarea, select")?.focus({ preventScroll: true });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [elementoSeleccionado, revisionSeleccion]);
   const id = useId();
   const diseno = normalizarConfig(config);
-
   // Los valores normalizados alimentan los deslizadores.
   const valores = diseno.portada;
-
   // Conserva el texto que se está escribiendo, incluso si
   // temporalmente un color no es válido.
   const portada: ConfigPortada = {
     ...valores,
     ...config.portada,
   };
-
   const visible = diseno.secciones.some(
     (seccion) =>
       seccion.id === "portada" && seccion.visible,
   );
-
   const cambiar = (cambios: Partial<ConfigPortada>) => {
     if (disabled) return;
-
     onCambiarConfig({
       ...config,
       portada: {
@@ -301,25 +279,20 @@ export default function EditorPortada({
       },
     });
   };
-
   const separador =
     "space-y-4 border-t border-[var(--border-card)] pt-5";
-
   return (
-    <fieldset disabled={disabled} className="space-y-5">
+    <fieldset ref={controlesRef} disabled={disabled} className="space-y-5">
       <legend className="sr-only">
         Configuración del banner
       </legend>
-
       <label className="flex min-h-11 items-center justify-between gap-3 text-sm font-semibold">
         Mostrar portada
-
         <input
           type="checkbox"
           checked={visible}
           onChange={(event) => {
             if (disabled) return;
-
             onCambiarConfig({
               ...config,
               secciones: diseno.secciones.map((seccion) =>
@@ -335,13 +308,11 @@ export default function EditorPortada({
           className="h-5 w-5 accent-[var(--color-primary)]"
         />
       </label>
-
       {!visible && (
         <p className="text-xs text-[var(--text-secondary)]">
           Activa la portada para verla en la vista previa.
         </p>
       )}
-
       <EditorImagenPortada
         key={catalogoId}
         catalogoId={catalogoId}
@@ -350,10 +321,8 @@ export default function EditorPortada({
         disabled={disabled}
         onSubiendoChange={onSubiendoImagenChange}
       />
-
       <div className={separador}>
         <h3 className="text-sm font-bold">Imagen y altura</h3>
-
         <ControlColor
           nombre="Color de la capa sobre la imagen"
           value={portada.color_superposicion ?? valores.color_superposicion}
@@ -361,7 +330,6 @@ export default function EditorPortada({
             cambiar({ color_superposicion: value })
           }
         />
-
         <ControlNumero
           nombre="Opacidad de la capa"
           value={valores.opacidad_superposicion}
@@ -372,12 +340,10 @@ export default function EditorPortada({
             cambiar({ opacidad_superposicion: value })
           }
         />
-
         <p className="text-xs leading-relaxed text-[var(--text-secondary)]">
           Con una capa negra, aumenta la opacidad para
           oscurecer la imagen y destacar las letras.
         </p>
-
         <ControlNumero
           nombre="Altura en computadora"
           value={valores.alto_escritorio}
@@ -387,7 +353,6 @@ export default function EditorPortada({
             cambiar({ alto_escritorio: value })
           }
         />
-
         <ControlNumero
           nombre="Altura en teléfono"
           value={valores.alto_movil}
@@ -397,19 +362,23 @@ export default function EditorPortada({
             cambiar({ alto_movil: value })
           }
         />
-
         <ControlColor
           nombre="Fondo de la portada"
           value={portada.color_fondo}
           onChange={(value) => cambiar({ color_fondo: value })}
         />
       </div>
-
       <div className={separador} data-portada-control="titulo">
+        <label className="block text-sm font-semibold">Alineación del contenido de portada</label>
+        <select value={portada.alineacion} className={CLASE_INPUT} onChange={(event) => {
+          const value = event.target.value;
+          if (value === "izquierda" || value === "centro" || value === "derecha") cambiar({ alineacion: value });
+        }}>
+          <option value="izquierda">Izquierda</option><option value="centro">Centro</option><option value="derecha">Derecha</option>
+        </select>
         <label htmlFor={`${id}-titulo`} className="block text-sm font-semibold">
           Texto del título
         </label>
-
         <input
           id={`${id}-titulo`}
           value={portada.titulo}
@@ -420,7 +389,6 @@ export default function EditorPortada({
           }
           className={CLASE_INPUT}
         />
-
         <ControlTipografia
           nombre="Diseño del título"
           fuente={valores.fuente_titulo}
@@ -437,15 +405,20 @@ export default function EditorPortada({
           onColor={(value) => cambiar({ color_titulo: value })}
         />
       </div>
-
       <div className={separador} data-portada-control="descripcion">
+        <label className="block text-sm font-semibold">Alineación del contenido de portada</label>
+        <select value={portada.alineacion} className={CLASE_INPUT} onChange={(event) => {
+          const value = event.target.value;
+          if (value === "izquierda" || value === "centro" || value === "derecha") cambiar({ alineacion: value });
+        }}>
+          <option value="izquierda">Izquierda</option><option value="centro">Centro</option><option value="derecha">Derecha</option>
+        </select>
         <label
           htmlFor={`${id}-descripcion`}
           className="block text-sm font-semibold"
         >
           Texto de la descripción
         </label>
-
         <textarea
           id={`${id}-descripcion`}
           value={portada.descripcion}
@@ -457,7 +430,6 @@ export default function EditorPortada({
           }
           className={`${CLASE_INPUT} resize-y`}
         />
-
         <ControlTipografia
           nombre="Diseño de la descripción"
           descripcion
@@ -483,20 +455,17 @@ export default function EditorPortada({
           }
         />
       </div>
-
-      <div className={separador}>
+      <div className={separador} data-portada-control="boton">
         <div className="space-y-2">
           <label htmlFor={`${id}-alineacion`} className="block text-sm">
             Alineación del contenido
           </label>
-
           <select
             id={`${id}-alineacion`}
             value={portada.alineacion}
             onChange={(event) => {
               const value = event.target.value;
-
-              if (value === "izquierda" || value === "centro") {
+              if (value === "izquierda" || value === "centro" || value === "derecha") {
                 cambiar({ alineacion: value });
               }
             }}
@@ -504,12 +473,11 @@ export default function EditorPortada({
           >
             <option value="izquierda">Izquierda</option>
             <option value="centro">Centro</option>
+            <option value="derecha">Derecha</option>
           </select>
         </div>
-
         <label className="flex min-h-11 items-center justify-between gap-3 text-sm">
           Sombra en las letras
-
           <input
             type="checkbox"
             checked={valores.sombra_texto}
@@ -519,10 +487,8 @@ export default function EditorPortada({
             className="h-5 w-5 accent-[var(--color-primary)]"
           />
         </label>
-
         <label className="flex min-h-11 items-center justify-between gap-3 text-sm">
           Mostrar botón
-
           <input
             type="checkbox"
             checked={portada.mostrar_boton}
@@ -532,12 +498,10 @@ export default function EditorPortada({
             className="h-5 w-5 accent-[var(--color-primary)]"
           />
         </label>
-
         <div className="space-y-2">
           <label htmlFor={`${id}-boton`} className="block text-sm">
             Texto del botón
           </label>
-
           <input
             id={`${id}-boton`}
             value={portada.texto_boton}
@@ -547,7 +511,6 @@ export default function EditorPortada({
             }
             className={CLASE_INPUT}
           />
-
           <p className="text-xs text-[var(--text-secondary)]">
             Lleva al catálogo y utiliza el color principal
             de la tienda.

@@ -24,7 +24,7 @@ import {
   X,
 } from "lucide-react";
 import EditorSidebar from "@/components/dashboard/editor/EditorSidebar";
-import EditorPreview from "@/components/dashboard/editor/EditorPreview";
+import EditorPreview, { type EstadoVistaPrevia } from "@/components/dashboard/editor/EditorPreview";
 import {
   VERSION_CONFIG,
   SECCIONES_EDITOR,
@@ -35,6 +35,7 @@ import type {
   ConfigDiseno,
   DatosRenderTienda,
   SeccionEditor,
+  ElementoPortada,
 } from "@/lib/tienda-diseno/types";
 interface EditorTiendaProps {
   datosIniciales: DatosRenderTienda;
@@ -61,7 +62,6 @@ export default function EditorTienda({
 }: EditorTiendaProps) {
   const [logoTienda, setLogoTienda] = useState(datosIniciales.tienda.logo ?? null);
   const cambiarLogo = useCallback((logo: string) => setLogoTienda(logo), []);
-
   const [config, setConfig] = useState<ConfigDiseno>(() => ({
     ...datosIniciales.config,
   }));
@@ -82,9 +82,12 @@ export default function EditorTienda({
   const [dispositivo, setDispositivo] = useState<
     "escritorio" | "movil"
   >("escritorio");
+  const [estadoPreview, setEstadoPreview] = useState<EstadoVistaPrevia>("actualizando");
   const [modoSeleccion, setModoSeleccion] = useState(true);
   const [seccionSeleccionada, setSeccionSeleccionada] =
     useState<SeccionEditor | null>(null);
+  const [elementoSeleccionado, setElementoSeleccionado] = useState<ElementoPortada | null>(null);
+  const [revisionSeleccion, setRevisionSeleccion] = useState(0);
   const [panelAbierto, setPanelAbierto] = useState(false);
   const [panelAmpliado, setPanelAmpliado] = useState(false);
   const [alturaArrastre, setAlturaArrastre] = useState<number | null>(null);
@@ -200,9 +203,11 @@ export default function EditorTienda({
     setConfig(nuevaConfig);
     setAviso(null);
   };
-  const seleccionarSeccion = (seccion: SeccionEditor) => {
+  const seleccionarSeccion = (seccion: SeccionEditor, elemento: ElementoPortada | null = null) => {
     if (subiendoImagenRef.current) return;
     setSeccionSeleccionada(seccion);
+    setElementoSeleccionado(seccion === "portada" ? elemento : null);
+    setRevisionSeleccion((actual) => actual + 1);
     setPanelAmpliado(false);
     setPanelAbierto(true);
   };
@@ -211,6 +216,7 @@ export default function EditorTienda({
   ) => {
     if (subiendoImagenRef.current) return;
     setSeccionSeleccionada(seccion);
+    setElementoSeleccionado(null);
   };
   const cerrarPanel = () => {
     if (subiendoImagenRef.current) return;
@@ -374,7 +380,7 @@ export default function EditorTienda({
     }
   };
   const claseControl =
-    "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50";
+    "inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border px-2 py-1.5 text-xs lg:min-h-10 lg:gap-2 lg:px-3 lg:py-2 lg:text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50";
   const textoEstado = subiendoImagen
     ? "Preparando y subiendo imagen..."
     : operacion === "guardar"
@@ -390,8 +396,8 @@ export default function EditorTienda({
     <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-[var(--bg-main)] text-[var(--text-primary)]">
       {/* Barra superior fija */}
       <header className="z-20 shrink-0 border-b border-[var(--border-card)] bg-[var(--bg-secondary)]">
-        <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-3 sm:px-4">
-          <div className="flex min-w-0 flex-1 items-center gap-3">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-1 px-2 py-1.5 sm:px-3 lg:flex lg:gap-5 lg:px-4 lg:py-2.5">
+          <div className="order-1 flex min-w-0 items-center gap-2 lg:w-44 lg:shrink lg:flex-none">
             <Link
               href="/dashboard/tienda-online"
               aria-label="Volver a Tienda online"
@@ -425,7 +431,7 @@ export default function EditorTienda({
               <ArrowLeft size={18} aria-hidden="true" />
             </Link>
             <div className="min-w-0">
-              <h1 className="truncate text-sm font-bold sm:text-base">
+              <h1 className="truncate text-sm font-bold">
                 {datosIniciales.tienda.nombre}
               </h1>
               <p
@@ -436,7 +442,7 @@ export default function EditorTienda({
               </p>
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="order-2 flex shrink-0 items-center justify-end gap-1.5 lg:order-3 lg:gap-3">
             <button
               type="button"
               disabled={bloqueado || !hayCambios || !configValida}
@@ -463,7 +469,7 @@ export default function EditorTienda({
               <span className="hidden sm:inline">
                 {operacion === "guardar"
                   ? "Guardando..."
-                  : "Guardar borrador"}
+                  : "Guardar"}
               </span>
             </button>
             <button
@@ -500,9 +506,7 @@ export default function EditorTienda({
                   : "Publicar"}
             </button>
           </div>
-        </div>
-        {/* Controles de vista */}
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border-card)] px-3 py-2 sm:px-4">
+          <div className="order-3 col-span-2 flex min-w-0 items-center justify-center gap-2 lg:order-2 lg:ml-auto lg:shrink-0 lg:justify-end">
           <button
             type="button"
             aria-controls="editor-panel-configuracion"
@@ -512,9 +516,9 @@ export default function EditorTienda({
             className={`${claseControl} border-[var(--border-card)] text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)] lg:hidden`}
           >
             <Settings2 size={17} aria-hidden="true" />
-            {panelAbierto ? "Ocultar opciones" : "Personalizar"}
+            <span className="sr-only sm:not-sr-only">{panelAbierto ? "Ocultar opciones" : "Personalizar"}</span>
           </button>
-          <div className="flex items-center gap-2 lg:ml-auto">
+          <div className="flex items-center gap-1.5 lg:gap-3">
             <div
               role="group"
               aria-label="Tamaño de la vista previa"
@@ -565,8 +569,15 @@ export default function EditorTienda({
               }`}
             >
               <MousePointer2 size={17} aria-hidden="true" />
-              <span className="hidden sm:inline">Seleccionar</span>
+              <span className="sr-only">Seleccionar</span>
             </button>
+          </div>
+            <p role="status" className="sr-only" title="Estado de la vista previa">
+              {estadoPreview === "actualizada" ? "Vista previa actualizada" : estadoPreview === "error" ? "Error en vista previa" : "Actualizando vista previa…"}
+            </p>
+            <span role="status" className="hidden">
+              {estadoPreview === "actualizada" ? "Vista previa actualizada" : estadoPreview === "error" ? "Error en vista previa" : "Actualizando vista previa"}
+            </span>
           </div>
         </div>
       </header>
@@ -677,6 +688,8 @@ export default function EditorTienda({
               categorias={datosIniciales.categorias}
               plantilla={datosIniciales.plantilla}
               seccionSeleccionada={seccionSeleccionada}
+              elementoSeleccionado={elementoSeleccionado}
+              revisionSeleccion={revisionSeleccion}
               onSeleccionarSeccion={seleccionarDesdeSidebar}
               onCambiarConfig={cambiarConfig}
               disabled={ocupado}
@@ -691,7 +704,9 @@ export default function EditorTienda({
             dispositivo={dispositivo}
             modoSeleccion={modoSeleccion}
             seccionSeleccionada={seccionSeleccionada}
+            elementoSeleccionado={elementoSeleccionado}
             onSeleccionarSeccion={seleccionarSeccion}
+            onEstadoChange={setEstadoPreview}
           />
         </div>
       </div>
