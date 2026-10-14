@@ -2,331 +2,393 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 
+export const runtime = "nodejs";
+
+type CatalogoStripe = {
+  id: string;
+  user_id: string;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+};
+
+type ReferenciaStripe =
+  | string
+  | { id: string }
+  | null
+  | undefined;
+
+// Compatibilidad con versiones anteriores y recientes de Stripe.
+type SubscriptionCompatible = Stripe.Subscription & {
+  current_period_end?: number;
+};
+
+type InvoiceCompatible = {
+  customer?: ReferenciaStripe;
+  subscription?: ReferenciaStripe;
+  parent?: {
+    subscription_details?: {
+      subscription?: ReferenciaStripe;
+    } | null;
+  } | null;
+};
+
+function obtenerId(valor: ReferenciaStripe): string | null {
+  if (typeof valor === "string") return valor;
+  return valor?.id ?? null;
+}
+
+function obtenerSubscriptionId(invoice: InvoiceCompatible): string | null {
+  return (
+    obtenerId(invoice.parent?.subscription_details?.subscription) ||
+    obtenerId(invoice.subscription)
+  );
+}
+
+function obtenerVencimiento(subscription: Stripe.Subscription): string | null {
+  const compatible = subscription as SubscriptionCompatible;
+
+  // Catalagox utiliza un plan por suscripción.
+  const item = subscription.items.data[0] as
+    | (Stripe.SubscriptionItem & { current_period_end?: number })
+    | undefined;
+
+  const timestamp =
+    compatible.current_period_end ?? item?.current_period_end;
+
+  if (!timestamp) return null;
+
+  return new Date(timestamp * 1000).toISOString();
+}
+
+function tieneAcceso(status: Stripe.Subscription.Status): boolean {
+  return status === "active" || status === "trialing";
+}
+
+function esTerminal(status: Stripe.Subscription.Status): boolean {
+  return status === "canceled" || status === "incomplete_expired";
+}
+
 export async function POST(req: Request) {
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  const supabaseUrl =
+    process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (
+    !stripeSecretKey ||
+    !webhookSecret ||
+    !supabaseUrl ||
+    !supabaseServiceKey
+  ) {
+    console.error("Webhook Stripe: faltan variables de entorno.");
+
+    return NextResponse.json(
+      { error: "Error de configuración del servidor" },
+      { status: 500 }
+    );
+  }
+
+  const stripe = new Stripe(stripeSecretKey);
+
+  const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  });
+
+  const signature = req.headers.get("stripe-signature");
+
+  if (!signature) {
+    return NextResponse.json(
+      { error: "Missing stripe signature" },
+      { status: 400 }
+    );
+  }
+
+  let event: Stripe.Event;
+
   try {
-    // 1. Obtener y validar variables de entorno en runtime
-    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
-    if (!stripeSecretKey || !webhookSecret) {
-      console.error("❌ Error de Webhook: Faltan claves de configuración (STRIPE_SECRET_KEY o STRIPE_WEBHOOK_SECRET).");
-      return NextResponse.json(
-        { error: "Error de configuración interna del servidor" },
-        { status: 500 }
-      );
-    }
-
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    if (!supabaseUrl || !supabaseServiceKey) {
-      console.error("❌ Error de Webhook: Faltan claves de administración de Supabase.");
-      return NextResponse.json(
-        { error: "Error de configuración de Base de Datos" },
-        { status: 500 }
-      );
-    }
-
-    // 2. Instanciar clientes dentro de la función (evita cierres durante el Build de Next.js)
-    const stripe = new Stripe(stripeSecretKey);
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-
     const body = await req.text();
-    const sig = req.headers.get("stripe-signature");
+    event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+  } catch (error: unknown) {
+    console.error(
+      "Webhook Stripe: firma inválida.",
+      error instanceof Error ? error.message : "Error desconocido"
+    );
 
-    if (!sig) {
-      return NextResponse.json(
-        { error: "Missing stripe signature" },
-        { status: 400 }
+    return NextResponse.json(
+      { error: "Firma de Stripe inválida" },
+      { status: 400 }
+    );
+  }
+
+  const columnas =
+    "id, user_id, stripe_customer_id, stripe_subscription_id";
+
+  async function buscarCatalogo(
+    subscriptionId: string,
+    customerId: string,
+    userId?: string
+  ): Promise<CatalogoStripe | null> {
+    // Primero buscamos la suscripción exacta.
+    const vinculada = await supabaseAdmin
+      .from("catalogos")
+      .select(columnas)
+      .eq("stripe_subscription_id", subscriptionId)
+      .maybeSingle();
+
+    if (vinculada.error) {
+      throw new Error(vinculada.error.message);
+    }
+
+    if (vinculada.data) {
+      return vinculada.data as CatalogoStripe;
+    }
+
+    if (userId) {
+      const porUsuario = await supabaseAdmin
+        .from("catalogos")
+        .select(columnas)
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (porUsuario.error) {
+        throw new Error(porUsuario.error.message);
+      }
+
+      if (porUsuario.data) {
+        return porUsuario.data as CatalogoStripe;
+      }
+    }
+
+    const porCliente = await supabaseAdmin
+      .from("catalogos")
+      .select(columnas)
+      .eq("stripe_customer_id", customerId)
+      .maybeSingle();
+
+    if (porCliente.error) {
+      throw new Error(porCliente.error.message);
+    }
+
+    return porCliente.data as CatalogoStripe | null;
+  }
+
+  async function sincronizarSuscripcion(
+    subscriptionId: string,
+    opciones: {
+      userId?: string;
+      permitirVincular?: boolean;
+      permitirReemplazarCancelada?: boolean;
+    } = {}
+  ) {
+    // Usamos el estado actual, no el estado antiguo del evento.
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    const customerId = obtenerId(subscription.customer);
+
+    if (!customerId) {
+      throw new Error("La suscripción no tiene un cliente válido.");
+    }
+
+    const userId =
+      opciones.userId || subscription.metadata?.supabaseUserId;
+
+    const catalogo = await buscarCatalogo(
+      subscription.id,
+      customerId,
+      userId
+    );
+
+    if (!catalogo) {
+      // Stripe reintentará el evento si la tienda aún no está creada.
+      throw new Error(
+        `No se encontró un catálogo para la suscripción ${subscription.id}.`
       );
     }
 
-    let event: Stripe.Event;
+    const subscriptionAnterior = catalogo.stripe_subscription_id;
+    const mismaSuscripcion = subscriptionAnterior === subscription.id;
 
-    try {
-      event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
-      console.log("✅ Evento recibido con éxito:", event.type);
-    } catch (err: any) {
-      console.error("❌ Error Webhook (Firma inválida):", err.message);
-      return NextResponse.json(
-        { error: err.message },
-        { status: 400 }
+    if (!mismaSuscripcion) {
+      if (!opciones.permitirVincular || !tieneAcceso(subscription.status)) {
+        console.log("Evento de suscripción no vinculada ignorado:", {
+          eventId: event.id,
+          subscriptionId: subscription.id,
+          subscriptionVinculada: subscriptionAnterior,
+        });
+        return;
+      }
+
+      if (subscriptionAnterior) {
+        // Solo un checkout nuevo puede reemplazar un plan terminado.
+        if (!opciones.permitirReemplazarCancelada) {
+          console.log("Suscripción repetida ignorada:", subscription.id);
+          return;
+        }
+
+        const anterior = await stripe.subscriptions.retrieve(
+          subscriptionAnterior
+        );
+
+        if (!esTerminal(anterior.status)) {
+          console.log("Se conserva la suscripción existente:", {
+            actual: subscriptionAnterior,
+            repetida: subscription.id,
+          });
+          return;
+        }
+      }
+    }
+
+    const planVenceEl = obtenerVencimiento(subscription);
+
+    if (tieneAcceso(subscription.status) && !planVenceEl) {
+      // No inventamos meses ni fechas de vencimiento.
+      throw new Error(
+        `Stripe no devolvió el fin del período de ${subscription.id}.`
       );
     }
 
-    // =====================================================
-    // CHECKOUT COMPLETADO (Versión Ultra-Resistente)
-    // =====================================================
-    if (event.type === "checkout.session.completed") {
-      const session = event.data.object as Stripe.Checkout.Session;
+    const updateData: {
+      stripe_customer_id: string;
+      stripe_subscription_id: string;
+      subscription_status: string;
+      suscripcion_activa: boolean;
+      plan_vence_el?: string;
+    } = {
+      stripe_customer_id: customerId,
+      stripe_subscription_id: subscription.id,
+      subscription_status: subscription.status,
+      suscripcion_activa: tieneAcceso(subscription.status),
+    };
 
-      const userId = session.metadata?.supabaseUserId;
-      const planType = session.metadata?.planType || "monthly";
-      const customerId = session.customer as string;
-      const subscriptionId = session.subscription as string;
-      const customerEmail = session.customer_details?.email;
-
-      console.log("🔥 [EVENTO] checkout.session.completed iniciado");
-      console.log({
-        userId,
-        planType,
-        customerId,
-        subscriptionId,
-        customerEmail,
-      });
-
-      // 📅 Calcular fecha de vencimiento inicial por contingencia si no viene del periodo de Stripe
-      const fechaVencimiento = new Date();
-      if (planType === "annual") {
-        fechaVencimiento.setFullYear(fechaVencimiento.getFullYear() + 1);
-      } else {
-        fechaVencimiento.setMonth(fechaVencimiento.getMonth() + 1);
-      }
-
-      let updated = false;
-
-      // Intento 1: Actualizar usando el userId de la metadata
-      if (userId) {
-        console.log(`Intento 1: Actualizando catálogo por 'user_id': ${userId}`);
-        const { data, error } = await supabaseAdmin
-          .from("catalogos")
-          .update({
-            stripe_customer_id: customerId,
-            stripe_subscription_id: subscriptionId,
-            subscription_status: "active",
-            suscripcion_activa: true,
-            plan_vence_el: fechaVencimiento.toISOString(),
-          })
-          .eq("user_id", userId)
-          .select();
-
-        if (error) {
-          console.error("❌ Error en Intento 1 (user_id):", error.message);
-        } else if (data && data.length > 0) {
-          console.log("✅ Éxito en Intento 1 (user_id):", data);
-          updated = true;
-        }
-      }
-
-      // Intento 2: Si el intento 1 no alteró filas, usamos el Email / UPSERT como salvavidas
-      if (!updated && customerEmail && userId) {
-        console.log(`⚠️ Intento 1 no cambió nada. Iniciando Intento 2 por UPSERT: ${userId}`);
-
-        const { data, error } = await supabaseAdmin
-          .from("catalogos")
-          .upsert(
-            {
-              user_id: userId,
-              stripe_customer_id: customerId,
-              stripe_subscription_id: subscriptionId,
-              subscription_status: "active",
-              suscripcion_activa: true,
-              plan_vence_el: fechaVencimiento.toISOString(),
-            },
-            {
-              onConflict: "user_id",
-            }
-          )
-          .select();
-
-        if (error) {
-          console.error("❌ Error crítico en UPSERT de contingencia:", error.message);
-        } else {
-          console.log("🔥 [SOLUCIONADO] Fila forzada con UPSERT:", data);
-          updated = true;
-        }
-      }
+    if (planVenceEl) {
+      updateData.plan_vence_el = planVenceEl;
     }
 
-    // =====================================================
-    // SUBSCRIPTION CREATED / UPDATED
-    // =====================================================
-    if (
-      event.type === "customer.subscription.created" ||
-      event.type === "customer.subscription.updated"
-    ) {
-      const subscription = event.data.object as Stripe.Subscription;
-      const customerId = subscription.customer as string;
-      const userId = subscription.metadata?.supabaseUserId;
+    let query = supabaseAdmin
+      .from("catalogos")
+      .update(updateData)
+      .eq("id", catalogo.id);
 
-      // 📅 Fecha de fin del periodo actual (probamos raíz de objeto y fallback a item)
-      const currentPeriodEnd =
-        (subscription as any).current_period_end ||
-        subscription.items?.data?.[0]?.current_period_end;
+    // Evita que dos eventos sobrescriban el vínculo simultáneamente.
+    if (subscriptionAnterior === null) {
+      query = query.is("stripe_subscription_id", null);
+    } else {
+      query = query.eq("stripe_subscription_id", subscriptionAnterior);
+    }
 
-      const planVenceEl = currentPeriodEnd
-        ? new Date(currentPeriodEnd * 1000).toISOString()
-        : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    const { data, error } = await query.select("id");
 
-      console.log(`🔥 [EVENTO] ${event.type} iniciado`);
-      console.log({
-        userId,
-        customerId,
-        subscriptionId: subscription.id,
-        status: subscription.status,
-        planVenceEl,
-      });
+    if (error) {
+      throw new Error(error.message);
+    }
 
-      const updateData = {
-        stripe_customer_id: customerId,
-        stripe_subscription_id: subscription.id,
-        subscription_status: subscription.status,
-        plan_vence_el: planVenceEl,
-        suscripcion_activa:
-          subscription.status === "active" || subscription.status === "trialing",
-      };
+    if (!data?.length) {
+      // El vínculo cambió durante el procesamiento: reintentamos.
+      throw new Error(
+        "El vínculo de la suscripción cambió durante la actualización."
+      );
+    }
 
-      if (userId) {
-        console.log(`Actualizando por 'user_id': ${userId}`);
+    console.log("Catálogo sincronizado con Stripe:", {
+      eventId: event.id,
+      catalogoId: catalogo.id,
+      subscriptionId: subscription.id,
+      status: subscription.status,
+      planVenceEl,
+    });
+  }
 
-        const { data, error } = await supabaseAdmin
-          .from("catalogos")
-          .update(updateData)
-          .eq("user_id", userId)
-          .select();
+  try {
+    switch (event.type) {
+      case "checkout.session.completed":
+      case "checkout.session.async_payment_succeeded": {
+        const session = event.data.object as Stripe.Checkout.Session;
 
-        if (error) {
-          console.error(
-            "❌ ERROR EN SUBSCRIPTION UPDATE (Por user_id):",
-            error.message
-          );
-        } else {
-          console.log(
-            "✅ RESULTADO SUBSCRIPTION UPDATE (Por user_id):",
-            data
-          );
+        if (session.mode !== "subscription") break;
+
+        const subscriptionId = obtenerId(session.subscription);
+
+        if (!subscriptionId) {
+          throw new Error("Checkout no contiene una suscripción.");
         }
-      } else {
-        console.log(`Actualizando por 'stripe_customer_id': ${customerId}`);
 
-        const { data, error } = await supabaseAdmin
-          .from("catalogos")
-          .update(updateData)
-          .eq("stripe_customer_id", customerId)
-          .select();
+        await sincronizarSuscripcion(subscriptionId, {
+          userId: session.metadata?.supabaseUserId,
+          permitirVincular: true,
+          permitirReemplazarCancelada: true,
+        });
 
-        if (error) {
-          console.error(
-            "❌ ERROR EN SUBSCRIPTION UPDATE (Por customer_id):",
-            error.message
-          );
-        } else {
-          console.log(
-            "✅ RESULTADO SUBSCRIPTION UPDATE (Por customer_id):",
-            data
-          );
-        }
-      }
-    }
-
-    // =====================================================
-    // FACTURA PAGADA
-    // =====================================================
-    if (event.type === "invoice.payment_succeeded") {
-      const invoice = event.data.object as any;
-      const customerId = invoice.customer;
-
-      const userId =
-        invoice.parent?.subscription_details?.metadata?.supabaseUserId ||
-        invoice.lines?.data?.[0]?.metadata?.supabaseUserId ||
-        invoice.subscription_details?.metadata?.supabaseUserId;
-
-      const periodEnd = invoice.lines?.data?.[0]?.period?.end;
-      const planVenceEl = periodEnd
-        ? new Date(periodEnd * 1000).toISOString()
-        : null;
-
-      console.log("🔥 [EVENTO] invoice.payment_succeeded iniciado");
-      console.log({
-        customerId,
-        userId,
-        planVenceEl,
-      });
-
-      const updateInvoiceData: any = {
-        stripe_customer_id: customerId,
-        subscription_status: "active",
-        suscripcion_activa: true,
-      };
-
-      if (planVenceEl) {
-        updateInvoiceData.plan_vence_el = planVenceEl;
+        break;
       }
 
-      if (userId) {
-        console.log(`Actualizando factura por 'user_id': ${userId}`);
-        const { data, error } = await supabaseAdmin
-          .from("catalogos")
-          .update(updateInvoiceData)
-          .eq("user_id", userId)
-          .select();
+      case "customer.subscription.created":
+      case "customer.subscription.updated": {
+        const subscription = event.data.object as Stripe.Subscription;
 
-        if (error) console.error("❌ ERROR EN INVOICE UPDATE (Por user_id):", error.message);
-        else console.log("✅ RESULTADO INVOICE UPDATE (Por user_id):", data);
-      } else {
-        console.log(`Actualizando factura por 'stripe_customer_id': ${customerId}`);
-        const { data, error } = await supabaseAdmin
-          .from("catalogos")
-          .update(updateInvoiceData)
-          .eq("stripe_customer_id", customerId)
-          .select();
+        await sincronizarSuscripcion(subscription.id, {
+          permitirVincular: true,
+        });
 
-        if (error) console.error("❌ ERROR EN INVOICE UPDATE (Por customer_id):", error.message);
-        else console.log("✅ RESULTADO INVOICE UPDATE (Por customer_id):", data);
+        break;
       }
-    }
 
-    // =====================================================
-    // SUBSCRIPTION CANCELADA
-    // =====================================================
-    if (event.type === "customer.subscription.deleted") {
-      const subscription = event.data.object as Stripe.Subscription;
-      const customerId = subscription.customer as string;
+      case "customer.subscription.deleted": {
+        const subscription = event.data.object as Stripe.Subscription;
 
-      console.log("🔥 [EVENTO] customer.subscription.deleted");
+        // Una suscripción repetida nunca desactiva la vinculada.
+        await sincronizarSuscripcion(subscription.id);
 
-      const { error } = await supabaseAdmin
-        .from("catalogos")
-        .update({
-          subscription_status: "canceled",
-          suscripcion_activa: false,
-        })
-        .eq("stripe_customer_id", customerId);
+        break;
+      }
 
-      if (error) console.error("❌ ERROR EN CANCELACIÓN:", error.message);
-    }
+      case "invoice.paid":
+      case "invoice.payment_succeeded": {
+        const invoice = event.data.object as unknown as InvoiceCompatible;
+        const subscriptionId = obtenerSubscriptionId(invoice);
 
-    // =====================================================
-    // PAGO FALLIDO
-    // =====================================================
-    if (event.type === "invoice.payment_failed") {
-      const invoice = event.data.object as any;
-      const customerId = invoice.customer;
+        // Ignoramos facturas que no pertenecen a una suscripción.
+        if (!subscriptionId) break;
 
-      console.log("🔥 [EVENTO] invoice.payment_failed");
+        await sincronizarSuscripcion(subscriptionId, {
+          permitirVincular: true,
+        });
 
-      const { error } = await supabaseAdmin
-        .from("catalogos")
-        .update({
-          subscription_status: "past_due",
-          suscripcion_activa: false,
-        })
-        .eq("stripe_customer_id", customerId);
+        break;
+      }
 
-      if (error) console.error("❌ ERROR EN PAGO FALLIDO:", error.message);
+      case "invoice.payment_failed": {
+        const invoice = event.data.object as unknown as InvoiceCompatible;
+        const subscriptionId = obtenerSubscriptionId(invoice);
+
+        if (!subscriptionId) break;
+
+        // Consultamos el estado actual: una factura antigua fallida
+        // no desactiva una suscripción que ya volvió a estar activa.
+        await sincronizarSuscripcion(subscriptionId);
+
+        break;
+      }
+
+      default:
+        break;
     }
 
     return NextResponse.json({ received: true }, { status: 200 });
+  } catch (error: unknown) {
+    console.error("Error procesando webhook Stripe:", {
+      eventId: event.id,
+      eventType: event.type,
+      error: error instanceof Error ? error.message : "Error desconocido",
+    });
 
-  } catch (globalError: any) {
-    console.error("❌ ERROR CRÍTICO ASÍNCRONO EN EL WEBHOOK:", globalError.message);
+    // Stripe podrá reintentar cuando falle la API o la base de datos.
     return NextResponse.json(
-      { error: "Webhook handler internal failure" },
+      { error: "No se pudo procesar el evento de Stripe" },
       { status: 500 }
     );
   }
 }
-
-
-
-
