@@ -122,7 +122,6 @@ export default function CreateProductForm({
     }
   };
 
-  
   const subirImagen = async (archivo: File, propietarioId: string) => {
     const opciones = {
       maxSizeMB: 0.8,
@@ -149,7 +148,10 @@ export default function CreateProductForm({
 
               const canvas = document.createElement("canvas");
               canvas.width = Math.max(1, Math.round(img.naturalWidth * escala));
-              canvas.height = Math.max(1, Math.round(img.naturalHeight * escala));
+              canvas.height = Math.max(
+                1,
+                Math.round(img.naturalHeight * escala),
+              );
 
               const contexto = canvas.getContext("2d");
 
@@ -213,10 +215,18 @@ export default function CreateProductForm({
       try {
         comprimida = await convertirConCanvas(archivo);
       } catch (error) {
-        console.warn("Conversión alternativa falló:", error);
+        console.error("Error real al convertir imagen:", {
+          error,
+          nombre: archivo.name,
+          tipo: archivo.type,
+          tamanoBytes: archivo.size,
+          navegador: navigator.userAgent,
+        });
+
+        const detalle = error instanceof Error ? error.message : String(error);
 
         throw new Error(
-          "No pudimos convertir esta imagen. Prueba con una foto JPG o PNG. Si es una foto HEIC de iPhone, puede necesitar una conversión compatible adicional.",
+          `Falló la conversión (${archivo.type || "formato desconocido"}). Detalle: ${detalle}`,
         );
       }
     }
@@ -236,13 +246,12 @@ export default function CreateProductForm({
       throw new Error("No pudimos subir la imagen. Inténtalo nuevamente.");
     }
 
-    const { data: { publicUrl } } = supabase.storage
-      .from("productos")
-      .getPublicUrl(filePath);
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("productos").getPublicUrl(filePath);
 
     return { publicUrl, filePath };
   };
-
 
   const crearProducto = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -265,11 +274,7 @@ export default function CreateProductForm({
       return;
     }
 
-    if (
-      !producto.precio.trim() ||
-      !Number.isFinite(precio) ||
-      precio < 0
-    ) {
+    if (!producto.precio.trim() || !Number.isFinite(precio) || precio < 0) {
       setError("Ingresa un precio válido, igual o mayor que cero.");
       return;
     }
@@ -306,22 +311,22 @@ export default function CreateProductForm({
       const subida = await subirImagen(imagen, userId);
       rutaSubida = subida.filePath;
 
-      const { error: insertError } = await supabase
-        .from("productos")
-        .insert({
-          user_id: userId,
-          catalogo_id: catalogoId,
-          nombre,
-          descripcion: producto.descripcion.trim(),
-          precio,
-          categoria_id: producto.categoria_id || null,
-          imagen_url: subida.publicUrl,
-          disponible: true,
-        });
+      const { error: insertError } = await supabase.from("productos").insert({
+        user_id: userId,
+        catalogo_id: catalogoId,
+        nombre,
+        descripcion: producto.descripcion.trim(),
+        precio,
+        categoria_id: producto.categoria_id || null,
+        imagen_url: subida.publicUrl,
+        disponible: true,
+      });
 
       if (insertError) {
         console.error("Error guardando producto:", insertError);
-        throw new Error("No pudimos guardar el producto. Inténtalo nuevamente.");
+        throw new Error(
+          "No pudimos guardar el producto. Inténtalo nuevamente.",
+        );
       }
     } catch (err) {
       if (rutaSubida) {
@@ -331,7 +336,10 @@ export default function CreateProductForm({
             .remove([rutaSubida]);
 
           if (cleanupError) {
-            console.error("Error eliminando imagen sin producto:", cleanupError);
+            console.error(
+              "Error eliminando imagen sin producto:",
+              cleanupError,
+            );
           }
         } catch (cleanupError) {
           console.error("Error limpiando imagen:", cleanupError);
@@ -364,19 +372,13 @@ export default function CreateProductForm({
           <Plus size={22} aria-hidden="true" />
         </div>
 
-        <h2
-          id={`${id}-titulo`}
-          className="text-xl font-bold sm:text-2xl"
-        >
+        <h2 id={`${id}-titulo`} className="text-xl font-bold sm:text-2xl">
           Nuevo producto
         </h2>
       </div>
 
       <form onSubmit={crearProducto} aria-busy={loading}>
-        <fieldset
-          disabled={loading}
-          className="m-0 min-w-0 border-0 p-0"
-        >
+        <fieldset disabled={loading} className="m-0 min-w-0 border-0 p-0">
           <legend className="sr-only">Datos del producto</legend>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-5 lg:gap-8">
@@ -510,10 +512,7 @@ export default function CreateProductForm({
               </div>
 
               <div>
-                <label
-                  htmlFor={`${id}-descripcion`}
-                  className={labelClassName}
-                >
+                <label htmlFor={`${id}-descripcion`} className={labelClassName}>
                   Descripción
                   <span className="ml-1 font-normal text-[var(--text-secondary)]">
                     (opcional)
@@ -563,27 +562,6 @@ export default function CreateProductForm({
     </section>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /*"use client";
 
