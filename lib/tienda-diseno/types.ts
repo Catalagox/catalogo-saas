@@ -303,7 +303,33 @@ export interface ConfigCatalogo {
  * El contenido de las páginas permanece en su propia tabla.
  * Aquí se guardan los enlaces y su orden.
  */
+export type RedSocialPie = "instagram" | "facebook" | "tiktok" | "youtube";
+export interface ConfigPie {
+  mostrar: boolean;
+  mostrar_nombre: boolean;
+  nombre: string;
+  descripcion: string;
+  mostrar_redes: boolean;
+  titulo_redes: string;
+  redes: Record<RedSocialPie, { visible: boolean; url: string | null }>;
+  enlaces: { id: string; texto: string; url: string; visible: boolean; nueva_pestana: boolean }[];
+  mostrar_derechos: boolean;
+  texto_derechos: string;
+  alineacion: "izquierda" | "centro" | "derecha";
+  heredar_fondo: boolean;
+  color_fondo: string;
+  color_texto: string;
+  color_iconos: string;
+  color_fondo_iconos: string;
+  color_borde: string;
+  tamano_texto: number;
+  tamano_iconos: number;
+  padding_superior: number;
+  padding_inferior: number;
+}
+
 export interface ConfigDiseno {
+  pie?: ConfigPie;
   estilo_menu: EstiloCatalogo;
   color_primario: string;
   color_fondo: string;

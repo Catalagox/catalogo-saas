@@ -16,12 +16,8 @@ export default function AjustesPage() {
   const [password, setPassword] = useState("");
   // PAÍS DE REGISTRO
   const [paisCode, setPaisCode] = useState("PE"); // 👈 NUEVO: Estado maestro inicializado por defecto
-  // CONTACTO Y REDES
+  // CONTACTO Y PAÍS
   const [whatsapp, setWhatsapp] = useState("");
-  const [instagram, setInstagram] = useState("");
-  const [facebook, setFacebook] = useState("");
-  const [tiktok, setTiktok] = useState("");
-  const [youtube, setYoutube] = useState("");
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     cargarDatos();
@@ -39,10 +35,6 @@ export default function AjustesPage() {
         nombre,
         slug,
         whatsapp,
-        instagram,
-        facebook,
-        tiktok,
-        youtube,
         pais_code  
       `,
       )
@@ -51,10 +43,6 @@ export default function AjustesPage() {
     if (data) {
       setNombreMenu(data.nombre || "");
       setWhatsapp(data.whatsapp || "");
-      setInstagram(data.instagram || "");
-      setFacebook(data.facebook || "");
-      setTiktok(data.tiktok || "");
-      setYoutube(data.youtube || "");
       setPaisCode(data.pais_code || "PE");
     }
     setLoading(false);
@@ -99,21 +87,17 @@ export default function AjustesPage() {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) return;
-    const whatsappLimpio = whatsapp.replace("+", "");
+    if (!user) throw new Error("Tu sesión expiró. Inicia sesión nuevamente.");
+    const whatsappLimpio = whatsapp.replace(/\D/g, "");
     const { error } = await supabase
       .from("catalogos")
       .update({
         whatsapp: whatsappLimpio,
-        instagram,
-        facebook,
-        tiktok,
-        youtube,
         pais_code: paisCode, // 👈 NUEVO: Guardamos el código de país en Supabase
       })
       .eq("user_id", user.id);
     if (error) {
-      alert("Error al guardar contacto");
+      throw error;
     } else {
       alert("Contacto y configuración de moneda actualizados correctamente");
     }
@@ -229,20 +213,12 @@ export default function AjustesPage() {
           generarSlug={generarSlug}
           guardarNombreMenu={guardarNombreMenu}
         />
-        {/* CONTACTO Y REDES */}
+        {/* CONTACTO Y PAÍS */}
         <FormContacto
           paisCode={paisCode}
           setPaisCode={setPaisCode}
           whatsapp={whatsapp}
           setWhatsapp={setWhatsapp}
-          instagram={instagram}
-          setInstagram={setInstagram}
-          facebook={facebook}
-          setFacebook={setFacebook}
-          tiktok={tiktok}
-          setTiktok={setTiktok}
-          youtube={youtube}
-          setYoutube={setYoutube}
           guardarContacto={guardarContacto}
         />
         {/* PASSWORD */}

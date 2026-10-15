@@ -1,7 +1,8 @@
 "use client";
 
 import { useId, useRef, useState } from "react";
-import { Save } from "lucide-react";
+import { Save, ArrowRight } from "lucide-react";
+import Link from "next/link";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 
@@ -13,33 +14,14 @@ interface FormContactoProps {
   setPaisCode: (val: string) => void;
   whatsapp: string;
   setWhatsapp: (val: string) => void;
-  instagram: string;
-  setInstagram: (val: string) => void;
-  facebook: string;
-  setFacebook: (val: string) => void;
-  tiktok: string;
-  setTiktok: (val: string) => void;
-  youtube: string;
-  setYoutube: (val: string) => void;
   guardarContacto: () => Promise<void>;
 }
-
-const campoClassName =
-  "min-h-11 w-full rounded-xl border border-[var(--border-card)] bg-[var(--bg-secondary)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-secondary)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-60";
 
 export default function FormContacto({
   paisCode,
   setPaisCode,
   whatsapp,
   setWhatsapp,
-  instagram,
-  setInstagram,
-  facebook,
-  setFacebook,
-  tiktok,
-  setTiktok,
-  youtube,
-  setYoutube,
   guardarContacto,
 }: FormContactoProps) {
   const id = useId();
@@ -100,36 +82,6 @@ export default function FormContacto({
     }
   };
 
-  const redes = [
-    {
-      clave: "instagram",
-      nombre: "Instagram",
-      placeholder: "https://instagram.com/tu-negocio",
-      valor: instagram,
-      actualizar: setInstagram,
-    },
-    {
-      clave: "facebook",
-      nombre: "Facebook",
-      placeholder: "https://facebook.com/tu-negocio",
-      valor: facebook,
-      actualizar: setFacebook,
-    },
-    {
-      clave: "tiktok",
-      nombre: "TikTok",
-      placeholder: "https://tiktok.com/@tu-negocio",
-      valor: tiktok,
-      actualizar: setTiktok,
-    },
-    {
-      clave: "youtube",
-      nombre: "YouTube",
-      placeholder: "https://youtube.com/@tu-negocio",
-      valor: youtube,
-      actualizar: setYoutube,
-    },
-  ];
 
   return (
     <section
@@ -139,12 +91,12 @@ export default function FormContacto({
     >
       <div>
         <h2 id={`${id}-titulo`} className="text-xl font-bold">
-          Contacto y redes
+          Contacto y país
         </h2>
 
         <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">
-          Configura el país de tu negocio y los medios de contacto
-          que quieres mostrar en tu tienda.
+          Configura el país de tu negocio, su moneda y el número de
+          WhatsApp donde recibirás tus pedidos.
         </p>
       </div>
 
@@ -243,34 +195,6 @@ export default function FormContacto({
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-          {redes.map((red) => (
-            <div key={red.clave} className="min-w-0 space-y-2">
-              <label
-                htmlFor={`${id}-${red.clave}`}
-                className="block text-sm font-semibold"
-              >
-                {red.nombre}
-              </label>
-
-              <input
-                id={`${id}-${red.clave}`}
-                name={red.clave}
-                type="text"
-                inputMode="url"
-                autoCapitalize="none"
-                spellCheck={false}
-                placeholder={red.placeholder}
-                value={red.valor}
-                onChange={(event) => {
-                  red.actualizar(event.target.value);
-                  limpiarMensajes();
-                }}
-                className={campoClassName}
-              />
-            </div>
-          ))}
-        </div>
 
         <button
           type="button"
@@ -281,6 +205,20 @@ export default function FormContacto({
           {guardando ? "Guardando..." : "Guardar contacto"}
         </button>
       </fieldset>
+
+      <Link
+        href="/dashboard/tienda-online/editor"
+        className="flex items-center justify-between gap-3 rounded-xl border border-[var(--border-card)] bg-[var(--bg-secondary)] p-4 transition-colors hover:bg-[var(--bg-card-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
+      >
+        <div>
+          <p className="text-sm font-semibold">Redes sociales de tu tienda</p>
+          <p className="mt-1 text-xs leading-relaxed text-[var(--text-secondary)]">
+            Configura sus enlaces y visibilidad en el editor, en Pie de página.
+            Los enlaces que ya tenías guardados se conservan.
+          </p>
+        </div>
+        <ArrowRight size={18} className="shrink-0" aria-hidden="true" />
+      </Link>
 
       {error && (
         <p

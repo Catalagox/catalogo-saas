@@ -1,3 +1,4 @@
+import { crearConfigPie } from "./config-pie";
 // lib/tienda-diseno/config.ts
 import type {
   ConfigDiseno,
@@ -258,6 +259,7 @@ const TIPOGRAFIA: Grupo<ConfigTipografia> = {
 const TARJETAS: Grupo<ConfigTarjetasCompleta> =
   crearGrupoTarjetas(esColorValido);
 const CATALOGO = crearConfigCatalogo(esColorValido);
+const PIE = crearConfigPie(esColorValido);
 const ESPACIADO: Grupo<ConfigEspaciado> = {
   inicial: {
     ancho_contenido: 1280,
@@ -712,6 +714,7 @@ export const CONFIG_INICIAL: Readonly<ConfigDisenoCompleta> =
     tipografia: normalizarGrupo(undefined, TIPOGRAFIA),
     tarjetas: normalizarGrupo(undefined, TARJETAS),
     catalogo: CATALOGO.normalizar(undefined),
+    pie: PIE.normalizar(undefined),
     espaciado: normalizarGrupo(undefined, ESPACIADO),
     encabezado: normalizarGrupo(undefined, ENCABEZADO),
     navegacion: normalizarNavegacion(undefined),
@@ -818,6 +821,7 @@ export function normalizarConfig(
       TARJETAS,
       respaldo.tarjetas,
     ),
+    pie: PIE.normalizar(origen.pie, respaldo.pie),
     catalogo: CATALOGO.normalizar(
       origen.catalogo,
       respaldo.catalogo,
@@ -1032,6 +1036,7 @@ export function validarConfig(
   );
   validarNavegacion(value.navegacion, errores);
   errores.push(...CATALOGO.validar(value.catalogo));
+  errores.push(...PIE.validar(value.pie));
   if (
     value.secciones !== undefined &&
     !sonSeccionesValidas(value.secciones)

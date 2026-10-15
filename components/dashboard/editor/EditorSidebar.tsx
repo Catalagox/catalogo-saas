@@ -1,4 +1,5 @@
 "use client";
+import EditorPie from "@/components/dashboard/editor/EditorPie";
 import { useId } from "react";
 import { ChevronLeft, LayoutGrid, LayoutList, Paintbrush } from "lucide-react";
 import EditorPortada from "@/components/dashboard/editor/EditorPortada";
@@ -276,6 +277,8 @@ export default function EditorSidebar({
             onCambiarConfig={onCambiarConfig}
             disabled={disabled}
           />
+        ) : seccionSeleccionada === "pie" ? (
+          <EditorPie config={config} onCambiarConfig={onCambiarConfig} disabled={disabled} />
         ) : (
           <div className="space-y-6">
             {seccionSeleccionada === "categorias" && (
@@ -300,7 +303,6 @@ export default function EditorSidebar({
                 </p>
               </section>
             )}
-
             {seccionSeleccionada === "catalogo" && plantilla === "clasica" && (
               <fieldset disabled={disabled} className="space-y-3">
                 <legend className="mb-3 text-sm font-semibold">

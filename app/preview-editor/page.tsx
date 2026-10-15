@@ -115,7 +115,7 @@ export default function PreviewEditorPage() {
         </div>
         <TiendaPlantilla plantilla={plantilla} categorias={categorias} config={config} countryCode={tienda.pais_code} rutaBase={rutaBase} />
         <div data-editor-section="pie">
-          <TiendaFooter instagram={tienda.instagram ?? undefined} facebook={tienda.facebook ?? undefined} tiktok={tienda.tiktok ?? undefined} youtube={tienda.youtube ?? undefined} nombreTienda={tienda.nombre} />
+          <TiendaFooter config={config} rutaBase={rutaBase} instagram={tienda.instagram ?? undefined} facebook={tienda.facebook ?? undefined} tiktok={tienda.tiktok ?? undefined} youtube={tienda.youtube ?? undefined} nombreTienda={tienda.nombre} />
         </div>
         {error && <p role="alert" className="fixed bottom-4 left-4 right-4 z-[100] rounded-xl bg-red-700 p-3 text-sm text-white">{error}</p>}
         <style jsx global>{`
