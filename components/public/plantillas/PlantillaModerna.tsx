@@ -7,19 +7,14 @@ import ProductosDestacados from "@/components/public/plantillas/ProductosDestaca
 
 import { normalizarConfig } from "@/lib/tienda-diseno/config";
 
-import type {
-  CategoriaTienda,
-  ConfigDiseno,
-} from "@/lib/tienda-diseno/types";
+import type { CategoriaTienda, ConfigDiseno } from "@/lib/tienda-diseno/types";
 
 interface PlantillaModernaProps {
   categorias: CategoriaTienda[];
   config: ConfigDiseno;
   countryCode: string;
   rutaBase: string;
-  onTrackCategoria?: (
-    categoriaId: string,
-  ) => void | Promise<void>;
+  onTrackCategoria?: (categoriaId: string) => void | Promise<void>;
 }
 
 function ignorarTracking(): void {}
@@ -38,16 +33,13 @@ export default function PlantillaModerna({
   )
     .filter(
       (categoria) =>
-        categoria &&
-        Boolean(categoria.id) &&
-        Boolean(categoria.nombre?.trim()),
+        categoria && Boolean(categoria.id) && Boolean(categoria.nombre?.trim()),
     )
     .map((categoria) => ({
       ...categoria,
-      productos: (
-        Array.isArray(categoria.productos)
-          ? categoria.productos
-          : []
+      productos: (Array.isArray(categoria.productos)
+        ? categoria.productos
+        : []
       ).filter(
         (producto) =>
           producto &&
@@ -62,22 +54,17 @@ export default function PlantillaModerna({
     .filter((categoria) => categoria.productos.length > 0);
 
   const mostrarPortada = diseno.secciones.some(
-    (seccion) =>
-      seccion.id === "portada" && seccion.visible,
+    (seccion) => seccion.id === "portada" && seccion.visible,
   );
 
   const mostrarCategorias =
     categoriasSeguras.length > 0 &&
     diseno.secciones.some(
-      (seccion) =>
-        seccion.id === "categorias" && seccion.visible,
+      (seccion) => seccion.id === "categorias" && seccion.visible,
     );
 
   const barraCategorias = mostrarCategorias ? (
-    <div
-      data-editor-section="categorias"
-      className="w-full min-w-0"
-    >
+    <div data-editor-section="categorias" className="w-full min-w-0">
       <CategoriasSlider
         categorias={categoriasSeguras}
         onTrackCategoria={onTrackCategoria}
@@ -87,6 +74,8 @@ export default function PlantillaModerna({
         colorHeader={diseno.color_header}
         colorTextHeader={diseno.color_text_header}
         colorBorderHeader={diseno.color_border_header}
+        rutaBase={rutaBase}
+        comportamientoCategorias={diseno.catalogo.comportamiento_categorias}
       />
     </div>
   ) : null;

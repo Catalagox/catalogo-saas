@@ -34,6 +34,8 @@ interface CategoriasSliderProps {
   colorHeader?: string;
   colorTextHeader?: string;
   colorBorderHeader?: string;
+  rutaBase: string;
+  comportamientoCategorias?: "desplazamiento" | "pagina";
 }
 
 export default function CategoriasSlider({
@@ -50,6 +52,8 @@ export default function CategoriasSlider({
     "var(--color-text-header)",
   colorBorderHeader =
     "var(--color-border-header)",
+    rutaBase,
+  comportamientoCategorias = "desplazamiento",
 }: CategoriasSliderProps) {
   const [
     categoriaActiva,
@@ -424,76 +428,71 @@ export default function CategoriasSlider({
     };
   }, []);
 
-  const seleccionarCategoria =
-    useCallback(
-      (categoriaId: string) => {
-        seleccionandoCategoriaRef.current =
-          true;
+  
+  const seleccionarCategoria = useCallback(
+    (categoriaId: string) => {
+      seleccionandoCategoriaRef.current = true;
 
-        categoriaActivaRef.current =
-          categoriaId;
+      categoriaActivaRef.current = categoriaId;
+      setCategoriaActiva(categoriaId);
 
-        setCategoriaActiva(categoriaId);
+      onTrackCategoria?.(categoriaId);
 
-        onTrackCategoria?.(categoriaId);
+      // Si se eligió una página independiente,
+      // navegamos a la categoría seleccionada.
+      if (comportamientoCategorias === "pagina") {
+        const base = rutaBase.replace(/\/+$/, "");
+        const destino = `${base}/categoria/${encodeURIComponent(categoriaId)}`;
 
-        centrarCategoriaActiva(
-          categoriaId,
-        );
+        window.location.assign(destino);
+        return;
+      }
 
-        const elemento =
-          document.getElementById(
-            `cat-${categoriaId}`,
-          );
+      // Comportamiento original: desplazarse
+      // hasta la sección de productos.
+      centrarCategoriaActiva(categoriaId);
 
-        if (elemento) {
-          const desplazamiento =
-            mostrarCategoriasRef.current
-              ? -150
-              : -90;
+      const elemento = document.getElementById(
+        `cat-${categoriaId}`,
+      );
 
-          const posicionDestino =
-            elemento.getBoundingClientRect()
-              .top +
-            window.scrollY +
-            desplazamiento;
+      if (elemento) {
+        const desplazamiento =
+          mostrarCategoriasRef.current ? -150 : -90;
 
-          window.scrollTo({
-            top: Math.max(
-              0,
-              posicionDestino,
-            ),
-            behavior:
-              obtenerComportamientoScroll(),
-          });
-        }
+        const posicionDestino =
+          elemento.getBoundingClientRect().top +
+          window.scrollY +
+          desplazamiento;
 
-        /*
-         * Este temporizador se programa incluso si
-         * no encontramos la sección. Así evitamos
-         * que el bloqueo quede activo para siempre.
-         */
-        if (temporizadorClickRef.current) {
-          clearTimeout(
-            temporizadorClickRef.current,
-          );
-        }
+        window.scrollTo({
+          top: Math.max(0, posicionDestino),
+          behavior: obtenerComportamientoScroll(),
+        });
+      }
 
-        temporizadorClickRef.current =
-          setTimeout(() => {
-            seleccionandoCategoriaRef.current =
-              false;
+      /*
+       * Evitamos que el bloqueo quede activo
+       * indefinidamente si no encontramos la sección.
+       */
+      if (temporizadorClickRef.current) {
+        clearTimeout(temporizadorClickRef.current);
+      }
 
-            temporizadorClickRef.current =
-              null;
-          }, 800);
-      },
-      [
-        onTrackCategoria,
-        centrarCategoriaActiva,
-        obtenerComportamientoScroll,
-      ],
-    );
+      temporizadorClickRef.current = setTimeout(() => {
+        seleccionandoCategoriaRef.current = false;
+        temporizadorClickRef.current = null;
+      }, 800);
+    },
+    [
+      onTrackCategoria,
+      centrarCategoriaActiva,
+      obtenerComportamientoScroll,
+      comportamientoCategorias,
+      rutaBase,
+    ],
+  );
+
 
   if (categoriasValidas.length === 0) {
     return null;

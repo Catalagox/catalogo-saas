@@ -10,19 +10,14 @@ import ProductosDestacados from "@/components/public/plantillas/ProductosDestaca
 
 import { normalizarConfig } from "@/lib/tienda-diseno/config";
 
-import type {
-  CategoriaTienda,
-  ConfigDiseno,
-} from "@/lib/tienda-diseno/types";
+import type { CategoriaTienda, ConfigDiseno } from "@/lib/tienda-diseno/types";
 
 interface PlantillaClasicaProps {
   categorias: CategoriaTienda[];
   config: ConfigDiseno;
   countryCode: string;
   rutaBase: string;
-  onTrackCategoria?: (
-    categoriaId: string,
-  ) => void | Promise<void>;
+  onTrackCategoria?: (categoriaId: string) => void | Promise<void>;
 }
 
 function ignorarTracking(): void {}
@@ -41,16 +36,13 @@ export default function PlantillaClasica({
   )
     .filter(
       (categoria) =>
-        categoria &&
-        Boolean(categoria.id) &&
-        Boolean(categoria.nombre?.trim()),
+        categoria && Boolean(categoria.id) && Boolean(categoria.nombre?.trim()),
     )
     .map((categoria) => ({
       ...categoria,
-      productos: (
-        Array.isArray(categoria.productos)
-          ? categoria.productos
-          : []
+      productos: (Array.isArray(categoria.productos)
+        ? categoria.productos
+        : []
       ).filter(
         (producto) =>
           producto &&
@@ -82,12 +74,7 @@ export default function PlantillaClasica({
 
         switch (seccion.id) {
           case "portada":
-            return (
-              <PortadaTienda
-                key={seccion.id}
-                config={diseno.portada}
-              />
-            );
+            return <PortadaTienda key={seccion.id} config={diseno.portada} />;
 
           case "destacados":
             return (
@@ -104,10 +91,7 @@ export default function PlantillaClasica({
             if (!tieneProductos) return null;
 
             return (
-              <div
-                key={seccion.id}
-                data-editor-section="categorias"
-              >
+              <div key={seccion.id} data-editor-section="categorias">
                 <CategoriasSlider
                   categorias={categoriasSeguras}
                   onTrackCategoria={onTrackCategoria}
@@ -117,6 +101,10 @@ export default function PlantillaClasica({
                   colorHeader={diseno.color_header}
                   colorTextHeader={diseno.color_text_header}
                   colorBorderHeader={diseno.color_border_header}
+                  rutaBase={rutaBase}
+                  comportamientoCategorias={
+                    diseno.catalogo.comportamiento_categorias
+                  }
                 />
               </div>
             );
@@ -130,8 +118,7 @@ export default function PlantillaClasica({
                 className="mx-auto mb-0 w-full min-w-0 flex-grow scroll-mt-24 px-0 pb-0 sm:px-6 lg:px-8"
                 style={{
                   maxWidth: `${diseno.espaciado.ancho_contenido}px`,
-                  paddingTop:
-                    `${diseno.espaciado.separacion_secciones}px`,
+                  paddingTop: `${diseno.espaciado.separacion_secciones}px`,
                 }}
               >
                 {!tieneProductos ? (

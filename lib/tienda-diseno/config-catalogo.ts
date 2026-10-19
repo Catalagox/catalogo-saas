@@ -69,6 +69,7 @@ const CATALOGO_INICIAL: ConfigCatalogo = {
   columnas_tablet: 2,
   columnas_movil: 1,
 
+  comportamiento_categorias: "desplazamiento",
   titulos: TITULOS_INICIALES,
 };
 
@@ -81,6 +82,7 @@ export function crearConfigCatalogo(
   > = {
     heredar_fondo: booleano,
     color_fondo: esColorValido,
+    
 
     ancho_completo: booleano,
     ancho_maximo: (valor) => entero(valor, 640, 1920),
@@ -94,6 +96,7 @@ export function crearConfigCatalogo(
     columnas_escritorio: opciones([2, 3, 4, 5]),
     columnas_tablet: opciones([1, 2, 3]),
     columnas_movil: opciones([1, 2]),
+    comportamiento_categorias: opciones(["desplazamiento", "pagina"]),
   };
 
   const reglasTitulos: Record<

@@ -292,6 +292,7 @@ export interface ConfigCatalogo {
   columnas_escritorio: 2 | 3 | 4 | 5;
   columnas_tablet: 1 | 2 | 3;
   columnas_movil: 1 | 2;
+  comportamiento_categorias: "desplazamiento" | "pagina";
   titulos: ConfigTitulosCategoria;
 }
 /**

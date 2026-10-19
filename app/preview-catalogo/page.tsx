@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useState,
-  type CSSProperties,
-} from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 
 import TiendaHeader from "@/components/public/TiendaHeader";
 import TiendaFooter from "@/components/public/TiendaFooter";
@@ -71,35 +67,21 @@ function ignorarTracking(): void {
 }
 
 export default function PreviewCatalogoPage() {
-  const [preview, setPreview] =
-    useState<PreviewData | null>(null);
+  const [preview, setPreview] = useState<PreviewData | null>(null);
 
   useEffect(() => {
-    const recibirDatos = (
-      event: MessageEvent,
-    ) => {
-      if (
-        event.origin !== window.location.origin
-      ) {
+    const recibirDatos = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) {
         return;
       }
 
-      if (
-        event.data?.type !==
-        "CATALOGO_PREVIEW"
-      ) {
+      if (event.data?.type !== "CATALOGO_PREVIEW") {
         return;
       }
 
-      const payload =
-        event.data.payload as
-          | PreviewData
-          | undefined;
+      const payload = event.data.payload as PreviewData | undefined;
 
-      if (
-        !payload?.catalogo ||
-        !Array.isArray(payload.categorias)
-      ) {
+      if (!payload?.catalogo || !Array.isArray(payload.categorias)) {
         return;
       }
 
@@ -117,10 +99,7 @@ export default function PreviewCatalogoPage() {
       );
     };
 
-    window.addEventListener(
-      "message",
-      recibirDatos,
-    );
+    window.addEventListener("message", recibirDatos);
 
     /*
      * Avisa a la ventana principal que la vista
@@ -136,10 +115,7 @@ export default function PreviewCatalogoPage() {
     }
 
     return () => {
-      window.removeEventListener(
-        "message",
-        recibirDatos,
-      );
+      window.removeEventListener("message", recibirDatos);
     };
   }, []);
 
@@ -151,17 +127,9 @@ export default function PreviewCatalogoPage() {
     );
   }
 
-  const {
-    catalogo,
-    categorias,
-    countryCode,
-  } = preview;
+  const { catalogo, categorias, countryCode } = preview;
 
-  const categoriasSeguras = Array.isArray(
-    categorias,
-  )
-    ? categorias
-    : [];
+  const categoriasSeguras = Array.isArray(categorias) ? categorias : [];
 
   /*
    * Si el catálogo ya tiene slug, los productos
@@ -170,46 +138,26 @@ export default function PreviewCatalogoPage() {
    * Si todavía no tiene slug, permanecemos
    * dentro de la página de vista previa.
    */
-  const slugTienda =
-    catalogo.slug?.trim();
+  const slugTienda = catalogo.slug?.trim();
 
-  const rutaBase = slugTienda
-    ? `/${slugTienda}`
-    : "/preview-catalogo";
+  const rutaBase = slugTienda ? `/${slugTienda}` : "/preview-catalogo";
 
   const theme = {
-    "--color-bg":
-      catalogo.color_fondo,
-    "--color-header":
-      catalogo.color_header,
-    "--color-text-header":
-      catalogo.color_text_header,
-    "--color-border-header":
-      catalogo.color_border_header,
-    "--color-footer":
-      catalogo.color_footer,
-    "--color-text":
-      catalogo.color_texto,
-    "--color-price":
-      catalogo.color_precio,
-    "--color-hamburguesa":
-      catalogo.color_hamburguesa,
-    "--color-card":
-      catalogo.color_tarjeta,
-    "--color-categoria":
-      catalogo.color_categoria ??
-      "#eae9e9",
-    "--color-primary":
-      catalogo.color_primario ??
-      "#f97316",
-    "--color-lupa":
-      catalogo.color_lupa,
-    "--color-fondo-categoria":
-      catalogo.color_fondo_categoria,
-    "--color-texto-categoria":
-      catalogo.color_texto_categoria,
-    "--color-border-categoria":
-      catalogo.color_border_categoria,
+    "--color-bg": catalogo.color_fondo,
+    "--color-header": catalogo.color_header,
+    "--color-text-header": catalogo.color_text_header,
+    "--color-border-header": catalogo.color_border_header,
+    "--color-footer": catalogo.color_footer,
+    "--color-text": catalogo.color_texto,
+    "--color-price": catalogo.color_precio,
+    "--color-hamburguesa": catalogo.color_hamburguesa,
+    "--color-card": catalogo.color_tarjeta,
+    "--color-categoria": catalogo.color_categoria ?? "#eae9e9",
+    "--color-primary": catalogo.color_primario ?? "#f97316",
+    "--color-lupa": catalogo.color_lupa,
+    "--color-fondo-categoria": catalogo.color_fondo_categoria,
+    "--color-texto-categoria": catalogo.color_texto_categoria,
+    "--color-border-categoria": catalogo.color_border_categoria,
   } as CSSProperties;
 
   return (
@@ -225,64 +173,35 @@ export default function PreviewCatalogoPage() {
 
       <CategoriasSlider
         categorias={categoriasSeguras}
-        onTrackCategoria={
-          ignorarTracking
-        }
-        colorFondoCategoria={
-          catalogo.color_fondo_categoria
-        }
-        colorTextoCategoria={
-          catalogo.color_texto_categoria
-        }
-        colorBorderCategoria={
-          catalogo.color_border_categoria
-        }
-        colorHeader={
-          catalogo.color_header
-        }
-        colorTextHeader={
-          catalogo.color_text_header
-        }
-        colorBorderHeader={
-          catalogo.color_border_header
-        }
+        onTrackCategoria={ignorarTracking}
+        colorFondoCategoria={catalogo.color_fondo_categoria}
+        colorTextoCategoria={catalogo.color_texto_categoria}
+        colorBorderCategoria={catalogo.color_border_categoria}
+        colorHeader={catalogo.color_header}
+        colorTextHeader={catalogo.color_text_header}
+        colorBorderHeader={catalogo.color_border_header}
+        rutaBase=""
+        comportamientoCategorias="desplazamiento"
       />
 
       <main className="w-full flex-grow px-0 pt-8">
-        {catalogo.estilo_menu ===
-        "lista" ? (
+        {catalogo.estilo_menu === "lista" ? (
           <TiendaLista
-            categorias={
-              categoriasSeguras
-            }
+            categorias={categoriasSeguras}
             countryCode={countryCode}
             rutaBase={rutaBase}
-            colorFondoCategoria={
-              catalogo.color_fondo_categoria
-            }
-            colorTextoCategoria={
-              catalogo.color_texto_categoria
-            }
-            colorBorderCategoria={
-              catalogo.color_border_categoria
-            }
+            colorFondoCategoria={catalogo.color_fondo_categoria}
+            colorTextoCategoria={catalogo.color_texto_categoria}
+            colorBorderCategoria={catalogo.color_border_categoria}
           />
         ) : (
           <TiendaGaleria
-            categorias={
-              categoriasSeguras
-            }
+            categorias={categoriasSeguras}
             countryCode={countryCode}
             rutaBase={rutaBase}
-            colorFondoCategoria={
-              catalogo.color_fondo_categoria
-            }
-            colorTextoCategoria={
-              catalogo.color_texto_categoria
-            }
-            colorBorderCategoria={
-              catalogo.color_border_categoria
-            }
+            colorFondoCategoria={catalogo.color_fondo_categoria}
+            colorTextoCategoria={catalogo.color_texto_categoria}
+            colorBorderCategoria={catalogo.color_border_categoria}
           />
         )}
       </main>

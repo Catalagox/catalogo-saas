@@ -218,9 +218,19 @@ export default function EditorSidebar({
         ) : null}
         <h2 className="flex items-center gap-2 text-base font-bold">
           {!seccionSeleccionada && (
-            <Paintbrush size={20} className="shrink-0 text-[var(--color-primary)]" aria-hidden="true" />
+            <Paintbrush
+              size={20}
+              className="shrink-0 text-[var(--color-primary)]"
+              aria-hidden="true"
+            />
           )}
-          {seccionSeleccionada === "portada" && elementoSeleccionado ? elementoSeleccionado === "titulo" ? "Título principal · H1" : elementoSeleccionado === "descripcion" ? "Descripción · P" : "Botón de portada" : seccion?.nombre ?? "Personalizar tienda"}
+          {seccionSeleccionada === "portada" && elementoSeleccionado
+            ? elementoSeleccionado === "titulo"
+              ? "Título principal · H1"
+              : elementoSeleccionado === "descripcion"
+                ? "Descripción · P"
+                : "Botón de portada"
+            : (seccion?.nombre ?? "Personalizar tienda")}
         </h2>
         <p className="mt-1 text-xs leading-relaxed text-[var(--text-secondary)]">
           {seccionSeleccionada
@@ -278,28 +288,87 @@ export default function EditorSidebar({
             disabled={disabled}
           />
         ) : seccionSeleccionada === "pie" ? (
-          <EditorPie config={config} onCambiarConfig={onCambiarConfig} disabled={disabled} />
+          <EditorPie
+            config={config}
+            onCambiarConfig={onCambiarConfig}
+            disabled={disabled}
+          />
         ) : (
           <div className="space-y-6">
             {seccionSeleccionada === "categorias" && (
-              <section aria-label="Visibilidad de la barra de categorías" className="rounded-xl border border-[var(--border-card)] bg-[var(--bg-card)] p-4">
+              <section
+                aria-label="Visibilidad de la barra de categorías"
+                className="rounded-xl border border-[var(--border-card)] bg-[var(--bg-card)] p-4"
+              >
                 <label className="flex min-h-11 cursor-pointer items-center justify-between gap-3">
-                  <span className="text-sm font-semibold">Mostrar barra de categorías</span>
+                  <span className="text-sm font-semibold">
+                    Mostrar barra de categorías
+                  </span>
                   <input
                     type="checkbox"
                     role="switch"
                     checked={categoriasVisibles}
                     disabled={disabled}
-                    onChange={(event) => cambiarVisibilidadCategorias(event.target.checked)}
+                    onChange={(event) =>
+                      cambiarVisibilidadCategorias(event.target.checked)
+                    }
                     className="h-5 w-5 shrink-0 accent-[var(--color-primary)] disabled:cursor-not-allowed"
                   />
                 </label>
+                <div className="mt-4 border-t border-[var(--border-card)] pt-4">
+  <label
+    htmlFor="comportamiento-categorias"
+    className="mb-2 block text-sm font-semibold"
+  >
+    Al seleccionar una categoría
+  </label>
+
+  <select
+    id="comportamiento-categorias"
+    value={
+      normalizarConfig(config).catalogo.comportamiento_categorias
+    }
+    disabled={disabled}
+    onChange={(event) => {
+      if (disabled) return;
+
+      const configActual = normalizarConfig(config);
+
+      const comportamiento = event.target.value as
+        | "desplazamiento"
+        | "pagina";
+
+      onCambiarConfig({
+        ...config,
+        catalogo: {
+          ...configActual.catalogo,
+          comportamiento_categorias: comportamiento,
+        },
+      });
+    }}
+    className="min-h-11 w-full rounded-xl border border-[var(--border-card)] bg-[var(--bg-card)] px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-60"
+  >
+    <option value="desplazamiento">
+      Desplazarse hasta los productos
+    </option>
+    <option value="pagina">
+      Abrir una página de categoría
+    </option>
+  </select>
+
+  <p className="mt-2 text-xs leading-relaxed text-[var(--text-secondary)]">
+    Elige si al pulsar una categoría se muestran sus productos
+    en esta página o en una página independiente.
+  </p>
+</div>
                 <p className="mt-2 text-xs leading-relaxed text-[var(--text-secondary)]">
                   {categoriasVisibles
                     ? "La barra de categorías está activada."
                     : "La barra de categorías está oculta."}
-                  {plantilla === "moderna" ? " En Moderna aparece debajo de la portada." : ""}
-                  {" "}Guarda el borrador y publica para aplicar el cambio.
+                  {plantilla === "moderna"
+                    ? " En Moderna aparece debajo de la portada."
+                    : ""}{" "}
+                  Guarda el borrador y publica para aplicar el cambio.
                 </p>
               </section>
             )}
