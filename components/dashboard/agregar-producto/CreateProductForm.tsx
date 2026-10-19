@@ -8,7 +8,14 @@ import {
   type ChangeEvent,
   type FormEvent,
 } from "react";
-import { Upload, X, Plus } from "lucide-react";
+import {
+  Upload,
+  X,
+  Plus,
+  CheckCircle2,
+  AlertCircle,
+  LoaderCircle,
+} from "lucide-react";
 import imageCompression from "browser-image-compression";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -122,179 +129,162 @@ export default function CreateProductForm({
     }
   };
 
-  
-const subirImagen = async (archivo: File, propietarioId: string) => {
-  const convertirConCanvas = async (
-    original: File,
-    formato: "image/webp" | "image/jpeg",
-  ): Promise<File> => {
-    const url = URL.createObjectURL(original);
+  const subirImagen = async (archivo: File, propietarioId: string) => {
+    const convertirConCanvas = async (
+      original: File,
+      formato: "image/webp" | "image/jpeg",
+    ): Promise<File> => {
+      const url = URL.createObjectURL(original);
 
-    try {
-      return await new Promise<File>((resolve, reject) => {
-        const img = new Image();
+      try {
+        return await new Promise<File>((resolve, reject) => {
+          const img = new Image();
 
-        img.onload = () => {
-          try {
-            const maxDimension = 1200;
-            const escala = Math.min(
-              1,
-              maxDimension / Math.max(img.naturalWidth, img.naturalHeight),
-            );
+          img.onload = () => {
+            try {
+              const maxDimension = 1200;
+              const escala = Math.min(
+                1,
+                maxDimension / Math.max(img.naturalWidth, img.naturalHeight),
+              );
 
-            const canvas = document.createElement("canvas");
-            canvas.width = Math.max(
-              1,
-              Math.round(img.naturalWidth * escala),
-            );
-            canvas.height = Math.max(
-              1,
-              Math.round(img.naturalHeight * escala),
-            );
+              const canvas = document.createElement("canvas");
+              canvas.width = Math.max(1, Math.round(img.naturalWidth * escala));
+              canvas.height = Math.max(
+                1,
+                Math.round(img.naturalHeight * escala),
+              );
 
-            const contexto = canvas.getContext("2d");
+              const contexto = canvas.getContext("2d");
 
-            if (!contexto) {
-              reject(new Error("No se pudo preparar la imagen."));
-              return;
+              if (!contexto) {
+                reject(new Error("No se pudo preparar la imagen."));
+                return;
+              }
+
+              contexto.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+              canvas.toBlob(
+                (blob) => {
+                  if (!blob) {
+                    reject(
+                      new Error("El navegador no pudo procesar la imagen."),
+                    );
+                    return;
+                  }
+
+                  // Algunos navegadores pueden devolver PNG aunque
+                  // se solicite WebP. Conservamos el formato real.
+                  if (formato === "image/webp" && blob.type !== "image/webp") {
+                    reject(new Error("El navegador no pudo generar WebP."));
+                    return;
+                  }
+
+                  if (formato === "image/jpeg" && blob.type !== "image/jpeg") {
+                    reject(new Error("El navegador no pudo generar JPEG."));
+                    return;
+                  }
+
+                  const extension = blob.type === "image/webp" ? "webp" : "jpg";
+
+                  resolve(
+                    new File(
+                      [blob],
+                      `${original.name.replace(/\.[^.]+$/, "")}.${extension}`,
+                      {
+                        type: blob.type,
+                        lastModified: Date.now(),
+                      },
+                    ),
+                  );
+                },
+                formato,
+                0.82,
+              );
+            } catch (error) {
+              reject(error);
             }
+          };
 
-            contexto.drawImage(img, 0, 0, canvas.width, canvas.height);
+          img.onerror = () => {
+            reject(new Error("El navegador no pudo leer esta imagen."));
+          };
 
-            canvas.toBlob(
-              (blob) => {
-                if (!blob) {
-                  reject(new Error("El navegador no pudo procesar la imagen."));
-                  return;
-                }
+          img.src = url;
+        });
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    };
 
-                // Algunos navegadores pueden devolver PNG aunque
-                // se solicite WebP. Conservamos el formato real.
-                if (
-                  formato === "image/webp" &&
-                  blob.type !== "image/webp"
-                ) {
-                  reject(
-                    new Error("El navegador no pudo generar WebP."),
-                  );
-                  return;
-                }
+    let comprimida: File | null = null;
 
-                if (
-                  formato === "image/jpeg" &&
-                  blob.type !== "image/jpeg"
-                ) {
-                  reject(
-                    new Error("El navegador no pudo generar JPEG."),
-                  );
-                  return;
-                }
-
-                const extension =
-                  blob.type === "image/webp" ? "webp" : "jpg";
-
-                resolve(
-                  new File(
-                    [
-                      blob,
-                    ],
-                    `${original.name.replace(/\.[^.]+$/, "")}.${extension}`,
-                    {
-                      type: blob.type,
-                      lastModified: Date.now(),
-                    },
-                  ),
-                );
-              },
-              formato,
-              0.82,
-            );
-          } catch (error) {
-            reject(error);
-          }
-        };
-
-        img.onerror = () => {
-          reject(new Error("El navegador no pudo leer esta imagen."));
-        };
-
-        img.src = url;
+    // Primer intento: compresión con browser-image-compression.
+    try {
+      const resultado = await imageCompression(archivo, {
+        maxSizeMB: 0.8,
+        maxWidthOrHeight: 1200,
+        useWebWorker: false,
+        fileType: "image/webp",
       });
-    } finally {
-      URL.revokeObjectURL(url);
+
+      if (resultado.type === "image/webp") {
+        comprimida = resultado;
+      }
+    } catch (error) {
+      console.warn("No se pudo convertir la imagen a WebP:", error);
     }
+
+    // Segundo intento: Canvas en WebP y después JPEG.
+    if (!comprimida) {
+      try {
+        comprimida = await convertirConCanvas(archivo, "image/webp");
+      } catch (error) {
+        console.warn("Conversión a WebP no disponible:", error);
+      }
+    }
+
+    if (!comprimida) {
+      try {
+        comprimida = await convertirConCanvas(archivo, "image/jpeg");
+      } catch (error) {
+        console.error("Fallaron las conversiones de imagen:", {
+          error,
+          nombre: archivo.name,
+          tipo: archivo.type,
+          tamanoBytes: archivo.size,
+          navegador: navigator.userAgent,
+        });
+
+        throw new Error(
+          "No pudimos procesar esta imagen. Prueba con una foto JPG o PNG.",
+        );
+      }
+    }
+
+    const extension = comprimida.type === "image/webp" ? "webp" : "jpg";
+
+    const filePath = `${propietarioId}/${crypto.randomUUID()}.${extension}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("productos")
+      .upload(filePath, comprimida, {
+        cacheControl: "31536000",
+        upsert: false,
+        contentType: comprimida.type,
+      });
+
+    if (uploadError) {
+      console.error("Error subiendo imagen:", uploadError);
+      throw new Error("No pudimos subir la imagen. Inténtalo nuevamente.");
+    }
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("productos").getPublicUrl(filePath);
+
+    return { publicUrl, filePath };
   };
-
-  let comprimida: File | null = null;
-
-  // Primer intento: compresión con browser-image-compression.
-  try {
-    const resultado = await imageCompression(archivo, {
-      maxSizeMB: 0.8,
-      maxWidthOrHeight: 1200,
-      useWebWorker: false,
-      fileType: "image/webp",
-    });
-
-    if (resultado.type === "image/webp") {
-      comprimida = resultado;
-    }
-  } catch (error) {
-    console.warn("No se pudo convertir la imagen a WebP:", error);
-  }
-
-  // Segundo intento: Canvas en WebP y después JPEG.
-  if (!comprimida) {
-    try {
-      comprimida = await convertirConCanvas(archivo, "image/webp");
-    } catch (error) {
-      console.warn("Conversión a WebP no disponible:", error);
-    }
-  }
-
-  if (!comprimida) {
-    try {
-      comprimida = await convertirConCanvas(archivo, "image/jpeg");
-    } catch (error) {
-      console.error("Fallaron las conversiones de imagen:", {
-        error,
-        nombre: archivo.name,
-        tipo: archivo.type,
-        tamanoBytes: archivo.size,
-        navegador: navigator.userAgent,
-      });
-
-      throw new Error(
-        "No pudimos procesar esta imagen. Prueba con una foto JPG o PNG.",
-      );
-    }
-  }
-
-  const extension =
-    comprimida.type === "image/webp" ? "webp" : "jpg";
-
-  const filePath = `${propietarioId}/${crypto.randomUUID()}.${extension}`;
-
-  const { error: uploadError } = await supabase.storage
-    .from("productos")
-    .upload(filePath, comprimida, {
-      cacheControl: "31536000",
-      upsert: false,
-      contentType: comprimida.type,
-    });
-
-  if (uploadError) {
-    console.error("Error subiendo imagen:", uploadError);
-    throw new Error("No pudimos subir la imagen. Inténtalo nuevamente.");
-  }
-
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from("productos").getPublicUrl(filePath);
-
-  return { publicUrl, filePath };
-};
-
 
   const crearProducto = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -410,6 +400,67 @@ const subirImagen = async (archivo: File, propietarioId: string) => {
       aria-labelledby={`${id}-titulo`}
       className="mx-auto mb-12 w-full max-w-4xl rounded-2xl border border-[var(--border-card)] bg-[var(--bg-card)] p-5 text-[var(--text-primary)] shadow-sm md:p-8"
     >
+      {(loading || error || mensaje) && (
+        <div
+          className="fixed inset-x-0 top-4 z-[99999] flex justify-center px-4 sm:top-6"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          <div
+            className={`flex w-full max-w-md items-center gap-3 rounded-2xl border p-4 shadow-2xl backdrop-blur-xl ${
+              error
+                ? "border-red-300/30 bg-red-950 text-white"
+                : mensaje
+                  ? "border-green-300/30 bg-green-700 text-white"
+                  : "border-white/10 bg-gray-950 text-white"
+            }`}
+            role={error ? "alert" : "status"}
+          >
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15">
+              {loading ? (
+                <LoaderCircle className="h-6 w-6 animate-spin" />
+              ) : error ? (
+                <AlertCircle className="h-6 w-6" />
+              ) : (
+                <CheckCircle2 className="h-6 w-6" />
+              )}
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-bold">
+                {loading
+                  ? "Procesando tu producto"
+                  : error
+                    ? "No se pudo completar"
+                    : "¡Producto publicado!"}
+              </p>
+
+              <p className="mt-1 break-words text-sm leading-relaxed text-white/85">
+                {loading
+                  ? "Estamos optimizando la imagen y guardando tu producto. No cierres esta página."
+                  : error
+                    ? error
+                    : mensaje}
+              </p>
+            </div>
+
+            {!loading && (
+              <button
+                type="button"
+                onClick={() => {
+                  setError("");
+                  setMensaje("");
+                }}
+                aria-label="Cerrar notificación"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white/80 transition hover:bg-white/15 hover:text-white focus-visible:outline-2 focus-visible:outline-white"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="mb-6 flex items-center gap-3">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--bg-secondary)]">
           <Plus size={22} aria-hidden="true" />
@@ -583,24 +634,6 @@ const subirImagen = async (archivo: File, propietarioId: string) => {
             </div>
           </div>
         </fieldset>
-
-        {error && (
-          <p
-            role="alert"
-            className="mt-5 text-sm leading-relaxed text-[var(--color-danger)]"
-          >
-            {error}
-          </p>
-        )}
-
-        {mensaje && (
-          <p
-            role="status"
-            className="mt-5 text-sm leading-relaxed text-[var(--text-primary)]"
-          >
-            {mensaje}
-          </p>
-        )}
       </form>
     </section>
   );
