@@ -122,136 +122,179 @@ export default function CreateProductForm({
     }
   };
 
-  const subirImagen = async (archivo: File, propietarioId: string) => {
-    const opciones = {
-      maxSizeMB: 0.8,
-      maxWidthOrHeight: 1200,
-      useWebWorker: true,
-      fileType: "image/webp",
-      alwaysKeepResolution: false,
-    };
-
-    const convertirConCanvas = async (original: File): Promise<File> => {
-      const url = URL.createObjectURL(original);
-
-      try {
-        return await new Promise<File>((resolve, reject) => {
-          const img = new Image();
-
-          img.onload = () => {
-            try {
-              const maxDimension = 1200;
-              const escala = Math.min(
-                1,
-                maxDimension / Math.max(img.naturalWidth, img.naturalHeight),
-              );
-
-              const canvas = document.createElement("canvas");
-              canvas.width = Math.max(1, Math.round(img.naturalWidth * escala));
-              canvas.height = Math.max(
-                1,
-                Math.round(img.naturalHeight * escala),
-              );
-
-              const contexto = canvas.getContext("2d");
-
-              if (!contexto) {
-                reject(new Error("No se pudo preparar la imagen."));
-                return;
-              }
-
-              contexto.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-              canvas.toBlob(
-                (blob) => {
-                  if (!blob || blob.type !== "image/webp") {
-                    reject(new Error("El navegador no pudo generar WebP."));
-                    return;
-                  }
-
-                  resolve(
-                    new File(
-                      [blob],
-                      `${original.name.replace(/\.[^.]+$/, "")}.webp`,
-                      {
-                        type: "image/webp",
-                        lastModified: Date.now(),
-                      },
-                    ),
-                  );
-                },
-                "image/webp",
-                0.82,
-              );
-            } catch (error) {
-              reject(error);
-            }
-          };
-
-          img.onerror = () => {
-            reject(new Error("El navegador no pudo leer esta imagen."));
-          };
-
-          img.src = url;
-        });
-      } finally {
-        URL.revokeObjectURL(url);
-      }
-    };
-
-    let comprimida: File | null = null;
+  
+const subirImagen = async (archivo: File, propietarioId: string) => {
+  const convertirConCanvas = async (
+    original: File,
+    formato: "image/webp" | "image/jpeg",
+  ): Promise<File> => {
+    const url = URL.createObjectURL(original);
 
     try {
-      comprimida = await imageCompression(archivo, opciones);
+      return await new Promise<File>((resolve, reject) => {
+        const img = new Image();
 
-      if (comprimida.type !== "image/webp") {
-        comprimida = null;
-      }
+        img.onload = () => {
+          try {
+            const maxDimension = 1200;
+            const escala = Math.min(
+              1,
+              maxDimension / Math.max(img.naturalWidth, img.naturalHeight),
+            );
+
+            const canvas = document.createElement("canvas");
+            canvas.width = Math.max(
+              1,
+              Math.round(img.naturalWidth * escala),
+            );
+            canvas.height = Math.max(
+              1,
+              Math.round(img.naturalHeight * escala),
+            );
+
+            const contexto = canvas.getContext("2d");
+
+            if (!contexto) {
+              reject(new Error("No se pudo preparar la imagen."));
+              return;
+            }
+
+            contexto.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            canvas.toBlob(
+              (blob) => {
+                if (!blob) {
+                  reject(new Error("El navegador no pudo procesar la imagen."));
+                  return;
+                }
+
+                // Algunos navegadores pueden devolver PNG aunque
+                // se solicite WebP. Conservamos el formato real.
+                if (
+                  formato === "image/webp" &&
+                  blob.type !== "image/webp"
+                ) {
+                  reject(
+                    new Error("El navegador no pudo generar WebP."),
+                  );
+                  return;
+                }
+
+                if (
+                  formato === "image/jpeg" &&
+                  blob.type !== "image/jpeg"
+                ) {
+                  reject(
+                    new Error("El navegador no pudo generar JPEG."),
+                  );
+                  return;
+                }
+
+                const extension =
+                  blob.type === "image/webp" ? "webp" : "jpg";
+
+                resolve(
+                  new File(
+                    [
+                      blob,
+                    ],
+                    `${original.name.replace(/\.[^.]+$/, "")}.${extension}`,
+                    {
+                      type: blob.type,
+                      lastModified: Date.now(),
+                    },
+                  ),
+                );
+              },
+              formato,
+              0.82,
+            );
+          } catch (error) {
+            reject(error);
+          }
+        };
+
+        img.onerror = () => {
+          reject(new Error("El navegador no pudo leer esta imagen."));
+        };
+
+        img.src = url;
+      });
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  let comprimida: File | null = null;
+
+  // Primer intento: compresión con browser-image-compression.
+  try {
+    const resultado = await imageCompression(archivo, {
+      maxSizeMB: 0.8,
+      maxWidthOrHeight: 1200,
+      useWebWorker: false,
+      fileType: "image/webp",
+    });
+
+    if (resultado.type === "image/webp") {
+      comprimida = resultado;
+    }
+  } catch (error) {
+    console.warn("No se pudo convertir la imagen a WebP:", error);
+  }
+
+  // Segundo intento: Canvas en WebP y después JPEG.
+  if (!comprimida) {
+    try {
+      comprimida = await convertirConCanvas(archivo, "image/webp");
     } catch (error) {
-      console.warn("Primer método de conversión falló:", error);
+      console.warn("Conversión a WebP no disponible:", error);
     }
+  }
 
-    if (!comprimida) {
-      try {
-        comprimida = await convertirConCanvas(archivo);
-      } catch (error) {
-        console.error("Error real al convertir imagen:", {
-          error,
-          nombre: archivo.name,
-          tipo: archivo.type,
-          tamanoBytes: archivo.size,
-          navegador: navigator.userAgent,
-        });
-
-        const detalle = error instanceof Error ? error.message : String(error);
-
-        throw new Error(
-          `Falló la conversión (${archivo.type || "formato desconocido"}). Detalle: ${detalle}`,
-        );
-      }
-    }
-
-    const filePath = `${propietarioId}/${crypto.randomUUID()}.webp`;
-
-    const { error: uploadError } = await supabase.storage
-      .from("productos")
-      .upload(filePath, comprimida, {
-        cacheControl: "31536000",
-        upsert: false,
-        contentType: "image/webp",
+  if (!comprimida) {
+    try {
+      comprimida = await convertirConCanvas(archivo, "image/jpeg");
+    } catch (error) {
+      console.error("Fallaron las conversiones de imagen:", {
+        error,
+        nombre: archivo.name,
+        tipo: archivo.type,
+        tamanoBytes: archivo.size,
+        navegador: navigator.userAgent,
       });
 
-    if (uploadError) {
-      console.error("Error subiendo imagen:", uploadError);
-      throw new Error("No pudimos subir la imagen. Inténtalo nuevamente.");
+      throw new Error(
+        "No pudimos procesar esta imagen. Prueba con una foto JPG o PNG.",
+      );
     }
+  }
 
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from("productos").getPublicUrl(filePath);
+  const extension =
+    comprimida.type === "image/webp" ? "webp" : "jpg";
 
-    return { publicUrl, filePath };
-  };
+  const filePath = `${propietarioId}/${crypto.randomUUID()}.${extension}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("productos")
+    .upload(filePath, comprimida, {
+      cacheControl: "31536000",
+      upsert: false,
+      contentType: comprimida.type,
+    });
+
+  if (uploadError) {
+    console.error("Error subiendo imagen:", uploadError);
+    throw new Error("No pudimos subir la imagen. Inténtalo nuevamente.");
+  }
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from("productos").getPublicUrl(filePath);
+
+  return { publicUrl, filePath };
+};
+
 
   const crearProducto = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
