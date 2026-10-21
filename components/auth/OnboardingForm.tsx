@@ -57,25 +57,30 @@ function translateOnboardingError(message: string) {
 }
 
 async function trackStoreCreated(countryCode: string) {
-  // Esperamos brevemente si Analytics todavía está cargando.
-  const deadline = Date.now() + 1500;
+  // Enviar el evento a Google Analytics si está disponible.
+  const analyticsWindow = window as AnalyticsWindow;
 
-  while (Date.now() < deadline) {
-    const analyticsWindow = window as AnalyticsWindow;
-
-    if (typeof analyticsWindow.gtag === "function") {
-      analyticsWindow.gtag("event", "manual_event_SIGNUP", {
-        send_to: "G-181DBYJ8QZ",
-        country_code: countryCode,
-        registration_step: "store_created",
-      });
-
-      return;
-    }
-
-    await new Promise<void>((resolve) => {
-      window.setTimeout(resolve, 100);
+  if (typeof analyticsWindow.gtag === "function") {
+    analyticsWindow.gtag("event", "manual_event_SIGNUP", {
+      send_to: "G-181DBYJ8QZ",
+      country_code: countryCode,
+      registration_step: "store_created",
     });
+  }
+
+  // Enviar a TikTok el evento cuando la tienda se creó correctamente.
+  const tiktokWindow = window as Window & {
+    ttq?: {
+      track?: (eventName: string, parameters?: Record<string, string>) => void;
+    };
+  };
+
+  if (typeof tiktokWindow.ttq?.track === "function") {
+    tiktokWindow.ttq.track("CompleteRegistration");
+  } else {
+    console.warn(
+      "TikTok Pixel todavía no está disponible para registrar el evento.",
+    );
   }
 }
 
@@ -87,16 +92,12 @@ export default function OnboardingForm({
   const submittingRef = useRef(false);
 
   const [storeName, setStoreName] = useState("");
-  const [countryCode, setCountryCode] = useState(
-    initialCountryCode,
-  );
+  const [countryCode, setCountryCode] = useState(initialCountryCode);
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const handleSubmit = async (
-    event: FormEvent<HTMLFormElement>,
-  ) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (submittingRef.current) return;
@@ -106,16 +107,12 @@ export default function OnboardingForm({
     const destination = getSafeNext(nextPath);
 
     if (normalizedName.length < 3) {
-      setErrorMsg(
-        "El nombre de la tienda debe tener al menos 3 caracteres.",
-      );
+      setErrorMsg("El nombre de la tienda debe tener al menos 3 caracteres.");
       return;
     }
 
     if (normalizedName.length > 80) {
-      setErrorMsg(
-        "El nombre de la tienda no puede superar 80 caracteres.",
-      );
+      setErrorMsg("El nombre de la tienda no puede superar 80 caracteres.");
       return;
     }
 
@@ -135,20 +132,14 @@ export default function OnboardingForm({
       } = await supabase.auth.getUser();
 
       if (userError || !user) {
-        const onboardingPath =
-          `/onboarding?next=${encodeURIComponent(destination)}`;
+        const onboardingPath = `/onboarding?next=${encodeURIComponent(destination)}`;
 
-        router.replace(
-          `/auth?redirect=${encodeURIComponent(onboardingPath)}`,
-        );
+        router.replace(`/auth?redirect=${encodeURIComponent(onboardingPath)}`);
         return;
       }
 
       // Si la tienda ya existe, entramos sin enviar otra conversión.
-      const {
-        data: existingStore,
-        error: existingStoreError,
-      } = await supabase
+      const { data: existingStore, error: existingStoreError } = await supabase
         .from("catalogos")
         .select("id")
         .eq("user_id", user.id)
@@ -173,10 +164,7 @@ export default function OnboardingForm({
       if (onboardingError) throw onboardingError;
 
       // Confirmamos que la tienda quedó guardada.
-      const {
-        data: createdStore,
-        error: createdStoreError,
-      } = await supabase
+      const { data: createdStore, error: createdStoreError } = await supabase
         .from("catalogos")
         .select("id")
         .eq("user_id", user.id)
@@ -185,9 +173,7 @@ export default function OnboardingForm({
       if (createdStoreError) throw createdStoreError;
 
       if (!createdStore) {
-        throw new Error(
-          "No pudimos confirmar la creación de tu tienda.",
-        );
+        throw new Error("No pudimos confirmar la creación de tu tienda.");
       }
 
       // Analytics no debe impedir el acceso a una tienda creada.
@@ -231,8 +217,8 @@ export default function OnboardingForm({
         </h1>
 
         <p className="mt-3 text-gray-500">
-          Completa estos datos para configurar tu moneda y crear
-          tu tienda online.
+          Completa estos datos para configurar tu moneda y crear tu tienda
+          online.
         </p>
       </div>
 
@@ -262,9 +248,7 @@ export default function OnboardingForm({
               type="text"
               name="storeName"
               value={storeName}
-              onChange={(event) =>
-                setStoreName(event.target.value)
-              }
+              onChange={(event) => setStoreName(event.target.value)}
               placeholder="Ej: Tienda Yelimar"
               minLength={3}
               maxLength={80}
@@ -299,8 +283,8 @@ export default function OnboardingForm({
           </div>
 
           <p className="mt-2 text-xs text-gray-500">
-            Usaremos el país para configurar precios, moneda y
-            futuras opciones de pago.
+            Usaremos el país para configurar precios, moneda y futuras opciones
+            de pago.
           </p>
         </label>
 
@@ -309,9 +293,7 @@ export default function OnboardingForm({
           disabled={loading}
           className="w-full rounded-xl bg-[#16A34A] py-3 font-semibold text-white transition hover:bg-[#15803D] disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {loading
-            ? "Creando tu tienda..."
-            : "Crear mi tienda"}
+          {loading ? "Creando tu tienda..." : "Crear mi tienda"}
         </button>
       </form>
     </div>
