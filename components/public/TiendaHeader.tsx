@@ -1,11 +1,5 @@
 "use client";
-import {
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  type CSSProperties,
-} from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -19,7 +13,11 @@ import {
 import BuscadorTienda from "@/components/public/BuscadorTienda";
 import { normalizarConfig } from "@/lib/tienda-diseno/config";
 import { supabase } from "@/lib/supabaseClient";
-import { crearEnlacesNavegacion, normalizarRutaTienda, type EnlaceNavegacion } from "@/lib/tienda-diseno/navegacion";
+import {
+  crearEnlacesNavegacion,
+  normalizarRutaTienda,
+  type EnlaceNavegacion,
+} from "@/lib/tienda-diseno/navegacion";
 import type {
   ConfigDiseno,
   ConfigEncabezado,
@@ -59,8 +57,7 @@ interface TiendaHeaderProps {
   onOpenCart?: () => void;
   onOpenOrders?: () => void;
 }
-type VariablesHeader = CSSProperties &
-  Record<`--header-${string}`, string>;
+type VariablesHeader = CSSProperties & Record<`--header-${string}`, string>;
 const FUENTES: Record<FuentePortada, string> = {
   heredar: "inherit",
   sistema:
@@ -94,7 +91,10 @@ export default function TiendaHeader({
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [buscadorAbierto, setBuscadorAbierto] = useState(false);
   const [paginaDesplazada, setPaginaDesplazada] = useState(false);
-  const [paginasCargadas, setPaginasCargadas] = useState<{ clave: string; paginas: ResumenPaginaTienda[] }>({ clave: "", paginas: [] });
+  const [paginasCargadas, setPaginasCargadas] = useState<{
+    clave: string;
+    paginas: ResumenPaginaTienda[];
+  }>({ clave: "", paginas: [] });
   const botonMenuRef = useRef<HTMLButtonElement>(null);
   const botonCerrarRef = useRef<HTMLButtonElement>(null);
   const dialogoRef = useRef<HTMLElement>(null);
@@ -117,10 +117,12 @@ export default function TiendaHeader({
       )
     : [];
   const inicioTienda = normalizarRutaTienda(rutaBase);
-  const idsPaginas = diseno.navegacion.modo === "personalizada"
-    ? diseno.navegacion.enlaces.filter((e) => e.tipo === "pagina" && e.visible)
-        .map((e) => e.tipo === "pagina" ? e.pagina_id : "")
-    : [];
+  const idsPaginas =
+    diseno.navegacion.modo === "personalizada"
+      ? diseno.navegacion.enlaces
+          .filter((e) => e.tipo === "pagina" && e.visible)
+          .map((e) => (e.tipo === "pagina" ? e.pagina_id : ""))
+      : [];
   const firmaPaginas = [...new Set(idsPaginas)].sort().join(",");
   const identidadTienda = tienda.id || tienda.slug?.trim() || "";
   const clavePaginas = `${identidadTienda}:${firmaPaginas}`;
@@ -133,57 +135,75 @@ export default function TiendaHeader({
       try {
         let catalogoId = tienda.id;
         if (!catalogoId) {
-          const { data, error } = await supabase.from("catalogos").select("id")
-            .eq("slug", tienda.slug?.trim() ?? "").maybeSingle();
+          const { data, error } = await supabase
+            .from("catalogos")
+            .select("id")
+            .eq("slug", tienda.slug?.trim() ?? "")
+            .maybeSingle();
           if (error || !data) return;
           catalogoId = data.id;
         }
-        const { data, error } = await supabase.from("paginas_tienda")
+        const { data, error } = await supabase
+          .from("paginas_tienda")
           .select("id, titulo, slug, estado")
           .eq("catalogo_id", catalogoId)
           .eq("estado", "publicada")
           .in("id", firmaPaginas.split(","));
         if (!error && activo) {
-          setPaginasCargadas({ clave: clavePaginas, paginas: (data ?? []) as ResumenPaginaTienda[] });
+          setPaginasCargadas({
+            clave: clavePaginas,
+            paginas: (data ?? []) as ResumenPaginaTienda[],
+          });
         }
       } catch {
         // Una referencia no disponible queda fuera del menú público.
       }
     }
     void cargarPaginas();
-    return () => { activo = false; };
-  }, [paginas, firmaPaginas, identidadTienda, clavePaginas, tienda.id, tienda.slug]);
+    return () => {
+      activo = false;
+    };
+  }, [
+    paginas,
+    firmaPaginas,
+    identidadTienda,
+    clavePaginas,
+    tienda.id,
+    tienda.slug,
+  ]);
   const enlacesNavegacion = crearEnlacesNavegacion({
     navegacion: diseno.navegacion,
     categorias: categoriasSeguras,
-    paginas: paginas ?? (paginasCargadas.clave === clavePaginas ? paginasCargadas.paginas : []),
+    paginas:
+      paginas ??
+      (paginasCargadas.clave === clavePaginas ? paginasCargadas.paginas : []),
     rutaBase: inicioTienda,
   });
-  const enlacesMovil = diseno.navegacion.modo === "automatica" && !opciones.mostrar_navegacion
-    ? enlacesNavegacion.filter((e) => e.id === "auto-inicio")
-    : enlacesNavegacion;
+  const enlacesMovil =
+    diseno.navegacion.modo === "automatica" && !opciones.mostrar_navegacion
+      ? enlacesNavegacion.filter((e) => e.id === "auto-inicio")
+      : enlacesNavegacion;
   const logo = tienda.logo?.trim();
   const tieneLogo = opciones.mostrar_logo && Boolean(logo);
   // Conserva el nombre como respaldo cuando aún no hay logo.
   const mostrarNombre =
-    opciones.mostrar_nombre ||
-    (opciones.mostrar_logo && !logo);
+    opciones.mostrar_nombre || (opciones.mostrar_logo && !logo);
   const tieneMarca = tieneLogo || mostrarNombre;
   const marcaCentrada = opciones.alineacion_marca === "centro";
-  const mostrarCarrito =
-    opciones.mostrar_carrito && Boolean(onOpenCart);
-  const mostrarPedidos =
-    opciones.mostrar_pedidos && Boolean(onOpenOrders);
+  const mostrarCarrito = opciones.mostrar_carrito && Boolean(onOpenCart);
+  const mostrarPedidos = opciones.mostrar_pedidos && Boolean(onOpenOrders);
   const mostrarAccesos =
     opciones.mostrar_buscador || mostrarCarrito || mostrarPedidos;
   const cantidad = Number.isFinite(cartCount)
     ? Math.max(0, Math.floor(cartCount))
     : 0;
-  const cantidadAccesosMovil = Number(opciones.mostrar_buscador) + Number(mostrarCarrito);
+  const cantidadAccesosMovil =
+    Number(opciones.mostrar_buscador) + Number(mostrarCarrito);
   const anchoBotonMovil = Math.max(44, opciones.tamano_iconos_movil + 16);
   const espacioLateralMovil = Math.max(
     opciones.mostrar_menu ? anchoBotonMovil : 0,
-    cantidadAccesosMovil * anchoBotonMovil + Math.max(0, cantidadAccesosMovil - 1) * opciones.separacion_iconos,
+    cantidadAccesosMovil * anchoBotonMovil +
+      Math.max(0, cantidadAccesosMovil - 1) * opciones.separacion_iconos,
   );
 
   const variablesHeader: Record<`--header-${string}`, string> = {
@@ -191,14 +211,11 @@ export default function TiendaHeader({
     "--header-alto": `${opciones.alto_escritorio}px`,
     "--header-alto-movil": `${opciones.alto_movil}px`,
     "--header-padding": `${opciones.padding_horizontal}px`,
-    "--header-padding-movil":
-      `${opciones.padding_horizontal_movil}px`,
+    "--header-padding-movil": `${opciones.padding_horizontal_movil}px`,
     "--header-logo-ancho": `${opciones.ancho_logo}px`,
     "--header-logo-alto": `${opciones.alto_logo}px`,
-    "--header-logo-ancho-movil":
-      `${opciones.ancho_logo_movil}px`,
-    "--header-logo-alto-movil":
-      `${opciones.alto_logo_movil}px`,
+    "--header-logo-ancho-movil": `${opciones.ancho_logo_movil}px`,
+    "--header-logo-alto-movil": `${opciones.alto_logo_movil}px`,
     "--header-nombre": `${opciones.tamano_nombre}px`,
     "--header-nombre-movil": `${opciones.tamano_nombre_movil}px`,
     "--header-icono": `${opciones.tamano_iconos}px`,
@@ -212,9 +229,7 @@ export default function TiendaHeader({
     borderBottomStyle: "solid",
     borderBottomWidth: opciones.grosor_borde,
     borderBottomColor: opciones.color_borde,
-    boxShadow: paginaDesplazada
-      ? SOMBRAS[opciones.sombra]
-      : "none",
+    boxShadow: paginaDesplazada ? SOMBRAS[opciones.sombra] : "none",
   };
   const estiloNavegacion: CSSProperties = {
     backgroundColor: opciones.color_fondo_navegacion,
@@ -234,12 +249,23 @@ export default function TiendaHeader({
     const target = enlace.nuevaPestana ? "_blank" : undefined;
     const rel = enlace.nuevaPestana ? "noopener noreferrer" : undefined;
     return enlace.externo ? (
-      <a key={enlace.id} href={enlace.href} target={target} rel={rel}
-        onClick={cerrarPaneles} className={className}>
+      <a
+        key={enlace.id}
+        href={enlace.href}
+        target={target}
+        rel={rel}
+        onClick={cerrarPaneles}
+        className={className}
+      >
         {enlace.etiqueta}
       </a>
     ) : (
-      <Link key={enlace.id} href={enlace.href} onClick={cerrarPaneles} className={className}>
+      <Link
+        key={enlace.id}
+        href={enlace.href}
+        onClick={cerrarPaneles}
+        className={className}
+      >
         {enlace.etiqueta}
       </Link>
     );
@@ -264,9 +290,7 @@ export default function TiendaHeader({
     <button
       type="button"
       onClick={alternarBusqueda}
-      aria-label={
-        buscadorAbierto ? "Cerrar búsqueda" : "Buscar productos"
-      }
+      aria-label={buscadorAbierto ? "Cerrar búsqueda" : "Buscar productos"}
       aria-expanded={buscadorAbierto}
       className={`${CLASE_BOTON} w-full justify-between gap-3`}
       style={{
@@ -319,24 +343,16 @@ export default function TiendaHeader({
   }, [opciones.mostrar_menu, opciones.mostrar_buscador]);
   // El menú lateral se utiliza solamente en móvil y tablet.
   useEffect(() => {
-    const pantallaEscritorio = window.matchMedia(
-      "(min-width: 1024px)",
-    );
+    const pantallaEscritorio = window.matchMedia("(min-width: 1024px)");
     const cerrarEnEscritorio = () => {
       if (pantallaEscritorio.matches) {
         setMenuAbierto(false);
       }
     };
     cerrarEnEscritorio();
-    pantallaEscritorio.addEventListener(
-      "change",
-      cerrarEnEscritorio,
-    );
+    pantallaEscritorio.addEventListener("change", cerrarEnEscritorio);
     return () => {
-      pantallaEscritorio.removeEventListener(
-        "change",
-        cerrarEnEscritorio,
-      );
+      pantallaEscritorio.removeEventListener("change", cerrarEnEscritorio);
     };
   }, []);
   useEffect(() => {
@@ -364,16 +380,10 @@ export default function TiendaHeader({
       const activo = document.activeElement;
       const focoDentro =
         activo !== null && dialogoRef.current?.contains(activo);
-      if (
-        event.shiftKey &&
-        (activo === primero || !focoDentro)
-      ) {
+      if (event.shiftKey && (activo === primero || !focoDentro)) {
         event.preventDefault();
         ultimo.focus();
-      } else if (
-        !event.shiftKey &&
-        (activo === ultimo || !focoDentro)
-      ) {
+      } else if (!event.shiftKey && (activo === ultimo || !focoDentro)) {
         event.preventDefault();
         primero.focus();
       }
@@ -394,9 +404,7 @@ export default function TiendaHeader({
       <header
         data-editor-section="encabezado"
         className={`z-50 w-full ${
-          opciones.posicion === "fijo"
-            ? "sticky top-0"
-            : "relative"
+          opciones.posicion === "fijo" ? "sticky top-0" : "relative"
         }`}
         style={estiloHeader}
       >
@@ -419,10 +427,7 @@ export default function TiendaHeader({
               className={`${CLASE_BOTON} col-start-1 row-start-1 justify-self-start lg:hidden`}
               style={{ color: opciones.color_menu }}
             >
-              <MenuIcon
-                aria-hidden="true"
-                className={CLASE_ICONO}
-              />
+              <MenuIcon aria-hidden="true" className={CLASE_ICONO} />
             </button>
           )}
           {tieneMarca && (
@@ -436,12 +441,13 @@ export default function TiendaHeader({
               }`}
             >
               {tieneLogo && logo && (
-                <div className="relative h-[var(--header-logo-alto-movil)] w-[var(--header-logo-ancho-movil)] max-w-full shrink lg:h-[var(--header-logo-alto)] lg:w-[var(--header-logo-ancho)]">
+                <div className="relative h-[var(--header-logo-alto-movil)] w-[var(--header-logo-ancho-movil)] max-w-full shrink-0 lg:h-[var(--header-logo-alto)] lg:w-[var(--header-logo-ancho)]">
                   <Image
                     src={logo}
                     alt={`Logo de ${tienda.nombre}`}
                     fill
                     priority
+                    unoptimized
                     sizes={`(max-width: 1023px) ${opciones.ancho_logo_movil}px, ${opciones.ancho_logo}px`}
                     className="object-contain"
                   />
@@ -463,9 +469,7 @@ export default function TiendaHeader({
           )}
           {!marcaCentrada && opciones.mostrar_buscador && (
             <div className="hidden min-w-0 flex-1 px-4 lg:block">
-              <div className="mx-auto w-full max-w-lg">
-                {botonBusqueda}
-              </div>
+              <div className="mx-auto w-full max-w-lg">{botonBusqueda}</div>
             </div>
           )}
           {mostrarAccesos && (
@@ -478,24 +482,16 @@ export default function TiendaHeader({
                   type="button"
                   onClick={alternarBusqueda}
                   aria-label={
-                    buscadorAbierto
-                      ? "Cerrar búsqueda"
-                      : "Buscar productos"
+                    buscadorAbierto ? "Cerrar búsqueda" : "Buscar productos"
                   }
                   aria-expanded={buscadorAbierto}
                   className={`${CLASE_BOTON} lg:hidden`}
                   style={{ color: opciones.color_busqueda }}
                 >
                   {buscadorAbierto ? (
-                    <X
-                      aria-hidden="true"
-                      className={CLASE_ICONO}
-                    />
+                    <X aria-hidden="true" className={CLASE_ICONO} />
                   ) : (
-                    <Search
-                      aria-hidden="true"
-                      className={CLASE_ICONO}
-                    />
+                    <Search aria-hidden="true" className={CLASE_ICONO} />
                   )}
                 </button>
               )}
@@ -508,10 +504,7 @@ export default function TiendaHeader({
                   className={`${CLASE_BOTON} hidden gap-2 lg:inline-flex`}
                   style={{ color: opciones.color_pedidos }}
                 >
-                  <ClipboardList
-                    aria-hidden="true"
-                    className={CLASE_ICONO}
-                  />
+                  <ClipboardList aria-hidden="true" className={CLASE_ICONO} />
                   <span className="hidden text-sm font-semibold xl:inline">
                     Mis pedidos
                   </span>
@@ -531,10 +524,7 @@ export default function TiendaHeader({
                   className={`${CLASE_BOTON} relative`}
                   style={{ color: opciones.color_carrito }}
                 >
-                  <ShoppingCart
-                    aria-hidden="true"
-                    className={CLASE_ICONO}
-                  />
+                  <ShoppingCart aria-hidden="true" className={CLASE_ICONO} />
                   {cantidad > 0 && (
                     <span className="absolute right-0 top-0 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-[var(--color-primary)] px-1 text-[10px] font-bold text-white">
                       {cantidad > 99 ? "99+" : cantidad}
@@ -550,19 +540,24 @@ export default function TiendaHeader({
             className="mx-auto hidden w-full px-[var(--header-padding)] pb-3 lg:block"
             style={{ maxWidth: opciones.ancho_contenido }}
           >
-            <div className="mx-auto max-w-lg">
-              {botonBusqueda}
-            </div>
+            <div className="mx-auto max-w-lg">{botonBusqueda}</div>
           </div>
         )}
         {opciones.mostrar_navegacion && enlacesNavegacion.length > 0 && (
           <nav aria-label="Navegación de la tienda" style={estiloNavegacion}>
             <div
               className="mx-auto flex items-center overflow-x-auto px-[var(--header-padding-movil)] py-3 lg:px-[var(--header-padding)]"
-              style={{ maxWidth: opciones.ancho_contenido, gap: opciones.separacion_navegacion }}
+              style={{
+                maxWidth: opciones.ancho_contenido,
+                gap: opciones.separacion_navegacion,
+              }}
             >
-              {enlacesNavegacion.map((enlace) => renderizarEnlace(enlace,
-                "shrink-0 whitespace-nowrap rounded px-1 py-1 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-current"))}
+              {enlacesNavegacion.map((enlace) =>
+                renderizarEnlace(
+                  enlace,
+                  "shrink-0 whitespace-nowrap rounded px-1 py-1 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-current",
+                ),
+              )}
             </div>
           </nav>
         )}
@@ -634,7 +629,9 @@ export default function TiendaHeader({
                 fontWeight: opciones.peso_navegacion,
               }}
             >
-              {enlacesMovil.map((enlace) => renderizarEnlace(enlace, CLASE_ENLACE_MENU))}
+              {enlacesMovil.map((enlace) =>
+                renderizarEnlace(enlace, CLASE_ENLACE_MENU),
+              )}
               {mostrarPedidos && (
                 <button
                   type="button"
@@ -674,9 +671,7 @@ export default function TiendaHeader({
                 <span className="text-[10px] font-bold uppercase tracking-wider">
                   Tienda creada con
                 </span>
-                <span className="text-base font-extrabold">
-                  catalagox.com
-                </span>
+                <span className="text-base font-extrabold">catalagox.com</span>
               </span>
               <ExternalLink size={20} aria-hidden="true" />
             </Link>
