@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, type CSSProperties } from "react";
@@ -24,6 +25,32 @@ function obtenerClaveImagen(src: ImageProps["src"]): string {
   return src.default.src;
 }
 
+/**
+ * Evita las transformaciones automáticas de Next.js para las
+ * imágenes públicas de Supabase, conservando el archivo original.
+ */
+function esImagenPublicaSupabase(src: ImageProps["src"]): boolean {
+  if (typeof src !== "string") return false;
+
+  try {
+    const url = new URL(src);
+
+    const esSupabase = url.hostname.endsWith(".supabase.co");
+
+    const esRutaPublica =
+      url.pathname.startsWith("/storage/v1/object/public/") ||
+      url.pathname.startsWith("/storage/v1/render/image/public/");
+
+    return (
+      (url.protocol === "https:" || url.protocol === "http:") &&
+      esSupabase &&
+      esRutaPublica
+    );
+  } catch {
+    return false;
+  }
+}
+
 type EstadoImagen = "loading" | "loaded" | "error";
 
 function ImagenConEstado({
@@ -35,6 +62,8 @@ function ImagenConEstado({
   mostrarMensajeError = true,
   ajuste = "tema",
   style,
+  fill,
+  unoptimized,
   ...imageProps
 }: OptimizedImageProps) {
   const [estado, setEstado] = useState<EstadoImagen>("loading");
@@ -42,18 +71,26 @@ function ImagenConEstado({
   const estiloImagen: CSSProperties = {
     objectPosition: "center",
     ...style,
-
-    // Un ajuste explícito tiene prioridad sobre el estilo recibido.
     ...(ajuste !== "tema" ? { objectFit: ajuste } : {}),
   };
+
+  const estiloContenedor: CSSProperties = {
+    position: "relative",
+    overflow: "hidden",
+    ...containerStyle,
+  };
+
+  // Si utiliza fill, el padre controla las dimensiones.
+  if (!fill) {
+    estiloContenedor.aspectRatio ??= "var(--tienda-image-ratio, 1 / 1)";
+  }
+
+  const usarOriginalSupabase = esImagenPublicaSupabase(src);
 
   return (
     <div
       className={`relative overflow-hidden bg-black/5 ${containerClassName}`}
-      style={{
-        aspectRatio: "var(--tienda-image-ratio, 1 / 1)",
-        ...containerStyle,
-      }}
+      style={estiloContenedor}
       data-image-status={estado}
       aria-busy={estado === "loading"}
     >
@@ -80,6 +117,8 @@ function ImagenConEstado({
         {...imageProps}
         src={src}
         alt={alt}
+        fill={fill}
+        unoptimized={unoptimized ?? usarOriginalSupabase}
         onLoad={() => setEstado("loaded")}
         onError={() => setEstado("error")}
         style={estiloImagen}
@@ -91,9 +130,7 @@ function ImagenConEstado({
   );
 }
 
-export default function OptimizedImage(
-  props: OptimizedImageProps,
-) {
+export default function OptimizedImage(props: OptimizedImageProps) {
   return (
     <ImagenConEstado
       key={obtenerClaveImagen(props.src)}
