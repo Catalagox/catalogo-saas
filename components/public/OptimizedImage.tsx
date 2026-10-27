@@ -75,15 +75,14 @@ function ImagenConEstado({
   };
 
   const estiloContenedor: CSSProperties = {
-    position: "relative",
-    overflow: "hidden",
-    ...containerStyle,
-  };
-
-  // Si utiliza fill, el padre controla las dimensiones.
-  if (!fill) {
-    estiloContenedor.aspectRatio ??= "var(--tienda-image-ratio, 1 / 1)";
-  }
+  position: "relative",
+  overflow: "hidden",
+  width: "100%",
+  ...(fill
+    ? { height: "100%", minHeight: 1 }
+    : { aspectRatio: "var(--tienda-image-ratio, 1 / 1)" }),
+  ...containerStyle,
+};
 
   const usarOriginalSupabase = esImagenPublicaSupabase(src);
 
