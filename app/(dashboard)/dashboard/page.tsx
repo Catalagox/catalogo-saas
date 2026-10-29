@@ -9,10 +9,10 @@ import {
   Tags,
   QrCode,
   Palette,
-  Image,
+  PanelsTopLeft,
   Globe,
   PlusCircle,
-  Video,
+  Play,
   AlertCircle,
   RefreshCw,
 } from "lucide-react";
@@ -45,12 +45,11 @@ export default function DashboardPage() {
         router.replace("/auth?redirect=%2Fdashboard");
         return;
       }
-      const { data: catalogoData, error: catalogoError } =
-        await supabase
-          .from("catalogos")
-          .select("id, nombre, slug, created_at, plan_vence_el")
-          .eq("user_id", user.id)
-          .maybeSingle();
+      const { data: catalogoData, error: catalogoError } = await supabase
+        .from("catalogos")
+        .select("id, nombre, slug, created_at, plan_vence_el")
+        .eq("user_id", user.id)
+        .maybeSingle();
       if (catalogoError) throw catalogoError;
       if (!catalogoData) {
         router.replace("/onboarding?next=%2Fdashboard");
@@ -158,13 +157,13 @@ export default function DashboardPage() {
       action: () => irA("/dashboard/agregar-producto"),
     },
     {
-      icon: <Image className="h-5 w-5" />,
-      label: "Marca",
-      value: "Subir logo",
-      subtext: "Personaliza la imagen y la marca de tu tienda",
-      highlight: false,
-      action: () => irA("/dashboard/ajustes#logo"),
-    },
+  icon: <PanelsTopLeft className="h-5 w-5" />,
+  label: "Diseño",
+  value: "Plantillas disponibles",
+  subtext: "Explora los diseños y elige el estilo de tu tienda",
+  highlight: false,
+  action: () => irA("/dashboard/tienda-online#plantillas-disponibles"),
+},
     {
       icon: <Tags className="h-5 w-5" />,
       label: "Categorías",
@@ -218,9 +217,7 @@ export default function DashboardPage() {
               type="button"
               onClick={card.action}
               className={`${cardClass} ${
-                card.highlight
-                  ? "card-dashboard-highlight"
-                  : "card-dashboard"
+                card.highlight ? "card-dashboard-highlight" : "card-dashboard"
               }`}
             >
               <div className="flex w-full items-center justify-between gap-3">
@@ -246,27 +243,30 @@ export default function DashboardPage() {
             </button>
           ))}
           {/* Tutorial de YouTube */}
+
           <a
-            href="https://www.youtube.com/watch?v=RV7S4Pz7XZA&t=26s"
+            href="https://www.youtube.com/@Catalagox"
             target="_blank"
             rel="noopener noreferrer"
             className={`${cardClass} card-dashboard`}
           >
             <div className="flex w-full items-center justify-between gap-3">
-              <div className="shrink-0 rounded-xl bg-[var(--bg-tertiary)] p-2.5 text-[var(--text-secondary)] transition-all duration-300 group-hover:scale-110 group-hover:bg-red-500/10 group-hover:text-[var(--color-danger)]">
-                <Video className="h-5 w-5" />
+              <div className="shrink-0 rounded-xl bg-red-500/10 p-2.5 text-red-600 transition-all duration-300 group-hover:scale-110 group-hover:bg-red-500/20">
+                <Play className="h-5 w-5" />
               </div>
-              <span className={labelClass}>Tutorial</span>
+              <span className={labelClass}>Tutoriales</span>
             </div>
             <div>
               <h3 className="text-xl font-bold text-[var(--text-primary)]">
-                Ver video
+                Ver videos
               </h3>
               <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
-                Aprende a configurar tu tienda online en pocos minutos
+                Aprende a crear y configurar tu tienda online con nuestros
+                tutoriales
               </p>
             </div>
           </a>
+
           {/* Tienda pública */}
           <a
             href={`/${catalogo.slug}`}
