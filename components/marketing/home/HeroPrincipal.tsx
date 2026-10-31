@@ -416,51 +416,52 @@ export default function HeroPrincipal() {
               target="_blank"
               rel="noopener noreferrer"
               className="
-                group
-                inline-flex
-                w-full
-                min-w-[150px]
-                items-center
-                justify-center
-                gap-3
-                rounded-full
-                border
-                border-gray-300
-                bg-[var(--marketing-bg-white)]
-                px-7
-                py-3.5
-                text-sm
-                font-extrabold
-                text-[var(--marketing-text-dark)]
-                transition-all
-                duration-300
+    group
+    inline-flex
+    w-full
+    min-w-[150px]
+    items-center
+    justify-center
+    gap-3
+    rounded-full
+    border
+    border-black
+    bg-black
+    px-7
+    py-3.5
+    text-sm
+    font-extrabold
+    text-white
+    transition-all
+    duration-300
 
-                hover:-translate-y-1
-                hover:border-[var(--marketing-nav-hover)]
-                hover:text-[var(--marketing-nav-hover)]
+    hover:-translate-y-1
+    hover:border-gray-800
+    hover:bg-gray-800
+    hover:text-white
 
-                active:scale-95
+    active:scale-95
 
-                sm:w-auto
-                sm:px-8
-                sm:py-4
-                sm:text-base
-              "
+    sm:w-auto
+    sm:px-8
+    sm:py-4
+    sm:text-base
+  "
             >
               <span>Ver tienda demo</span>
 
               <svg
                 aria-hidden="true"
                 className="
-                  h-4
-                  w-4
-                  transition-transform
-                  duration-300
-                  group-hover:translate-x-1
+      h-4
+      w-4
+      transition-transform
+      duration-300
+      group-hover:translate-x-1
 
-                  sm:h-5
-                  sm:w-5
-                "
+      sm:h-5
+      sm:w-5
+    "
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >

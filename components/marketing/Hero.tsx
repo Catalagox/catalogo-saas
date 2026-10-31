@@ -5,12 +5,15 @@ import ExperienciaMovilSection from "@/components/marketing/home/ExperienciaMovi
 import HeroPrincipal from "@/components/marketing/home/HeroPrincipal";
 import SolucionesSection from "@/components/marketing/home/SolucionesSection";
 import WhatsAppPedidosSection from "@/components/marketing/home/WhatsAppPedidosSection";
+import SeccionTutoriales from "@/components/marketing/home/SeccionTutoriales";
 
 export default function Hero() {
   return (
     <main className="w-full bg-[var(--marketing-bg-white)]">
       {/* PORTADA PRINCIPAL */}
       <HeroPrincipal />
+
+      <SeccionTutoriales />
 
       {/* PEDIDOS Y VENTAS POR WHATSAPP */}
       <WhatsAppPedidosSection />
