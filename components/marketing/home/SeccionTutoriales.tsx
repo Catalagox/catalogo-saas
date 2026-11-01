@@ -61,7 +61,7 @@ export default function SeccionTutoriales() {
               max-w-xl
               text-base
               leading-relaxed
-              text-gray-500
+              text-gray-700
               sm:text-lg
             ">
               ¿No sabes por dónde empezar? En nuestro canal de
@@ -93,13 +93,14 @@ export default function SeccionTutoriales() {
               className="
                 group
                 mt-9
-                inline-flex
+                flex
+                w-full
                 items-center
                 justify-center
                 gap-3
                 rounded-xl
                 bg-[#E62117]
-                px-7
+                px-5
                 py-4
                 text-sm
                 font-extrabold
@@ -111,18 +112,17 @@ export default function SeccionTutoriales() {
                 hover:-translate-y-1
                 hover:bg-[#CC1810]
                 hover:shadow-xl
-                active:scale-95
+                active:scale-[0.98]
+                sm:w-fit
+                sm:px-7
                 sm:text-base
               "
             >
-              <FaYoutube className="text-xl" />
+              <FaYoutube className="shrink-0 text-xl" />
               Ver todos los tutoriales
-              <FaExternalLinkAlt className="text-xs transition-transform duration-300 group-hover:translate-x-1" />
+              <FaExternalLinkAlt className="shrink-0 text-xs transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
 
-            <p className="mt-4 text-xs font-medium text-gray-400">
-              Aprende a tu ritmo, desde cualquier dispositivo.
-            </p>
           </motion.div>
 
           {/* PANEL VISUAL DE YOUTUBE */}
@@ -160,8 +160,6 @@ export default function SeccionTutoriales() {
                       Catalagox
                     </h3>
                   </div>
-
-                  <FaYoutube className="text-4xl text-[#FF3333]" />
                 </div>
 
                 {/* MINIATURA REAL DEL VIDEO */}

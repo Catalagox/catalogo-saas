@@ -32,6 +32,7 @@ type EstadoPlan = {
 };
 type Props = { closeMenu?: () => void; estadoPlan?: EstadoPlan | null };
 const links = [
+  { name: "Ver planes y precios", href: "/suscripcion", icon: Crown },
   { name: "Principal", href: "/dashboard", icon: LayoutDashboard },
   {
     name: "Agregar producto",
@@ -52,7 +53,7 @@ const links = [
     icon: Globe2,
   },
   { name: "Ayuda", href: "/contacto", icon: HelpCircle },
-  { name: "Ver planes y precios", href: "/suscripcion", icon: Crown },
+  
 ];
 export default function Sidebar({ closeMenu, estadoPlan }: Props) {
   const pathname = usePathname();

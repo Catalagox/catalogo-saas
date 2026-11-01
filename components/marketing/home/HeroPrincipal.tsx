@@ -302,7 +302,7 @@ export default function HeroPrincipal() {
                   gap-3
                   text-sm
                   font-semibold
-                  text-[#475569]
+                  text-[#1F2937]
 
                   sm:text-base
                 "
@@ -416,37 +416,37 @@ export default function HeroPrincipal() {
               target="_blank"
               rel="noopener noreferrer"
               className="
-    group
-    inline-flex
-    w-full
-    min-w-[150px]
-    items-center
-    justify-center
-    gap-3
-    rounded-full
-    border
-    border-black
-    bg-black
-    px-7
-    py-3.5
-    text-sm
-    font-extrabold
-    text-white
-    transition-all
-    duration-300
+  group
+  inline-flex
+  w-full
+  min-w-[150px]
+  items-center
+  justify-center
+  gap-3
+  rounded-xl
+  border-2
+  border-black
+  bg-black
+  px-7
+  py-3.5
+  text-sm
+  font-extrabold
+  text-white
+  transition-all
+  duration-300
 
-    hover:-translate-y-1
-    hover:border-gray-800
-    hover:bg-gray-800
-    hover:text-white
+  hover:-translate-y-1
+  hover:border-gray-800
+  hover:bg-gray-800
+  hover:shadow-md
 
-    active:scale-95
+  active:scale-95
 
-    sm:w-auto
-    sm:px-8
-    sm:py-4
-    sm:text-base
-  "
+  sm:w-auto
+  sm:px-8
+  sm:py-4
+  sm:text-base
+"
             >
               <span>Ver tienda demo</span>
 
