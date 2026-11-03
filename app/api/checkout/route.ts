@@ -1,13 +1,53 @@
+
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@/lib/supabase/server";
 
+type PlanKey = "basic_monthly" | "pro_monthly" | "pro_annual";
 type PlanType = "monthly" | "annual";
+
+type PlanConfig = {
+  planTipo: "basic" | "pro";
+  planIntervalo: "monthly" | "annual";
+  planType: PlanType;
+  priceId: string | undefined;
+};
+
+const PLANES: Record<PlanKey, PlanConfig> = {
+  basic_monthly: {
+    planTipo: "basic",
+    planIntervalo: "monthly",
+    planType: "monthly",
+    priceId: process.env.STRIPE_PRICE_ID_BASIC_MONTHLY,
+  },
+
+  pro_monthly: {
+    planTipo: "pro",
+    planIntervalo: "monthly",
+    planType: "monthly",
+    priceId: process.env.STRIPE_PRICE_ID_PRO_MONTHLY,
+  },
+
+  pro_annual: {
+    planTipo: "pro",
+    planIntervalo: "annual",
+    planType: "annual",
+    priceId: process.env.STRIPE_PRICE_ID_PRO_ANNUAL,
+  },
+};
 
 const ESTADOS_FINALIZADOS = new Set([
   "canceled",
   "incomplete_expired",
 ]);
+
+function esPlanKey(valor: unknown): valor is PlanKey {
+  return (
+    valor === "basic_monthly" ||
+    valor === "pro_monthly" ||
+    valor === "pro_annual"
+  );
+}
 
 async function obtenerCuenta() {
   const supabase = await createClient();
@@ -71,7 +111,10 @@ export async function GET() {
     }
 
     const secretKey = process.env.STRIPE_SECRET_KEY;
-    if (!secretKey) throw new Error("Falta STRIPE_SECRET_KEY");
+
+    if (!secretKey) {
+      throw new Error("Falta STRIPE_SECRET_KEY");
+    }
 
     const stripe = new Stripe(secretKey);
 
@@ -116,25 +159,61 @@ export async function POST(req: Request) {
       );
     }
 
-    const body = await req.json().catch(() => null);
-    const planType = body?.planType as PlanType | undefined;
+    // Leemos el plan solicitado.
+    const body: unknown = await req.json().catch(() => null);
 
-    if (planType !== "monthly" && planType !== "annual") {
+    if (!body || typeof body !== "object") {
       return NextResponse.json(
         { error: "Selecciona un plan válido." },
         { status: 400 },
       );
     }
 
-    const priceId =
-      planType === "annual"
-        ? process.env.STRIPE_PRICE_ID_ANNUAL ||
-          process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANNUAL
-        : process.env.STRIPE_PRICE_ID_MONTHLY ||
-          process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY ||
-          process.env.NEXT_PUBLIC_STRIPE_PRICE_ID;
+    const datos = body as {
+      planKey?: unknown;
+      planType?: unknown;
+    };
 
-    if (!priceId) {
+    let planKey: PlanKey;
+
+    // Nuevo sistema: Basic mensual, Pro mensual y Pro anual.
+    if (esPlanKey(datos.planKey)) {
+      planKey = datos.planKey;
+    } else if (datos.planKey !== undefined) {
+      return NextResponse.json(
+        { error: "Selecciona un plan válido." },
+        { status: 400 },
+      );
+    } else {
+      /*
+       * Compatibilidad con la página anterior:
+       * monthly = Pro mensual
+       * annual = Pro anual
+       *
+       * Así no rompemos el Checkout mientras actualizamos
+       * el componente de suscripciones.
+       */
+      if (
+        datos.planType !== "monthly" &&
+        datos.planType !== "annual"
+      ) {
+        return NextResponse.json(
+          { error: "Selecciona un plan válido." },
+          { status: 400 },
+        );
+      }
+
+      planKey =
+        datos.planType === "annual"
+          ? "pro_annual"
+          : "pro_monthly";
+    }
+
+    const plan = PLANES[planKey];
+
+    if (!plan.priceId) {
+      console.error("Precio de Stripe no configurado:", planKey);
+
       return NextResponse.json(
         { error: "El precio de este plan no está configurado." },
         { status: 500 },
@@ -142,6 +221,7 @@ export async function POST(req: Request) {
     }
 
     const stripe = new Stripe(secretKey);
+
     const baseUrl =
       process.env.NEXT_PUBLIC_SITE_URL ||
       "https://www.catalagox.com";
@@ -152,7 +232,7 @@ export async function POST(req: Request) {
       customerId = catalogo.stripe_customer_id;
     } else {
       const customer = await stripe.customers.create({
-        email: user.email!,
+        email: user.email,
         metadata: {
           supabaseUserId: user.id,
         },
@@ -193,6 +273,7 @@ export async function POST(req: Request) {
       }
     }
 
+    // Evitamos crear una segunda suscripción para la misma cuenta.
     if (await tieneSuscripcionEnCurso(stripe, customerId)) {
       return NextResponse.json(
         {
@@ -204,8 +285,8 @@ export async function POST(req: Request) {
     }
 
     /*
-     * Si había un Checkout abierto para este cliente, reutilizamos su URL.
-     * Esto evita dejar dos páginas de pago abiertas para la misma cuenta.
+     * Si había un Checkout abierto para este cliente,
+     * reutilizamos su URL cuando corresponde al mismo plan.
      */
     const sesionesAbiertas = await stripe.checkout.sessions.list({
       customer: customerId,
@@ -213,34 +294,64 @@ export async function POST(req: Request) {
       limit: 100,
     });
 
-    const sesionExistente = sesionesAbiertas.data.find(
-      (session) =>
-        session.mode === "subscription" &&
-        session.metadata?.supabaseUserId === user.id &&
-        session.metadata?.planType === planType &&
-        session.url,
-    );
+    const sesionExistente = sesionesAbiertas.data.find((session) => {
+      if (
+        session.mode !== "subscription" ||
+        session.metadata?.supabaseUserId !== user.id ||
+        !session.url
+      ) {
+        return false;
+      }
+
+      // Sesiones creadas con el nuevo sistema.
+      if (session.metadata?.planKey) {
+        return session.metadata.planKey === planKey;
+      }
+
+      // Compatibilidad con sesiones antiguas.
+      // Las sesiones antiguas mensuales corresponden a Pro.
+      return (
+        plan.planTipo === "pro" &&
+        session.metadata?.planType === plan.planType
+      );
+    });
 
     if (sesionExistente?.url) {
-      return NextResponse.json({ url: sesionExistente.url });
+      return NextResponse.json({
+        url: sesionExistente.url,
+      });
     }
+
+    // Metadatos compartidos entre Checkout y la suscripción.
+    const metadataStripe = {
+      supabaseUserId: user.id,
+      planKey,
+      planTipo: plan.planTipo,
+      planIntervalo: plan.planIntervalo,
+
+      // Se conserva para compatibilidad con el sistema anterior.
+      planType: plan.planType,
+    };
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: customerId,
       payment_method_types: ["card"],
-      line_items: [{ price: priceId, quantity: 1 }],
+
+      line_items: [
+        {
+          price: plan.priceId,
+          quantity: 1,
+        },
+      ],
+
       success_url: `${baseUrl}/dashboard?success=true`,
       cancel_url: `${baseUrl}/suscripcion?canceled=true`,
-      metadata: {
-        supabaseUserId: user.id,
-        planType,
-      },
+
+      metadata: metadataStripe,
+
       subscription_data: {
-        metadata: {
-          supabaseUserId: user.id,
-          planType,
-        },
+        metadata: metadataStripe,
       },
     });
 
@@ -248,7 +359,9 @@ export async function POST(req: Request) {
       throw new Error("Stripe no devolvió la URL de Checkout");
     }
 
-    return NextResponse.json({ url: session.url });
+    return NextResponse.json({
+      url: session.url,
+    });
   } catch (error) {
     console.error("Error al crear Checkout:", error);
 

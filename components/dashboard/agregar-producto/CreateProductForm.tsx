@@ -129,7 +129,11 @@ export default function CreateProductForm({
     }
   };
 
-  const subirImagen = async (archivo: File, propietarioId: string) => {
+  const subirImagen = async (
+    archivo: File,
+    catalogoId: string,
+    accessToken: string,
+  ) => {
     const convertirConCanvas = async (
       original: File,
       formato: "image/webp" | "image/jpeg",
@@ -262,28 +266,30 @@ export default function CreateProductForm({
       }
     }
 
-    const extension = comprimida.type === "image/webp" ? "webp" : "jpg";
+    
 
-    const filePath = `${propietarioId}/${crypto.randomUUID()}.${extension}`;
+    const formData = new FormData();
+    formData.append("file", comprimida);
+    formData.append("catalogoId", catalogoId);
 
-    const { error: uploadError } = await supabase.storage
-      .from("productos")
-      .upload(filePath, comprimida, {
-        cacheControl: "31536000",
-        upsert: false,
-        contentType: comprimida.type,
-      });
+    const response = await fetch("/api/upload-product-image", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: formData,
+    });
 
-    if (uploadError) {
-      console.error("Error subiendo imagen:", uploadError);
-      throw new Error("No pudimos subir la imagen. Inténtalo nuevamente.");
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "No pudimos subir la imagen.");
     }
 
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from("productos").getPublicUrl(filePath);
-
-    return { publicUrl, filePath };
+    return {
+      publicUrl: data.url as string,
+      filePath: data.filePath as string,
+    };
   };
 
   const crearProducto = async (event: FormEvent<HTMLFormElement>) => {
@@ -322,27 +328,48 @@ export default function CreateProductForm({
 
     let rutaSubida: string | null = null;
 
-    try {
-      const { data: catalogo, error: catalogoError } = await supabase
-        .from("catalogos")
-        .select("suscripcion_activa")
-        .eq("id", catalogoId)
-        .eq("user_id", userId)
-        .single();
+    
+try {
+  // Obtener y validar la sesión actual.
+  const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession();
 
-      if (catalogoError) {
-        console.error("Error validando suscripción:", catalogoError);
-        throw new Error("No pudimos validar la suscripción.");
-      }
+  if (sessionError || !session || session.user.id !== userId) {
+    throw new Error(
+      "Tu sesión no es válida. Inicia sesión nuevamente."
+    );
+  }
 
-      if (!catalogo.suscripcion_activa) {
-        throw new Error(
-          "Tu suscripción está vencida. Renueva tu plan para seguir agregando productos.",
-        );
-      }
+  // Comprobar que el catálogo pertenece al usuario.
+  const { data: catalogo, error: catalogoError } = await supabase
+    .from("catalogos")
+    .select("suscripcion_activa")
+    .eq("id", catalogoId)
+    .eq("user_id", userId)
+    .single();
 
-      const subida = await subirImagen(imagen, userId);
-      rutaSubida = subida.filePath;
+  if (catalogoError || !catalogo) {
+    console.error("Error validando suscripción:", catalogoError);
+    throw new Error("No pudimos validar tu catálogo.");
+  }
+
+  if (!catalogo.suscripcion_activa) {
+    throw new Error(
+      "Tu suscripción está vencida. Renueva tu plan para seguir agregando productos."
+    );
+  }
+
+  // Subir imagen enviando catálogo y token de sesión.
+  const subida = await subirImagen(
+    imagen,
+    catalogoId,
+    session.access_token
+  );
+
+  rutaSubida = subida.filePath;
+
 
       const { error: insertError } = await supabase.from("productos").insert({
         user_id: userId,

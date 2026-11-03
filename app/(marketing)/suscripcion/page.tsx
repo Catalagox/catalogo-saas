@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -11,6 +12,84 @@ interface EstadoSuscripcion {
   tieneClienteStripe: boolean;
   tieneSuscripcionEnCurso: boolean;
 }
+
+type PlanKey = "basic_monthly" | "pro_monthly" | "pro_annual";
+
+const PLANES = [
+  {
+    key: "basic_monthly" as const,
+    title: "Plan Basic",
+    price: "5",
+    period: "/mes",
+    badgeText: "Plan Económico",
+    badgeColor:
+      "bg-emerald-50 text-emerald-700 border border-emerald-200",
+    features: [
+      "1 Catálogo Digital Profesional",
+      "Hasta 300 productos",
+      "Hasta 70 imágenes en total",
+      "QR Personalizado de Alta Calidad",
+      "Carrito de Compra",
+      "Personalización de Colores",
+      "Edición de Productos",
+      "Estadísticas del Catálogo",
+      "Panel de Administración",
+      "Sin Comisiones por Venta",
+      "Sin Contratos ni Permanencia",
+      "Sin dominio personalizado",
+    ],
+  },
+  {
+    key: "pro_monthly" as const,
+    title: "Plan Pro Mensual",
+    price: "10",
+    period: "/mes",
+    badgeText: "Opción Flexible",
+    badgeColor:
+      "bg-emerald-50 text-emerald-700 border border-emerald-200",
+    features: [
+      "1 Catálogo Digital Profesional",
+      "Hasta 300 productos",
+      "Imágenes sin límite comercial",
+      "Dominio personalizado",
+      "QR Personalizado de Alta Calidad",
+      "Carrito de Compra",
+      "Personalización de Colores",
+      "Edición de Productos",
+      "Estadísticas del Catálogo",
+      "Soporte Prioritario 24/7",
+      "Panel de Administración Pro",
+      "Sin Comisiones por Venta",
+      "Sin Contratos ni Permanencia",
+    ],
+  },
+  {
+    key: "pro_annual" as const,
+    title: "Plan Pro Anual",
+    price: "108",
+    period: "/año",
+    badgeText: "Ahorra 10% - Más Popular",
+    badgeColor:
+      "bg-emerald-600 text-white shadow-md shadow-emerald-500/20",
+    isPopular: true,
+    subPriceText: "Equivale a solo $9.00 al mes",
+    features: [
+      "1 Catálogo Digital Profesional",
+      "Hasta 300 productos",
+      "Imágenes sin límite comercial",
+      "Dominio personalizado",
+      "QR Personalizado de Alta Calidad",
+      "Carrito de Compra",
+      "Personalización de Colores",
+      "Edición de Productos",
+      "Estadísticas del Catálogo",
+      "Soporte Prioritario 24/7",
+      "Panel de Administración Pro",
+      "Sin Comisiones por Venta",
+      "Sin Contratos ni Permanencia",
+    ],
+  },
+];
 
 export default function SuscripcionPage() {
   const router = useRouter();
@@ -33,7 +112,7 @@ export default function SuscripcionPage() {
           cache: "no-store",
         });
 
-        const data = (await response.json()) as
+        const data = await response.json() as
           | EstadoSuscripcion
           | { error?: string };
 
@@ -41,7 +120,7 @@ export default function SuscripcionPage() {
           throw new Error(
             "error" in data
               ? data.error || "No pudimos comprobar tu suscripción."
-              : "No pudimos comprobar tu suscripción.",
+              : "No pudimos comprobar tu suscripción."
           );
         }
 
@@ -49,23 +128,24 @@ export default function SuscripcionPage() {
           const estado = data as EstadoSuscripcion;
 
           setTieneClienteStripe(
-            Boolean(estado.tieneClienteStripe),
+            Boolean(estado.tieneClienteStripe)
           );
+
           setTieneSuscripcionEnCurso(
-            Boolean(estado.tieneSuscripcionEnCurso),
+            Boolean(estado.tieneSuscripcionEnCurso)
           );
+
           setErrorCuenta("");
         }
       } catch (error) {
         console.error(
           "Error al revisar la suscripción:",
-          error,
+          error
         );
 
         if (activo) {
-          // Si Stripe no responde, no ofrecemos otro pago a ciegas.
           setErrorCuenta(
-            "No pudimos comprobar tu suscripción. Recarga la página para intentarlo de nuevo.",
+            "No pudimos comprobar tu suscripción. Recarga la página para intentarlo de nuevo."
           );
         }
       } finally {
@@ -82,9 +162,7 @@ export default function SuscripcionPage() {
     };
   }, []);
 
-  const handleSuscribirse = async (
-    planType: "monthly" | "annual",
-  ) => {
+  const handleSuscribirse = async (planKey: PlanKey) => {
     if (
       revisandoCuenta ||
       Boolean(errorCuenta) ||
@@ -94,7 +172,7 @@ export default function SuscripcionPage() {
       return;
     }
 
-    setLoadingPlan(planType);
+    setLoadingPlan(planKey);
 
     try {
       const {
@@ -107,43 +185,38 @@ export default function SuscripcionPage() {
       }
 
       /*
-       * El servidor vuelve a comprobar el estado real en Stripe
-       * antes de crear o recuperar una sesión de Checkout.
+       * Enviamos el identificador exacto del plan.
+       * El servidor selecciona el Price ID correspondiente.
        */
       const response = await fetch("/api/checkout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ planType }),
+        body: JSON.stringify({ planKey }),
       });
 
       const data = await response.json();
 
       if (!response.ok || !data.url) {
         if (response.status === 409) {
-          // Puede haberse activado otra suscripción desde que
-          // cargamos la página. Evitamos otro intento de pago.
           setTieneSuscripcionEnCurso(true);
         }
 
         throw new Error(
           data.error ||
-            "Ocurrió un error al iniciar el proceso de pago.",
+            "Ocurrió un error al iniciar el proceso de pago."
         );
       }
 
       window.location.assign(data.url);
     } catch (error) {
-      console.error(
-        "Error en la suscripción:",
-        error,
-      );
+      console.error("Error en la suscripción:", error);
 
       alert(
         error instanceof Error
           ? error.message
-          : "Ocurrió un error al conectar con el servidor de pago.",
+          : "Ocurrió un error al conectar con el servidor de pago."
       );
     } finally {
       setLoadingPlan("");
@@ -158,12 +231,16 @@ export default function SuscripcionPage() {
 
   return (
     <section className="relative min-h-screen overflow-hidden bg-slate-50 px-6 py-24 text-slate-900 md:py-20">
+
       {/* Resplandores luminosos de fondo */}
       <div className="pointer-events-none absolute -left-10 top-0 h-96 w-96 animate-blob rounded-full bg-emerald-300/30 opacity-70 blur-3xl mix-blend-multiply" />
+
       <div className="pointer-events-none absolute -right-10 top-10 h-96 w-96 animate-blob rounded-full bg-green-200/40 opacity-70 blur-3xl mix-blend-multiply animation-delay-2000" />
+
       <div className="pointer-events-none absolute -bottom-10 left-20 h-96 w-96 animate-blob rounded-full bg-teal-200/30 opacity-70 blur-3xl mix-blend-multiply animation-delay-4000" />
 
-      <div className="relative z-10 mx-auto max-w-5xl">
+      <div className="relative z-10 mx-auto max-w-7xl">
+
         {/* Encabezado principal */}
         <div className="mb-16 text-center">
           <div className="mb-6 inline-flex items-center rounded-full border border-emerald-200 bg-emerald-100 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-emerald-800 shadow-xs">
@@ -184,6 +261,7 @@ export default function SuscripcionPage() {
           </p>
         </div>
 
+        {/* Error de comprobación */}
         {errorCuenta && (
           <div
             role="alert"
@@ -193,34 +271,37 @@ export default function SuscripcionPage() {
           </div>
         )}
 
-        {/* Tarjetas de precios */}
-        <div className="mx-auto grid max-w-4xl grid-cols-1 items-stretch gap-8 md:grid-cols-2">
-          <PricingCard
-            title="Plan Pro Mensual"
-            price="10"
-            period="/mes"
-            badgeText="Opción Flexible"
-            badgeColor="bg-emerald-50 text-emerald-700 border border-emerald-200"
-            isLoading={loadingPlan === "monthly"}
-            isDisabled={deshabilitarPlanes}
-            onSubmit={() => handleSuscribirse("monthly")}
-          />
+        {/* Aviso de suscripción existente */}
+        {tieneSuscripcionEnCurso && (
+          <div className="mx-auto mb-8 max-w-4xl rounded-xl border border-blue-200 bg-blue-50 p-4 text-center text-sm font-medium text-blue-900">
+            Ya tienes una suscripción o un pago pendiente.
+            Puedes gestionar tu facturación desde el portal de Stripe.
+          </div>
+        )}
 
-          <PricingCard
-            title="Plan Pro Anual"
-            price="108"
-            period="/año"
-            badgeText="Ahorra 10% - Más Popular"
-            badgeColor="bg-emerald-600 text-white shadow-md shadow-emerald-500/20"
-            isPopular
-            subPriceText="Equivale a solo $9.00 al mes"
-            isLoading={loadingPlan === "annual"}
-            isDisabled={deshabilitarPlanes}
-            onSubmit={() => handleSuscribirse("annual")}
-          />
+        {/* Tarjetas de precios */}
+        <div className="mx-auto grid max-w-7xl grid-cols-1 items-stretch gap-8 md:grid-cols-2 xl:grid-cols-3">
+
+          {PLANES.map((plan) => (
+            <PricingCard
+              key={plan.key}
+              title={plan.title}
+              price={plan.price}
+              period={plan.period}
+              badgeText={plan.badgeText}
+              badgeColor={plan.badgeColor}
+              features={plan.features}
+              isPopular={plan.isPopular}
+              subPriceText={plan.subPriceText}
+              isLoading={loadingPlan === plan.key}
+              isDisabled={deshabilitarPlanes}
+              onSubmit={() => handleSuscribirse(plan.key)}
+            />
+          ))}
+
         </div>
 
-        {/* Acceso al portal aunque el dashboard esté bloqueado */}
+        {/* Acceso al portal de Stripe */}
         {tieneClienteStripe && (
           <div className="mx-auto mt-10 max-w-4xl rounded-2xl border border-emerald-200 bg-white p-6 text-center shadow-sm sm:p-8">
             <h2 className="text-xl font-bold text-slate-900">
@@ -241,7 +322,7 @@ export default function SuscripcionPage() {
           </div>
         )}
 
-        {/* Enlace de soporte */}
+        {/* Soporte */}
         <p className="mt-16 text-center text-sm text-slate-500">
           ¿Tienes alguna duda sobre nuestras tiendas online?{" "}
           <Link
@@ -251,6 +332,7 @@ export default function SuscripcionPage() {
             Habla con nuestro equipo
           </Link>
         </p>
+
       </div>
 
       <style jsx>{`
