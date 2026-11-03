@@ -18,21 +18,21 @@ const PLANES: Record<PlanKey, PlanConfig> = {
     planTipo: "basic",
     planIntervalo: "monthly",
     planType: "monthly",
-    priceId: process.env.STRIPE_PRICE_ID_BASIC_MONTHLY,
+    priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID,
   },
 
   pro_monthly: {
     planTipo: "pro",
     planIntervalo: "monthly",
     planType: "monthly",
-    priceId: process.env.STRIPE_PRICE_ID_PRO_MONTHLY,
+    priceId: process.env.STRIPE_PRICE_ID_MONTHLY,
   },
 
   pro_annual: {
     planTipo: "pro",
     planIntervalo: "annual",
     planType: "annual",
-    priceId: process.env.STRIPE_PRICE_ID_PRO_ANNUAL,
+    priceId: process.env.STRIPE_PRICE_ID_ANNUAL,
   },
 };
 
