@@ -1,35 +1,29 @@
+
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FaRocket, FaEye, FaStore } from "react-icons/fa6";
+import { createPageMetadata } from "@/components/marketing/seo/metadata";
 
-export const metadata: Metadata = {
-  title: "Sobre Nosotros | Crea tu Tienda Online con Catalagox",
+export const metadata: Metadata = createPageMetadata({
+  title: "Sobre Nosotros | Catalagox - Tu Tienda Online Profesional",
+
   description:
-    "Conoce la historia, misión y visión de Catalagox, la plataforma líder para crear tiendas online profesionales, vender por Internet y recibir pedidos por WhatsApp.",
+    "Conoce la historia, misión y visión de Catalagox. Impulsamos la transformación digital de emprendedores y negocios en Latinoamérica con herramientas para vender online.",
+
+  path: "/sobre-nosotros",
+
   keywords: [
-    "tienda online",
+    "sobre Catalagox",
+    "historia de Catalagox",
     "crear tienda online",
-    "ecommerce latinoamerica",
-    "vender por internet",
-    "Catalagox",
+    "ecommerce Latinoamérica",
+    "vender por Internet",
     "tienda virtual",
-    "catalogo digital",
+    "catálogo digital",
+    "plataforma ecommerce",
+    "emprendedores digitales",
   ],
-  openGraph: {
-    title: "Sobre Nosotros | Catalagox - Tu Tienda Online Profesional",
-    description:
-      "Impulsamos la transformación digital de emprendedores y negocios en Latinoamérica con herramientas simples y potentes para vender online.",
-    siteName: "Catalagox",
-    locale: "es_ES",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Sobre Nosotros | Catalagox",
-    description:
-      "Crea tu tienda online fácil, rápida y profesional con Catalagox.",
-  },
-};
+});
 
 export default function SobreNosotrosPage() {
   return (
@@ -56,7 +50,7 @@ export default function SobreNosotrosPage() {
 
         {/* BLOQUE PRINCIPAL */}
         <div className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center">
-          {/* HISTORIA / HISTORIAL DE LA MARCA */}
+          {/* HISTORIA */}
           <div className="space-y-6 text-slate-600 leading-relaxed text-base sm:text-lg">
             <p>
               <strong className="text-slate-900">Catalagox</strong> nació con la convicción de que cualquier negocio,
@@ -93,6 +87,7 @@ export default function SobreNosotrosPage() {
                   Nuestra Misión
                 </h2>
               </div>
+
               <p className="text-slate-600 leading-relaxed text-sm sm:text-base">
                 Democratizar el acceso al e-commerce para que cualquier comercio o emprendedor en Latinoamérica pueda crear su tienda online, independizar sus ventas y crecer por Internet.
               </p>
@@ -110,6 +105,7 @@ export default function SobreNosotrosPage() {
                   Nuestra Visión
                 </h2>
               </div>
+
               <p className="text-slate-600 leading-relaxed text-sm sm:text-base">
                 Convertirnos en la plataforma preferida de creación de tiendas virtuales en la región, impulsando a miles de marcas a digitalizarse con un sistema ágil, moderno y conectado.
               </p>

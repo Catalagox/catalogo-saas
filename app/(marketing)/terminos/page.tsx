@@ -1,31 +1,26 @@
-import type { Metadata } from "next";
 
-export const metadata: Metadata = {
+import type { Metadata } from "next";
+import { createPageMetadata } from "@/components/marketing/seo/metadata";
+
+export const metadata: Metadata = createPageMetadata({
   title: "Términos y Condiciones | Catalagox",
+
   description:
-    "Consulta los términos y condiciones de uso de Catalagox, la plataforma para crear tiendas online, catálogos virtuales y gestionar ventas por WhatsApp.",
+    "Consulta los términos y condiciones de uso de Catalagox, la plataforma para crear tiendas online, catálogos virtuales y gestionar pedidos por WhatsApp.",
+
+  path: "/terminos",
+
   keywords: [
     "términos y condiciones",
-    "tienda online",
+    "condiciones de uso Catalagox",
     "Catalagox",
-    "condiciones de uso",
+    "tienda online",
     "tienda virtual",
+    "plataforma ecommerce",
+    "catálogo digital",
+    "servicio de comercio electrónico",
   ],
-  openGraph: {
-    title: "Términos y Condiciones | Catalagox",
-    description:
-      "Términos y condiciones de uso del servicio de creación de tiendas online Catalagox.",
-    siteName: "Catalagox",
-    locale: "es_ES",
-    type: "website",
-  },
-  twitter: {
-    card: "summary",
-    title: "Términos y Condiciones | Catalagox",
-    description:
-      "Consulta los términos y condiciones de uso de la plataforma Catalagox.",
-  },
-};
+});
 
 export default function TerminosPage() {
   return (
@@ -38,9 +33,11 @@ export default function TerminosPage() {
           <div className="inline-flex items-center rounded-full bg-emerald-100 border border-emerald-200 text-emerald-800 px-3 py-1 text-xs font-bold uppercase tracking-wider mb-4">
             Aviso Legal
           </div>
+
           <h1 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight">
             Términos y Condiciones
           </h1>
+
           <p className="text-slate-500 text-sm mt-3 font-medium">
             Última actualización: 13 de febrero de 2026
           </p>
@@ -51,6 +48,7 @@ export default function TerminosPage() {
             <h2 className="text-xl font-bold text-slate-900 mb-3 flex items-center gap-2">
               <span className="text-emerald-600">1.</span> Información del Servicio
             </h2>
+
             <p>
               <strong className="text-slate-900">Catalagox</strong> es una plataforma digital que permite a comercios y emprendedores crear, gestionar y personalizar sus propias <strong className="text-slate-900">tiendas online</strong> y catálogos virtuales accesibles mediante enlace web o código QR, optimizados para la recepción de pedidos por WhatsApp. El servicio opera globalmente desde la República Argentina.
             </p>
@@ -60,6 +58,7 @@ export default function TerminosPage() {
             <h2 className="text-xl font-bold text-slate-900 mb-3 flex items-center gap-2">
               <span className="text-emerald-600">2.</span> Aceptación de los Términos
             </h2>
+
             <p>
               Al registrarse, acceder o utilizar la plataforma, el usuario acepta de manera plena y sin reservas los presentes Términos y Condiciones.
             </p>
@@ -69,6 +68,7 @@ export default function TerminosPage() {
             <h2 className="text-xl font-bold text-slate-900 mb-3 flex items-center gap-2">
               <span className="text-emerald-600">3.</span> Uso del Servicio
             </h2>
+
             <ul className="list-disc pl-6 space-y-2 marker:text-emerald-600">
               <li>Proporcionar información veraz, exacta y actualizada durante el registro y configuración de la tienda.</li>
               <li>No utilizar la plataforma para comercializar productos o servicios de carácter ilícito, ilegal o prohibido.</li>
@@ -81,6 +81,7 @@ export default function TerminosPage() {
             <h2 className="text-xl font-bold text-slate-900 mb-3 flex items-center gap-2">
               <span className="text-emerald-600">4.</span> Planes y Pagos
             </h2>
+
             <p>
               Los planes de suscripción pueden ser de modalidad mensual o anual. Todos los precios están expresados en dólares estadounidenses (USD) o su equivalente en moneda local según el procesador de pagos. El usuario puede cancelar su suscripción en cualquier momento. No se realizan reembolsos por períodos ya facturados, salvo disposición legal o regulación aplicable.
             </p>
@@ -90,6 +91,7 @@ export default function TerminosPage() {
             <h2 className="text-xl font-bold text-slate-900 mb-3 flex items-center gap-2">
               <span className="text-emerald-600">5.</span> Propiedad Intelectual
             </h2>
+
             <p>
               El código fuente, diseño, marca, marcas registradas, logotipos y arquitectura del sistema de <strong className="text-slate-900">Catalagox</strong> son propiedad exclusiva del titular del servicio y están protegidos por las leyes de propiedad intelectual vigentes.
             </p>
@@ -99,6 +101,7 @@ export default function TerminosPage() {
             <h2 className="text-xl font-bold text-slate-900 mb-3 flex items-center gap-2">
               <span className="text-emerald-600">6.</span> Limitación de Responsabilidad
             </h2>
+
             <p>
               Catalagox actúa como un facilitador tecnológico. No participamos ni nos hacemos responsables por las transacciones comerciales, pagos externos, entregas, envíos ni reclamos de garantía efectuados entre el usuario vendedor y los compradores finales de sus tiendas online.
             </p>
@@ -108,6 +111,7 @@ export default function TerminosPage() {
             <h2 className="text-xl font-bold text-slate-900 mb-3 flex items-center gap-2">
               <span className="text-emerald-600">7.</span> Modificaciones
             </h2>
+
             <p>
               Nos reservamos el derecho de actualizar o modificar estos términos en cualquier momento para adaptarlos a novedades legislativas o mejoras del servicio. Notificaremos los cambios significativos a través de nuestros canales oficiales.
             </p>

@@ -1,12 +1,28 @@
+
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FaWhatsapp, FaEnvelope, FaArrowLeft } from "react-icons/fa";
+import { createPageMetadata } from "@/components/marketing/seo/metadata";
 
-export const metadata: Metadata = {
-  title: "Contacto",
+export const metadata: Metadata = createPageMetadata({
+  title: "Contacto | Catalagox",
+
   description:
-    "Contáctanos para crear tu catálogo digital o menú QR. Soporte y asesoramiento para negocios en Argentina y Latinoamérica.",
-};
+    "Contacta con Catalagox para crear tu tienda online, catálogo digital o menú QR. Recibe asesoramiento y soporte para tu negocio en Argentina y Latinoamérica.",
+
+  path: "/contacto",
+
+  keywords: [
+    "contactar Catalagox",
+    "contacto Catalagox",
+    "soporte tienda online",
+    "asesoramiento ecommerce",
+    "crear catálogo digital",
+    "crear menú QR",
+    "tienda online para negocios",
+    "soporte ecommerce Latinoamérica",
+  ],
+});
 
 export default function ContactoPage() {
   return (

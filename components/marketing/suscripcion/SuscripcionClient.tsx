@@ -1,0 +1,365 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
+
+import { supabase } from "@/lib/supabaseClient";
+import PricingCard from "@/components/marketing/PricingCard";
+import BotonSuscripcionPortal from "@/components/dashboard/ajustes/BotonSuscripcionPortal";
+
+interface EstadoSuscripcion {
+  tieneClienteStripe: boolean;
+  tieneSuscripcionEnCurso: boolean;
+}
+
+type PlanKey = "basic_monthly" | "pro_monthly" | "pro_annual";
+
+const PLANES = [
+  {
+    key: "basic_monthly" as const,
+    title: "Plan Basic",
+    price: "5",
+    period: "/mes",
+    badgeText: "Plan Económico",
+    badgeColor:
+      "bg-emerald-50 text-emerald-700 border border-emerald-200",
+    features: [
+      "1 Catálogo Digital Profesional",
+      "Hasta 300 productos",
+      "Hasta 70 imágenes en total",
+      "QR Personalizado de Alta Calidad",
+      "Carrito de Compra",
+      "Personalización de Colores",
+      "Edición de Productos",
+      "Estadísticas del Catálogo",
+      "Panel de Administración",
+      "Sin Comisiones por Venta",
+      "Sin Contratos ni Permanencia",
+      "Sin dominio personalizado",
+    ],
+  },
+  {
+    key: "pro_monthly" as const,
+    title: "Plan Pro Mensual",
+    price: "10",
+    period: "/mes",
+    badgeText: "Opción Flexible",
+    badgeColor:
+      "bg-emerald-50 text-emerald-700 border border-emerald-200",
+    features: [
+      "1 Catálogo Digital Profesional",
+      "Hasta 300 productos",
+      "Imágenes sin límite comercial",
+      "Dominio personalizado",
+      "QR Personalizado de Alta Calidad",
+      "Carrito de Compra",
+      "Personalización de Colores",
+      "Edición de Productos",
+      "Estadísticas del Catálogo",
+      "Soporte Prioritario 24/7",
+      "Panel de Administración Pro",
+      "Sin Comisiones por Venta",
+      "Sin Contratos ni Permanencia",
+    ],
+  },
+  {
+    key: "pro_annual" as const,
+    title: "Plan Pro Anual",
+    price: "108",
+    period: "/año",
+    badgeText: "Ahorra 10% - Más Popular",
+    badgeColor:
+      "bg-emerald-600 text-white shadow-md shadow-emerald-500/20",
+    isPopular: true,
+    subPriceText: "Equivale a solo $9.00 al mes",
+    features: [
+      "1 Catálogo Digital Profesional",
+      "Hasta 300 productos",
+      "Imágenes sin límite comercial",
+      "Dominio personalizado",
+      "QR Personalizado de Alta Calidad",
+      "Carrito de Compra",
+      "Personalización de Colores",
+      "Edición de Productos",
+      "Estadísticas del Catálogo",
+      "Soporte Prioritario 24/7",
+      "Panel de Administración Pro",
+      "Sin Comisiones por Venta",
+      "Sin Contratos ni Permanencia",
+    ],
+  },
+];
+
+export default function SuscripcionClient() {
+  const router = useRouter();
+
+  const [loadingPlan, setLoadingPlan] = useState<string>("");
+  const [revisandoCuenta, setRevisandoCuenta] = useState(true);
+  const [errorCuenta, setErrorCuenta] = useState("");
+
+  const [tieneClienteStripe, setTieneClienteStripe] = useState(false);
+  const [tieneSuscripcionEnCurso, setTieneSuscripcionEnCurso] =
+    useState(false);
+
+  useEffect(() => {
+    let activo = true;
+
+    const revisarCuenta = async () => {
+      try {
+        const response = await fetch("/api/checkout", {
+          method: "GET",
+          cache: "no-store",
+        });
+
+        const data = (await response.json()) as
+          | EstadoSuscripcion
+          | { error?: string };
+
+        if (!response.ok) {
+          throw new Error(
+            "error" in data
+              ? data.error || "No pudimos comprobar tu suscripción."
+              : "No pudimos comprobar tu suscripción."
+          );
+        }
+
+        if (activo) {
+          const estado = data as EstadoSuscripcion;
+
+          setTieneClienteStripe(
+            Boolean(estado.tieneClienteStripe)
+          );
+
+          setTieneSuscripcionEnCurso(
+            Boolean(estado.tieneSuscripcionEnCurso)
+          );
+
+          setErrorCuenta("");
+        }
+      } catch (error) {
+        console.error(
+          "Error al revisar la suscripción:",
+          error
+        );
+
+        if (activo) {
+          setErrorCuenta(
+            "No pudimos comprobar tu suscripción. Recarga la página para intentarlo de nuevo."
+          );
+        }
+      } finally {
+        if (activo) {
+          setRevisandoCuenta(false);
+        }
+      }
+    };
+
+    revisarCuenta();
+
+    return () => {
+      activo = false;
+    };
+  }, []);
+
+  const handleSuscribirse = async (planKey: PlanKey) => {
+    if (
+      revisandoCuenta ||
+      Boolean(errorCuenta) ||
+      tieneSuscripcionEnCurso ||
+      loadingPlan
+    ) {
+      return;
+    }
+
+    setLoadingPlan(planKey);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        router.push("/auth");
+        return;
+      }
+
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ planKey }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.url) {
+        if (response.status === 409) {
+          setTieneSuscripcionEnCurso(true);
+        }
+
+        throw new Error(
+          data.error ||
+            "Ocurrió un error al iniciar el proceso de pago."
+        );
+      }
+
+      window.location.assign(data.url);
+    } catch (error) {
+      console.error("Error en la suscripción:", error);
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Ocurrió un error al conectar con el servidor de pago."
+      );
+    } finally {
+      setLoadingPlan("");
+    }
+  };
+
+  const deshabilitarPlanes =
+    revisandoCuenta ||
+    Boolean(errorCuenta) ||
+    tieneSuscripcionEnCurso ||
+    loadingPlan !== "";
+
+  return (
+    <section className="relative min-h-screen overflow-hidden bg-white px-5 py-8 text-slate-900 md:px-8 md:py-12">
+      <div className="relative z-10 mx-auto max-w-7xl">
+
+        {/* Botón para volver */}
+        <div className="mb-10">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50"
+          >
+            <ArrowLeft size={18} />
+            Volver
+          </button>
+        </div>
+
+        {/* Encabezado principal */}
+        <div className="mb-14 text-center md:mb-16">
+          <h1 className="mb-6 text-4xl font-black tracking-tight text-slate-900 md:text-6xl">
+            Lleva tu tienda online al{" "}
+            <br className="hidden sm:block" />
+            <span className="text-emerald-600">
+              siguiente nivel
+            </span>
+          </h1>
+
+          <p className="mx-auto max-w-2xl text-base font-medium leading-relaxed text-slate-600 md:text-lg">
+            Publica tus productos, gestiona tus ventas y
+            recibe pedidos por WhatsApp con tu propia tienda
+            virtual profesional.
+          </p>
+        </div>
+
+        {/* Error de comprobación */}
+        {errorCuenta && (
+          <div
+            role="alert"
+            className="mx-auto mb-8 max-w-4xl rounded-xl border border-amber-200 bg-amber-50 p-4 text-center text-sm font-medium text-amber-900"
+          >
+            {errorCuenta}
+          </div>
+        )}
+
+        {/* Aviso de suscripción existente */}
+        {tieneSuscripcionEnCurso && (
+          <div className="mx-auto mb-8 max-w-4xl rounded-xl border border-blue-200 bg-blue-50 p-4 text-center text-sm font-medium text-blue-900">
+            Ya tienes una suscripción o un pago pendiente.
+            Puedes gestionar tu facturación desde el portal de Stripe.
+          </div>
+        )}
+
+        {/* Tarjetas de precios */}
+        <div className="mx-auto grid max-w-7xl grid-cols-1 items-stretch gap-8 md:grid-cols-2 xl:grid-cols-3">
+          {PLANES.map((plan) => (
+            <PricingCard
+              key={plan.key}
+              title={plan.title}
+              price={plan.price}
+              period={plan.period}
+              badgeText={plan.badgeText}
+              badgeColor={plan.badgeColor}
+              features={plan.features}
+              isPopular={plan.isPopular}
+              subPriceText={plan.subPriceText}
+              isLoading={loadingPlan === plan.key}
+              isDisabled={deshabilitarPlanes}
+              onSubmit={() => handleSuscribirse(plan.key)}
+            />
+          ))}
+        </div>
+
+        {/* Acceso al portal de Stripe */}
+        {tieneClienteStripe && (
+          <div className="mx-auto mt-10 max-w-4xl rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm sm:p-8">
+            <h2 className="text-xl font-bold text-slate-900">
+              {tieneSuscripcionEnCurso
+                ? "Ya tienes una suscripción"
+                : "Gestiona tu facturación"}
+            </h2>
+
+            <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-slate-600">
+              {tieneSuscripcionEnCurso
+                ? "Si tienes un pago pendiente, puedes actualizar tu tarjeta. También puedes revisar tus pagos o cancelar tu suscripción desde Stripe."
+                : "Puedes revisar tus pagos anteriores en Stripe. Si quieres volver a contratar un plan, selecciona una de las opciones de arriba."}
+            </p>
+
+            <div className="mt-5">
+              <BotonSuscripcionPortal />
+            </div>
+          </div>
+        )}
+
+        {/* Soporte */}
+        <p className="mt-16 text-center text-sm text-slate-500">
+          ¿Tienes alguna duda sobre nuestras tiendas online?{" "}
+          <Link
+            href="/contacto"
+            className="font-bold text-emerald-600 transition-colors hover:underline"
+          >
+            Habla con nuestro equipo
+          </Link>
+        </p>
+      </div>
+
+      {/* Se conservan los efectos que podrían utilizar las tarjetas */}
+      <style jsx>{`
+        @keyframes shine {
+          100% {
+            left: 125%;
+          }
+        }
+
+        .animate-shine {
+          animation: shine 1.5s infinite;
+        }
+
+        @keyframes tilt {
+          0%,
+          50%,
+          100% {
+            transform: rotate(0deg);
+          }
+          25% {
+            transform: rotate(0.5deg);
+          }
+          75% {
+            transform: rotate(-0.5deg);
+          }
+        }
+
+        .animate-tilt {
+          animation: tilt 10s infinite linear;
+        }
+      `}</style>
+    </section>
+  );
+}

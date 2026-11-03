@@ -89,16 +89,6 @@ export default function Footer() {
                   Planes y Precios
                 </Link>
               </li>
-              <li>
-                <a
-                  href="https://catalagox.com/rifas"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-emerald-500 transition-colors"
-                >
-                  Rifas
-                </a>
-              </li>
             </ul>
           </div>
 
