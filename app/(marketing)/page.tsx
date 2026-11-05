@@ -1,37 +1,31 @@
-
 import type { Metadata } from "next";
 import Hero from "@/components/marketing/Hero";
 import RedirectIfLoggedIn from "@/components/marketing/auth/RedirectIfLoggedIn";
 import { createPageMetadata } from "@/components/marketing/seo/metadata";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Crea tu Tienda Online Profesional | Catalagox",
+  title: "Crea tu Tienda Online Fácilmente | Catalagox",
 
   description:
-    "Crea tu tienda online profesional en minutos. Publica tus productos, personaliza tu diseño, recibe pedidos por WhatsApp y vende por Internet con Catalagox.",
+    "Crea una tienda online profesional sin programar. Publica tus productos, personaliza tu catálogo y recibe pedidos por WhatsApp con Catalagox.",
 
   path: "/",
 
   keywords: [
-    "catalagox.com",
     "crear tienda online",
     "tienda online profesional",
+    "crear tienda virtual",
     "vender online",
     "vender por internet",
-    "crear tienda online gratis",
-    "ecommerce",
-    "e-commerce",
-    "tienda virtual",
     "tienda online para emprendedores",
     "tienda online para pequeños negocios",
     "vender productos online",
-    "menú QR",
     "pedidos por WhatsApp",
   ],
 
   image: "/og-image.png",
 
-  imageAlt: "Catalagox - Crea tu Tienda Online Profesional",
+  imageAlt: "Catalagox - Plataforma para crear tiendas online",
 });
 
 export default function Home() {
@@ -45,4 +39,3 @@ export default function Home() {
     </>
   );
 }
-

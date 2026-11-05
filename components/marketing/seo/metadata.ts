@@ -1,7 +1,7 @@
 
 import type { Metadata } from "next";
 
-const SITE_URL = "https://catalagox.com";
+const SITE_URL = "https://www.catalagox.com";
 const SITE_NAME = "Catalagox";
 const DEFAULT_IMAGE = "/og-image.png";
 
@@ -21,7 +21,7 @@ export function createPageMetadata({
   path,
   keywords = [],
   image = DEFAULT_IMAGE,
-  imageAlt = "Catalagox - Plataforma para crear tiendas online",
+  imageAlt = "Catalagox - Plataforma para crear páginas web para negocios",
   index = true,
 }: MetadataOptions): Metadata {
   const url = new URL(path, SITE_URL).toString();
@@ -33,12 +33,13 @@ export function createPageMetadata({
     description,
 
     keywords: [
-      "Catalagox",
-      "tienda online",
-      "catálogo digital",
-      "vender por Internet",
-      ...keywords,
-    ],
+  "Catalagox",
+  "crear página web",
+  "crear tienda online",
+  "catálogo digital",
+  "menú digital",
+  ...keywords,
+],
 
     authors: [{ name: SITE_NAME }],
     creator: SITE_NAME,
