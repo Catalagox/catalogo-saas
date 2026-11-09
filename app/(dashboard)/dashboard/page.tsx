@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import {
@@ -15,6 +16,7 @@ import {
   Play,
   AlertCircle,
   RefreshCw,
+  Crown,
 } from "lucide-react";
 type Catalogo = {
   id: string;
@@ -204,12 +206,21 @@ export default function DashboardPage() {
   return (
     <div className="w-full px-4 text-[var(--text-primary)] sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl space-y-6 md:space-y-10">
-        <PageHeader
-          title="Panel de control"
-          category="principal"
-          icon={MenuSquare}
-          showBackButton={false}
-        />
+        <div className="relative">
+          <PageHeader
+            title="Panel de control"
+            category="principal"
+            icon={MenuSquare}
+            showBackButton={false}
+          />
+          <Link
+            href="/suscripcion"
+            className="mt-3 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-green-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 sm:absolute sm:right-0 sm:top-1/2 sm:mt-0 sm:-translate-y-1/2"
+          >
+            <Crown className="h-[18px] w-[18px]" aria-hidden="true" />
+            Ver planes y precios
+          </Link>
+        </div>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {dashboardCards.map((card) => (
             <button

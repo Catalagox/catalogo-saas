@@ -22,7 +22,6 @@ import {
   FileText,
   ChevronUp,
   CreditCard,
-  Crown,
 } from "lucide-react";
 type EstadoPlan = {
   nombrePlan?: string | null;
@@ -32,7 +31,6 @@ type EstadoPlan = {
 };
 type Props = { closeMenu?: () => void; estadoPlan?: EstadoPlan | null };
 const links = [
-  { name: "Ver planes y precios", href: "/suscripcion", icon: Crown },
   { name: "Principal", href: "/dashboard", icon: LayoutDashboard },
   {
     name: "Agregar producto",
@@ -189,38 +187,20 @@ export default function Sidebar({ closeMenu, estadoPlan }: Props) {
   onClick={navegar}
   aria-current={active ? "page" : undefined}
   title={link.name}
-  style={
-    link.href === "/suscripcion" && !active
-      ? {
-          backgroundColor: "#F0FDF4",
-          color: "#14532D",
-          opacity: 1,
-        }
-      : undefined
-  }
   className={`flex min-h-11 items-center gap-3 rounded-xl px-4 py-2.5 text-sm transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--color-primary)] ${
     active
       ? "bg-[var(--color-primary)] font-semibold text-[var(--color-text-inverse)]"
-      : link.href === "/suscripcion"
-        ? "font-extrabold hover:!bg-[#DCFCE7]"
-        : "text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)] hover:text-[var(--text-primary)]"
+      : "text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)] hover:text-[var(--text-primary)]"
   }`}
 >
   <Icon
     size={19}
-    style={
-      link.href === "/suscripcion"
-        ? { color: "#15803D", opacity: 1 }
-        : undefined
-    }
     className="shrink-0"
     aria-hidden="true"
   />
 
   <span
-    className={`min-w-0 truncate ${
-      link.href === "/suscripcion" ? "font-extrabold" : ""
-    }`}
+    className="min-w-0 truncate"
   >
     {link.name}
   </span>
