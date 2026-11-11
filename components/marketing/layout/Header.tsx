@@ -45,12 +45,12 @@ export default function Header() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const isHome = pathname === "/";
+  const isPaginaWeb = pathname === "/crear-pagina-web";
 
-  // El header tendrá fondo sólido cuando:
-  // 1. No estamos en Inicio.
-  // 2. El usuario hizo scroll.
-  // 3. El menú responsive está abierto.
-  const headerSolid = !isHome || scrolled || menuOpen;
+  // Header transparente en la portada principal y en crear página web.
+  const headerTransparent = isHome || isPaginaWeb;
+
+  const headerSolid = !headerTransparent || scrolled || menuOpen;
 
   // ---------------------------------------------------------
   // AUTENTICACIÓN
@@ -190,8 +190,8 @@ export default function Header() {
 
   return (
     <header
-      className={`
-    ${isHome ? "fixed" : "sticky"}
+  className={`
+    ${headerTransparent ? "fixed" : "sticky"}
     left-0
     top-0
     z-[100]
@@ -217,7 +217,7 @@ export default function Header() {
         `
     }
   `}
-    >
+>
       {/* =====================================================
           BARRA PRINCIPAL
       ====================================================== */}
