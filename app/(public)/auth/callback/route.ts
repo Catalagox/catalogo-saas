@@ -1,3 +1,4 @@
+
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -16,6 +17,11 @@ function getAuthErrorUrl(
   message: string,
 ) {
   const url = request.nextUrl.clone();
+
+  // Forzar el dominio oficial con www
+  url.protocol = "https:";
+  url.hostname = "www.catalagox.com";
+  url.port = "";
 
   url.pathname = "/auth";
   url.search = "";
@@ -86,6 +92,6 @@ export async function GET(request: NextRequest) {
   }
 
   return NextResponse.redirect(
-    new URL(next, request.nextUrl.origin),
+    new URL(next, "https://www.catalagox.com"),
   );
 }

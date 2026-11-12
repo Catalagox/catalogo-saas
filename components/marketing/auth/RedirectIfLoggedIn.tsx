@@ -67,7 +67,7 @@ export default function RedirectIfLoggedIn() {
             <div className="absolute w-16 h-16 bg-emerald-500/20 rounded-full blur-xl animate-pulse" />
 
             <span className="text-2xl font-black tracking-tighter relative select-none">
-              Catalago<span className="text-emerald-500">X</span>
+              Catalagox<span className="text-emerald-500"></span>
             </span>
           </div>
 

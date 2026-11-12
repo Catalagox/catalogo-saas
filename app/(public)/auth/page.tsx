@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  Suspense,
-  useEffect,
-  useMemo,
-  useState,
-  type FormEvent,
-} from "react";
+import { Suspense, useEffect, useMemo, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   FaEnvelope,
@@ -85,37 +79,34 @@ function AuthForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] =
-    useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
-const [checkingSession, setCheckingSession] = useState(true);
+  const [checkingSession, setCheckingSession] = useState(true);
 
-const [errorMsg, setErrorMsg] = useState("");
-const [successMsg, setSuccessMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
 
-const isLogin = mode === "login";
-const isRegister = mode === "register";
-const isRecovery = mode === "recovery";
+  const isLogin = mode === "login";
+  const isRegister = mode === "register";
+  const isRecovery = mode === "recovery";
 
-/*
- * Muestra los errores enviados por /auth/callback.
- * Por ejemplo: enlace vencido, cancelación de Google
- * o código de autenticación inválido.
- */
-useEffect(() => {
-  const callbackError = searchParams.get("error");
+  /*
+   * Muestra los errores enviados por /auth/callback.
+   * Por ejemplo: enlace vencido, cancelación de Google
+   * o código de autenticación inválido.
+   */
+  useEffect(() => {
+    const callbackError = searchParams.get("error");
 
-  if (!callbackError) return;
+    if (!callbackError) return;
 
-  setMode("login");
-  setErrorMsg(callbackError);
-  setSuccessMsg("");
-}, [searchParams]);
+    setMode("login");
+    setErrorMsg(callbackError);
+    setSuccessMsg("");
+  }, [searchParams]);
 
-const resolveAuthenticatedDestination = async (
-  userId: string,
-) => {
+  const resolveAuthenticatedDestination = async (userId: string) => {
     const { data: catalogo, error } = await supabase
       .from("catalogos")
       .select("id")
@@ -144,8 +135,7 @@ const resolveAuthenticatedDestination = async (
 
         if (!active || !user) return;
 
-        const destination =
-          await resolveAuthenticatedDestination(user.id);
+        const destination = await resolveAuthenticatedDestination(user.id);
 
         if (active) {
           router.replace(destination);
@@ -185,11 +175,10 @@ const resolveAuthenticatedDestination = async (
   const handleLogin = async () => {
     const normalizedEmail = email.trim().toLowerCase();
 
-    const { data, error } =
-      await supabase.auth.signInWithPassword({
-        email: normalizedEmail,
-        password,
-      });
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: normalizedEmail,
+      password,
+    });
 
     if (error) throw error;
 
@@ -197,8 +186,7 @@ const resolveAuthenticatedDestination = async (
       throw new Error("No se pudo iniciar sesión.");
     }
 
-    const destination =
-      await resolveAuthenticatedDestination(data.user.id);
+    const destination = await resolveAuthenticatedDestination(data.user.id);
 
     router.replace(destination);
     router.refresh();
@@ -206,15 +194,11 @@ const resolveAuthenticatedDestination = async (
 
   const handleRegister = async () => {
     if (!countryCode) {
-      throw new Error(
-        "Selecciona el país donde funciona tu negocio.",
-      );
+      throw new Error("Selecciona el país donde funciona tu negocio.");
     }
 
     if (password.length < 8) {
-      throw new Error(
-        "La contraseña debe tener al menos 8 caracteres.",
-      );
+      throw new Error("La contraseña debe tener al menos 8 caracteres.");
     }
 
     if (password !== confirmPassword) {
@@ -224,10 +208,7 @@ const resolveAuthenticatedDestination = async (
     const normalizedEmail = email.trim().toLowerCase();
     const onboardingPath = getOnboardingPath(redirect);
 
-    const callbackUrl = new URL(
-      "/auth/callback",
-      window.location.origin,
-    );
+    const callbackUrl = new URL("/auth/callback", "https://www.catalagox.com");
 
     callbackUrl.searchParams.set("next", onboardingPath);
 
@@ -246,29 +227,29 @@ const resolveAuthenticatedDestination = async (
     if (error) throw error;
 
     if (!data.user) {
-  throw new Error("No se pudo crear la cuenta.");
-}
+      throw new Error("No se pudo crear la cuenta.");
+    }
 
-/*
- * Supabase puede devolver un usuario sin identidades cuando
- * intentan registrar nuevamente un correo que ya existe.
- */
-if (
-  Array.isArray(data.user.identities) &&
-  data.user.identities.length === 0
-) {
-  setMode("login");
-  setSuccessMsg("");
-  setErrorMsg(
-    "Este correo ya está registrado. Inicia sesión o recupera tu contraseña.",
-  );
+    /*
+     * Supabase puede devolver un usuario sin identidades cuando
+     * intentan registrar nuevamente un correo que ya existe.
+     */
+    if (
+      Array.isArray(data.user.identities) &&
+      data.user.identities.length === 0
+    ) {
+      setMode("login");
+      setSuccessMsg("");
+      setErrorMsg(
+        "Este correo ya está registrado. Inicia sesión o recupera tu contraseña.",
+      );
 
-  setPassword("");
-  setConfirmPassword("");
-  return;
-}
+      setPassword("");
+      setConfirmPassword("");
+      return;
+    }
 
-if (!data.session) {
+    if (!data.session) {
       setSuccessMsg(
         "Cuenta creada. Revisa tu correo y confirma tu cuenta para continuar.",
       );
@@ -283,36 +264,27 @@ if (!data.session) {
   };
 
   const handleRecovery = async () => {
-  const normalizedEmail = email.trim().toLowerCase();
+    const normalizedEmail = email.trim().toLowerCase();
 
-  const callbackUrl = new URL(
-    "/auth/callback",
-    "https://www.catalagox.com",
-  );
+    const callbackUrl = new URL("/auth/callback", "https://www.catalagox.com");
 
-  callbackUrl.searchParams.set(
-    "next",
-    "/auth/nueva-password",
-  );
+    callbackUrl.searchParams.set("next", "/auth/nueva-password");
 
-  const { error } =
-    await supabase.auth.resetPasswordForEmail(
+    const { error } = await supabase.auth.resetPasswordForEmail(
       normalizedEmail,
       {
         redirectTo: callbackUrl.toString(),
       },
     );
 
-  if (error) throw error;
+    if (error) throw error;
 
-  setSuccessMsg(
-    "Si existe una cuenta con ese correo, recibirás un enlace para cambiar tu contraseña.",
-  );
-};
+    setSuccessMsg(
+      "Si existe una cuenta con ese correo, recibirás un enlace para cambiar tu contraseña.",
+    );
+  };
 
-  const handleSubmit = async (
-    event: FormEvent<HTMLFormElement>,
-  ) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (loading) return;
@@ -352,7 +324,7 @@ if (!data.session) {
 
       const callbackUrl = new URL(
         "/auth/callback",
-        window.location.origin,
+        "https://www.catalagox.com",
       );
 
       callbackUrl.searchParams.set("next", onboardingPath);
@@ -400,27 +372,18 @@ if (!data.session) {
   return (
     <div className="w-full max-w-md rounded-3xl border border-gray-200 bg-white p-6 shadow-2xl sm:p-8 md:p-10">
       <div className="mb-8 text-center">
-        <h1 className="text-3xl font-extrabold text-gray-900">
-          {title}
-        </h1>
+        <h1 className="text-3xl font-extrabold text-gray-900">{title}</h1>
 
-        <p className="mt-2 text-gray-500">
-          {description}
-        </p>
+        <p className="mt-2 text-gray-500">{description}</p>
       </div>
 
       {!isRecovery && (
         <>
-          <GoogleButton
-            onClick={handleGoogleAuth}
-            disabled={loading}
-          />
+          <GoogleButton onClick={handleGoogleAuth} disabled={loading} />
 
           <div className="my-6 flex items-center">
             <div className="h-px flex-1 bg-gray-300" />
-            <span className="px-4 text-sm text-gray-500">
-              o
-            </span>
+            <span className="px-4 text-sm text-gray-500">o</span>
             <div className="h-px flex-1 bg-gray-300" />
           </div>
         </>
@@ -466,9 +429,7 @@ if (!data.session) {
               placeholder="tu@email.com"
               className="w-full bg-transparent text-gray-900 outline-none placeholder:text-gray-400"
               value={email}
-              onChange={(event) =>
-                setEmail(event.target.value)
-              }
+              onChange={(event) => setEmail(event.target.value)}
               disabled={loading}
               required
             />
@@ -512,21 +473,13 @@ if (!data.session) {
               <input
                 type={showPassword ? "text" : "password"}
                 name="password"
-                autoComplete={
-                  isLogin
-                    ? "current-password"
-                    : "new-password"
-                }
+                autoComplete={isLogin ? "current-password" : "new-password"}
                 placeholder={
-                  isRegister
-                    ? "Mínimo 8 caracteres"
-                    : "Escribe tu contraseña"
+                  isRegister ? "Mínimo 8 caracteres" : "Escribe tu contraseña"
                 }
                 className="w-full bg-transparent text-gray-900 outline-none placeholder:text-gray-400"
                 value={password}
-                onChange={(event) =>
-                  setPassword(event.target.value)
-                }
+                onChange={(event) => setPassword(event.target.value)}
                 disabled={loading}
                 minLength={8}
                 required
@@ -534,14 +487,10 @@ if (!data.session) {
 
               <button
                 type="button"
-                onClick={() =>
-                  setShowPassword((current) => !current)
-                }
+                onClick={() => setShowPassword((current) => !current)}
                 disabled={loading}
                 aria-label={
-                  showPassword
-                    ? "Ocultar contraseña"
-                    : "Mostrar contraseña"
+                  showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
                 }
                 className="ml-2 text-gray-400 transition-colors hover:text-gray-600"
               >
@@ -561,19 +510,13 @@ if (!data.session) {
               <FaLock className="mr-3 shrink-0 text-gray-400" />
 
               <input
-                type={
-                  showConfirmPassword
-                    ? "text"
-                    : "password"
-                }
+                type={showConfirmPassword ? "text" : "password"}
                 name="confirmPassword"
                 autoComplete="new-password"
                 placeholder="Repite tu contraseña"
                 className="w-full bg-transparent text-gray-900 outline-none placeholder:text-gray-400"
                 value={confirmPassword}
-                onChange={(event) =>
-                  setConfirmPassword(event.target.value)
-                }
+                onChange={(event) => setConfirmPassword(event.target.value)}
                 disabled={loading}
                 minLength={8}
                 required
@@ -581,11 +524,7 @@ if (!data.session) {
 
               <button
                 type="button"
-                onClick={() =>
-                  setShowConfirmPassword(
-                    (current) => !current,
-                  )
-                }
+                onClick={() => setShowConfirmPassword((current) => !current)}
                 disabled={loading}
                 aria-label={
                   showConfirmPassword
@@ -594,20 +533,15 @@ if (!data.session) {
                 }
                 className="ml-2 text-gray-400 transition-colors hover:text-gray-600"
               >
-                {showConfirmPassword ? (
-                  <FaEyeSlash />
-                ) : (
-                  <FaEye />
-                )}
+                {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
 
-            {confirmPassword &&
-              password !== confirmPassword && (
-                <p className="mt-2 text-xs font-medium text-red-600">
-                  Las contraseñas todavía no coinciden.
-                </p>
-              )}
+            {confirmPassword && password !== confirmPassword && (
+              <p className="mt-2 text-xs font-medium text-red-600">
+                Las contraseñas todavía no coinciden.
+              </p>
+            )}
           </label>
         )}
 
@@ -655,23 +589,15 @@ if (!data.session) {
         </div>
       ) : (
         <div className="mt-6 text-center text-sm text-gray-600">
-          {isLogin
-            ? "¿No tienes cuenta?"
-            : "¿Ya tienes cuenta?"}
+          {isLogin ? "¿No tienes cuenta?" : "¿Ya tienes cuenta?"}
 
           <button
             type="button"
-            onClick={() =>
-              changeMode(
-                isLogin ? "register" : "login",
-              )
-            }
+            onClick={() => changeMode(isLogin ? "register" : "login")}
             disabled={loading}
             className="ml-1 font-semibold text-green-600 hover:text-green-700"
           >
-            {isLogin
-              ? "Crear cuenta"
-              : "Iniciar sesión"}
+            {isLogin ? "Crear cuenta" : "Iniciar sesión"}
           </button>
         </div>
       )}
