@@ -72,27 +72,26 @@ type PlanIdentificado = {
   plan_intervalo: "monthly" | "annual";
 };
 
-function identificarPlan(
-  priceId: string,
-): PlanIdentificado | null {
-  const planes: Record<string, PlanIdentificado> = {
-    [process.env.STRIPE_PRICE_ID_BASIC_MONTHLY || ""]: {
-      plan_tipo: "basic",
-      plan_intervalo: "monthly",
+function identificarPlan(priceId: string): PlanIdentificado | null {
+  const planes: Array<{
+    id: string | undefined;
+    plan: PlanIdentificado;
+  }> = [
+    {
+      id: process.env.STRIPE_PRICE_ID_BASIC_MONTHLY,
+      plan: { plan_tipo: "basic", plan_intervalo: "monthly" },
     },
-
-    [process.env.STRIPE_PRICE_ID_PRO_MONTHLY || ""]: {
-      plan_tipo: "pro",
-      plan_intervalo: "monthly",
+    {
+      id: process.env.STRIPE_PRICE_ID_PRO_MONTHLY,
+      plan: { plan_tipo: "pro", plan_intervalo: "monthly" },
     },
-
-    [process.env.STRIPE_PRICE_ID_PRO_ANNUAL || ""]: {
-      plan_tipo: "pro",
-      plan_intervalo: "annual",
+    {
+      id: process.env.STRIPE_PRICE_ID_PRO_ANNUAL,
+      plan: { plan_tipo: "pro", plan_intervalo: "annual" },
     },
-  };
+  ];
 
-  return planes[priceId] ?? null;
+  return planes.find(({ id }) => Boolean(id) && id === priceId)?.plan ?? null;
 }
 
 function esTerminal(status: Stripe.Subscription.Status): boolean {
@@ -156,7 +155,7 @@ export async function POST(req: Request) {
   }
 
   const columnas =
-  "id, user_id, stripe_customer_id, stripe_subscription_id, plan_tipo, plan_intervalo, stripe_price_id";
+    "id, user_id, stripe_customer_id, stripe_subscription_id, plan_tipo, plan_intervalo, stripe_price_id";
 
   async function buscarCatalogo(
     subscriptionId: string,
@@ -175,7 +174,14 @@ export async function POST(req: Request) {
     }
 
     if (vinculada.data) {
-      return vinculada.data as CatalogoStripe;
+      const encontrado = vinculada.data as CatalogoStripe;
+      if (
+        encontrado.stripe_customer_id &&
+        encontrado.stripe_customer_id !== customerId
+      ) {
+        throw new Error("La suscripción pertenece a otro cliente Stripe.");
+      }
+      return encontrado;
     }
 
     if (userId) {
@@ -190,7 +196,14 @@ export async function POST(req: Request) {
       }
 
       if (porUsuario.data) {
-        return porUsuario.data as CatalogoStripe;
+        const encontrado = porUsuario.data as CatalogoStripe;
+        if (
+          encontrado.stripe_customer_id &&
+          encontrado.stripe_customer_id !== customerId
+        ) {
+          throw new Error("El cliente Stripe no coincide con el del catálogo.");
+        }
+        return encontrado;
       }
     }
 
@@ -275,27 +288,21 @@ export async function POST(req: Request) {
 
     const planVenceEl = obtenerVencimiento(subscription);
 
-    const stripePriceId =
-  subscription.items.data[0]?.price.id;
+    const stripePriceId = subscription.items.data[0]?.price.id;
 
-if (!stripePriceId) {
-  throw new Error(
-    `No se encontró el Price ID de ${subscription.id}.`,
-  );
-}
+    if (!stripePriceId) {
+      throw new Error(`No se encontró el Price ID de ${subscription.id}.`);
+    }
 
-const planIdentificado = identificarPlan(stripePriceId);
+    const planIdentificado = identificarPlan(stripePriceId);
 
-if (!planIdentificado) {
-  console.error("Price ID no reconocido:", {
-    subscriptionId: subscription.id,
-    stripePriceId,
-  });
-
-  throw new Error(
-    `El precio ${stripePriceId} no está configurado en Catalagox.`,
-  );
-}
+    if (!planIdentificado) {
+      throw new Error(
+        `Price ID no reconocido: ${stripePriceId} (suscripción ${subscription.id}). ` +
+          "Comprueba STRIPE_PRICE_ID_BASIC_MONTHLY, " +
+          "STRIPE_PRICE_ID_PRO_MONTHLY y STRIPE_PRICE_ID_PRO_ANNUAL en Vercel."
+      );
+    }
 
     if (tieneAcceso(subscription.status) && !planVenceEl) {
       // No inventamos meses ni fechas de vencimiento.
@@ -305,24 +312,23 @@ if (!planIdentificado) {
     }
 
     const updateData: {
-  stripe_customer_id: string;
-  stripe_subscription_id: string;
-  subscription_status: string;
-  suscripcion_activa: boolean;
-  plan_vence_el?: string;
-  plan_tipo: "basic" | "pro";
-  plan_intervalo: "monthly" | "annual";
-  stripe_price_id: string;
-} = {
-  stripe_customer_id: customerId,
-  stripe_subscription_id: subscription.id,
-  subscription_status: subscription.status,
-  suscripcion_activa: tieneAcceso(subscription.status),
-
-  plan_tipo: planIdentificado.plan_tipo,
-  plan_intervalo: planIdentificado.plan_intervalo,
-  stripe_price_id: stripePriceId,
-};
+      stripe_customer_id: string;
+      stripe_subscription_id: string;
+      subscription_status: string;
+      suscripcion_activa: boolean;
+      plan_vence_el?: string;
+      plan_tipo: "basic" | "pro";
+      plan_intervalo: "monthly" | "annual";
+      stripe_price_id: string;
+    } = {
+      stripe_customer_id: customerId,
+      stripe_subscription_id: subscription.id,
+      subscription_status: subscription.status,
+      suscripcion_activa: tieneAcceso(subscription.status),
+      plan_tipo: planIdentificado.plan_tipo,
+      plan_intervalo: planIdentificado.plan_intervalo,
+      stripe_price_id: stripePriceId,
+    };
 
     if (planVenceEl) {
       updateData.plan_vence_el = planVenceEl;

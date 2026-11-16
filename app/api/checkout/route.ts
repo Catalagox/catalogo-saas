@@ -3,12 +3,18 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@/lib/supabase/server";
 
-type PlanKey = "basic_monthly" | "pro_monthly" | "pro_annual";
+export const runtime = "nodejs";
+
+type PlanKey =
+  | "basic_monthly"
+  | "pro_monthly"
+  | "pro_annual";
+
 type PlanType = "monthly" | "annual";
 
 type PlanConfig = {
   planTipo: "basic" | "pro";
-  planIntervalo: "monthly" | "annual";
+  planIntervalo: PlanType;
   planType: PlanType;
   priceId: string | undefined;
 };
@@ -18,21 +24,21 @@ const PLANES: Record<PlanKey, PlanConfig> = {
     planTipo: "basic",
     planIntervalo: "monthly",
     planType: "monthly",
-    priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID,
+    priceId: process.env.STRIPE_PRICE_ID_BASIC_MONTHLY,
   },
 
   pro_monthly: {
     planTipo: "pro",
     planIntervalo: "monthly",
     planType: "monthly",
-    priceId: process.env.STRIPE_PRICE_ID_MONTHLY,
+    priceId: process.env.STRIPE_PRICE_ID_PRO_MONTHLY,
   },
 
   pro_annual: {
     planTipo: "pro",
     planIntervalo: "annual",
     planType: "annual",
-    priceId: process.env.STRIPE_PRICE_ID_ANNUAL,
+    priceId: process.env.STRIPE_PRICE_ID_PRO_ANNUAL,
   },
 };
 
@@ -49,6 +55,33 @@ function esPlanKey(valor: unknown): valor is PlanKey {
   );
 }
 
+function obtenerStripe(): Stripe {
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+
+  if (!secretKey) {
+    throw new Error("Falta STRIPE_SECRET_KEY");
+  }
+
+  return new Stripe(secretKey);
+}
+
+function obtenerBaseUrl(): string {
+  const configurada =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    "https://www.catalagox.com";
+
+  const url = new URL(configurada);
+
+  if (
+    process.env.NODE_ENV === "production" &&
+    url.protocol !== "https:"
+  ) {
+    throw new Error("NEXT_PUBLIC_SITE_URL debe utilizar HTTPS");
+  }
+
+  return url.origin;
+}
+
 async function obtenerCuenta() {
   const supabase = await createClient();
 
@@ -58,16 +91,23 @@ async function obtenerCuenta() {
   } = await supabase.auth.getUser();
 
   if (authError || !user || !user.email) {
-    return { supabase, user: null, catalogo: null };
+    return {
+      supabase,
+      user: null,
+      catalogo: null,
+    };
   }
 
-  const { data: catalogo, error: catalogoError } = await supabase
-    .from("catalogos")
-    .select("id, stripe_customer_id")
-    .eq("user_id", user.id)
-    .maybeSingle();
+  const { data: catalogo, error: catalogoError } =
+    await supabase
+      .from("catalogos")
+      .select("id, stripe_customer_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
 
-  if (catalogoError) throw catalogoError;
+  if (catalogoError) {
+    throw catalogoError;
+  }
 
   return { supabase, user, catalogo };
 }
@@ -75,94 +115,130 @@ async function obtenerCuenta() {
 async function tieneSuscripcionEnCurso(
   stripe: Stripe,
   customerId: string,
-) {
-  // Stripe devuelve aquí las suscripciones que aún no están canceladas.
-  const subscriptions = await stripe.subscriptions.list({
+): Promise<boolean> {
+  // Recorremos todas las páginas para no ignorar
+  // suscripciones antiguas del mismo cliente.
+  for await (const subscription of stripe.subscriptions.list({
     customer: customerId,
     status: "all",
     limit: 100,
-  });
+  })) {
+    if (!ESTADOS_FINALIZADOS.has(subscription.status)) {
+      return true;
+    }
+  }
 
-  return subscriptions.data.some(
-    (subscription) =>
-      !ESTADOS_FINALIZADOS.has(subscription.status),
-  );
+  return false;
 }
 
-// La página /suscripcion consulta este estado para decidir qué mostrar.
+function obtenerPlanSolicitado(
+  datos: {
+    planKey?: unknown;
+    planType?: unknown;
+  },
+): PlanKey | null {
+  if (esPlanKey(datos.planKey)) {
+    return datos.planKey;
+  }
+
+  if (datos.planKey !== undefined) {
+    return null;
+  }
+
+  // Compatibilidad con el frontend anterior.
+  if (datos.planType === "monthly") {
+    return "pro_monthly";
+  }
+
+  if (datos.planType === "annual") {
+    return "pro_annual";
+  }
+
+  return null;
+}
+
+// GET: consultar si el usuario tiene una suscripción.
 export async function GET() {
   try {
     const { user, catalogo } = await obtenerCuenta();
 
-    if (!user) {
-      return NextResponse.json({
-        tieneClienteStripe: false,
-        tieneSuscripcionEnCurso: false,
-      });
+    if (!user || !catalogo?.stripe_customer_id) {
+      return NextResponse.json(
+        {
+          tieneClienteStripe: false,
+          tieneSuscripcionEnCurso: false,
+        },
+        {
+          headers: { "Cache-Control": "no-store" },
+        },
+      );
     }
 
-    const customerId = catalogo?.stripe_customer_id;
+    const stripe = obtenerStripe();
 
-    if (!customerId) {
-      return NextResponse.json({
-        tieneClienteStripe: false,
-        tieneSuscripcionEnCurso: false,
-      });
-    }
-
-    const secretKey = process.env.STRIPE_SECRET_KEY;
-
-    if (!secretKey) {
-      throw new Error("Falta STRIPE_SECRET_KEY");
-    }
-
-    const stripe = new Stripe(secretKey);
-
-    return NextResponse.json({
-      tieneClienteStripe: true,
-      tieneSuscripcionEnCurso: await tieneSuscripcionEnCurso(
+    const tieneSuscripcion =
+      await tieneSuscripcionEnCurso(
         stripe,
-        customerId,
-      ),
-    });
-  } catch (error) {
-    console.error("Error consultando suscripción:", error);
+        catalogo.stripe_customer_id,
+      );
 
     return NextResponse.json(
-      { error: "No pudimos comprobar tu suscripción." },
+      {
+        tieneClienteStripe: true,
+        tieneSuscripcionEnCurso: tieneSuscripcion,
+      },
+      {
+        headers: { "Cache-Control": "no-store" },
+      },
+    );
+  } catch (error) {
+    console.error(
+      "Error consultando suscripción:",
+      error,
+    );
+
+    return NextResponse.json(
+      {
+        error: "No pudimos comprobar tu suscripción.",
+      },
       { status: 500 },
     );
   }
 }
 
+// POST: crear sesión de Checkout.
 export async function POST(req: Request) {
   try {
-    const secretKey = process.env.STRIPE_SECRET_KEY;
-
-    if (!secretKey) {
-      throw new Error("Falta STRIPE_SECRET_KEY");
-    }
-
-    const { supabase, user, catalogo } = await obtenerCuenta();
+    const { supabase, user, catalogo } =
+      await obtenerCuenta();
 
     if (!user) {
       return NextResponse.json(
-        { error: "Inicia sesión para contratar un plan." },
+        {
+          error: "Inicia sesión para contratar un plan.",
+        },
         { status: 401 },
       );
     }
 
     if (!catalogo) {
       return NextResponse.json(
-        { error: "Primero completa el registro de tu tienda." },
+        {
+          error: "Primero completa el registro de tu tienda.",
+        },
         { status: 409 },
       );
     }
 
-    // Leemos el plan solicitado.
-    const body: unknown = await req.json().catch(() => null);
+    const body: unknown = await req
+      .json()
+      .catch(() => null);
 
-    if (!body || typeof body !== "object") {
+    if (
+      !body ||
+      typeof body !== "object" ||
+      Array.isArray(body)
+    ) {
       return NextResponse.json(
         { error: "Selecciona un plan válido." },
         { status: 400 },
@@ -174,85 +250,106 @@ export async function POST(req: Request) {
       planType?: unknown;
     };
 
-    let planKey: PlanKey;
+    const planKey = obtenerPlanSolicitado(datos);
 
-    // Nuevo sistema: Basic mensual, Pro mensual y Pro anual.
-    if (esPlanKey(datos.planKey)) {
-      planKey = datos.planKey;
-    } else if (datos.planKey !== undefined) {
+    if (!planKey) {
       return NextResponse.json(
         { error: "Selecciona un plan válido." },
         { status: 400 },
       );
-    } else {
-      /*
-       * Compatibilidad con la página anterior:
-       * monthly = Pro mensual
-       * annual = Pro anual
-       *
-       * Así no rompemos el Checkout mientras actualizamos
-       * el componente de suscripciones.
-       */
-      if (
-        datos.planType !== "monthly" &&
-        datos.planType !== "annual"
-      ) {
-        return NextResponse.json(
-          { error: "Selecciona un plan válido." },
-          { status: 400 },
-        );
-      }
-
-      planKey =
-        datos.planType === "annual"
-          ? "pro_annual"
-          : "pro_monthly";
     }
 
     const plan = PLANES[planKey];
 
     if (!plan.priceId) {
-      console.error("Precio de Stripe no configurado:", planKey);
+      console.error(
+        "Precio Stripe no configurado:",
+        planKey,
+      );
 
       return NextResponse.json(
-        { error: "El precio de este plan no está configurado." },
+        {
+          error:
+            "El precio de este plan no está configurado.",
+        },
         { status: 500 },
       );
     }
 
-    const stripe = new Stripe(secretKey);
+    const stripe = obtenerStripe();
+    const baseUrl = obtenerBaseUrl();
 
-    const baseUrl =
-      process.env.NEXT_PUBLIC_SITE_URL ||
-      "https://www.catalagox.com";
+    // Verificamos que el Price ID exista y corresponda
+    // al importe e intervalo esperados.
+    const price = await stripe.prices.retrieve(plan.priceId);
+
+    const importesEsperados: Record<PlanKey, number> = {
+      basic_monthly: 500,
+      pro_monthly: 1000,
+      pro_annual: 10800,
+    };
+
+    const intervaloEsperado =
+      plan.planIntervalo === "annual" ? "year" : "month";
+
+    if (
+      !price.active ||
+      price.type !== "recurring" ||
+      price.currency !== "usd" ||
+      price.unit_amount !== importesEsperados[planKey] ||
+      price.recurring?.interval !== intervaloEsperado ||
+      price.recurring?.interval_count !== 1
+    ) {
+      console.error(
+        "Configuración de precio incompatible:",
+        {
+          planKey,
+          priceId: plan.priceId,
+        },
+      );
+
+      return NextResponse.json(
+        {
+          error:
+            "La configuración del plan necesita revisión.",
+        },
+        { status: 500 },
+      );
+    }
 
     let customerId: string;
 
     if (catalogo.stripe_customer_id) {
       customerId = catalogo.stripe_customer_id;
     } else {
-      const customer = await stripe.customers.create({
-        email: user.email,
-        metadata: {
-          supabaseUserId: user.id,
+      const customer = await stripe.customers.create(
+        {
+          email: user.email!,
+          metadata: {
+            supabaseUserId: user.id,
+          },
         },
-      });
+        {
+          idempotencyKey:
+            `catalagox-customer-${catalogo.id}`,
+        },
+      );
 
-      /*
-       * Guardamos el ID solamente si continúa vacío.
-       * Si otra solicitud lo guardó primero, usamos ese cliente.
-       */
       const { data: actualizado, error: updateError } =
         await supabase
           .from("catalogos")
-          .update({ stripe_customer_id: customer.id })
+          .update({
+            stripe_customer_id: customer.id,
+          })
           .eq("id", catalogo.id)
           .eq("user_id", user.id)
           .is("stripe_customer_id", null)
           .select("stripe_customer_id")
           .maybeSingle();
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        throw updateError;
+      }
 
       if (actualizado?.stripe_customer_id) {
         customerId = actualizado.stripe_customer_id;
@@ -266,15 +363,23 @@ export async function POST(req: Request) {
             .single();
 
         if (readError || !vigente?.stripe_customer_id) {
-          throw readError || new Error("No se pudo guardar el cliente");
+          throw (
+            readError ||
+            new Error("No se pudo recuperar el cliente Stripe")
+          );
         }
 
         customerId = vigente.stripe_customer_id;
       }
     }
 
-    // Evitamos crear una segunda suscripción para la misma cuenta.
-    if (await tieneSuscripcionEnCurso(stripe, customerId)) {
+    // Protección contra suscripciones duplicadas.
+    if (
+      await tieneSuscripcionEnCurso(
+        stripe,
+        customerId,
+      )
+    ) {
       return NextResponse.json(
         {
           error:
@@ -284,37 +389,33 @@ export async function POST(req: Request) {
       );
     }
 
-    /*
-     * Si había un Checkout abierto para este cliente,
-     * reutilizamos su URL cuando corresponde al mismo plan.
-     */
-    const sesionesAbiertas = await stripe.checkout.sessions.list({
-      customer: customerId,
-      status: "open",
-      limit: 100,
-    });
+    // Reutilizamos sesiones abiertas del mismo plan.
+    const sesionesAbiertas =
+      await stripe.checkout.sessions.list({
+        customer: customerId,
+        status: "open",
+        limit: 100,
+      });
 
-    const sesionExistente = sesionesAbiertas.data.find((session) => {
-      if (
-        session.mode !== "subscription" ||
-        session.metadata?.supabaseUserId !== user.id ||
-        !session.url
-      ) {
-        return false;
-      }
+    const sesionExistente =
+      sesionesAbiertas.data.find((session) => {
+        if (
+          session.mode !== "subscription" ||
+          session.metadata?.supabaseUserId !== user.id ||
+          !session.url
+        ) {
+          return false;
+        }
 
-      // Sesiones creadas con el nuevo sistema.
-      if (session.metadata?.planKey) {
-        return session.metadata.planKey === planKey;
-      }
+        if (session.metadata?.planKey) {
+          return session.metadata.planKey === planKey;
+        }
 
-      // Compatibilidad con sesiones antiguas.
-      // Las sesiones antiguas mensuales corresponden a Pro.
-      return (
-        plan.planTipo === "pro" &&
-        session.metadata?.planType === plan.planType
-      );
-    });
+        return (
+          plan.planTipo === "pro" &&
+          session.metadata?.planType === plan.planType
+        );
+      });
 
     if (sesionExistente?.url) {
       return NextResponse.json({
@@ -322,51 +423,60 @@ export async function POST(req: Request) {
       });
     }
 
-    // Metadatos compartidos entre Checkout y la suscripción.
     const metadataStripe = {
       supabaseUserId: user.id,
       planKey,
       planTipo: plan.planTipo,
       planIntervalo: plan.planIntervalo,
-
-      // Se conserva para compatibilidad con el sistema anterior.
       planType: plan.planType,
     };
 
-    const session = await stripe.checkout.sessions.create({
-      mode: "subscription",
-      customer: customerId,
-      payment_method_types: ["card"],
+    const session =
+      await stripe.checkout.sessions.create({
+        mode: "subscription",
+        customer: customerId,
+        payment_method_types: ["card"],
 
-      line_items: [
-        {
-          price: plan.priceId,
-          quantity: 1,
-        },
-      ],
+        line_items: [
+          {
+            price: plan.priceId,
+            quantity: 1,
+          },
+        ],
 
-      success_url: `${baseUrl}/dashboard?success=true`,
-      cancel_url: `${baseUrl}/suscripcion?canceled=true`,
+        success_url:
+          `${baseUrl}/dashboard?success=true`,
 
-      metadata: metadataStripe,
+        cancel_url:
+          `${baseUrl}/suscripcion?canceled=true`,
 
-      subscription_data: {
         metadata: metadataStripe,
-      },
-    });
+
+        subscription_data: {
+          metadata: metadataStripe,
+        },
+      });
 
     if (!session.url) {
-      throw new Error("Stripe no devolvió la URL de Checkout");
+      throw new Error(
+        "Stripe no devolvió la URL de Checkout",
+      );
     }
 
     return NextResponse.json({
       url: session.url,
     });
   } catch (error) {
-    console.error("Error al crear Checkout:", error);
+    console.error(
+      "Error al crear Checkout:",
+      error,
+    );
 
     return NextResponse.json(
-      { error: "No pudimos iniciar el pago. Inténtalo nuevamente." },
+      {
+        error:
+          "No pudimos iniciar el pago. Inténtalo nuevamente.",
+      },
       { status: 500 },
     );
   }
