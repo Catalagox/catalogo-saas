@@ -222,10 +222,6 @@ export default function OnboardingForm({
         </p>
       </div>
 
-      <div className="mb-6 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
-        🎉 Tus 7 días de prueba comienzan cuando crees la tienda.
-      </div>
-
       {errorMsg && (
         <div
           role="alert"
