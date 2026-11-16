@@ -6,11 +6,9 @@ import {
   FaEnvelope,
   FaEye,
   FaEyeSlash,
-  FaGlobeAmericas,
   FaLock,
 } from "react-icons/fa";
 import GoogleButton from "@/components/marketing/ui/GoogleButton";
-import SelectorPaises from "@/components/ui/SelectorPaises";
 import { supabase } from "@/lib/supabaseClient";
 
 type AuthMode = "login" | "register" | "recovery" | "verify";
@@ -82,7 +80,6 @@ function AuthForm() {
   const [mode, setMode] = useState<AuthMode>("login");
 
   const [email, setEmail] = useState("");
-  const [countryCode, setCountryCode] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [otp, setOtp] = useState("");
@@ -211,10 +208,6 @@ function AuthForm() {
   };
 
   const handleRegister = async () => {
-    if (!countryCode) {
-      throw new Error("Selecciona el país donde funciona tu negocio.");
-    }
-
     if (password.length < 8) {
       throw new Error("La contraseña debe tener al menos 8 caracteres.");
     }
@@ -236,7 +229,6 @@ function AuthForm() {
       options: {
         emailRedirectTo: callbackUrl.toString(),
         data: {
-          pais_code: countryCode,
           registration_method: "email",
         },
       },
@@ -434,7 +426,7 @@ function AuthForm() {
     : isLogin
     ? "Accede al panel de tu tienda online"
     : isRegister
-      ? "Empieza tu prueba gratuita de 7 días"
+      ? "Crea tu cuenta y comienza a construir tu presencia en Internet"
       : "Te enviaremos un enlace para crear una contraseña nueva";
 
   return (
@@ -455,12 +447,6 @@ function AuthForm() {
             <div className="h-px flex-1 bg-gray-300" />
           </div>
         </>
-      )}
-
-      {isRegister && (
-        <div className="mb-5 rounded-xl border border-green-200 bg-green-50 p-3 text-center text-sm text-green-700">
-          🎉 Prueba gratuita durante 7 días.
-        </div>
       )}
 
       {errorMsg && (
@@ -553,31 +539,6 @@ function AuthForm() {
             />
           </div>
         </label>
-
-        {isRegister && (
-          <label className="block">
-            <span className="mb-2 block text-sm font-semibold text-gray-700">
-              País de tu negocio
-            </span>
-
-            <div className="input-light flex items-center rounded-xl px-4 py-1 focus-within:border-green-500 focus-within:ring-2 focus-within:ring-green-500">
-              <FaGlobeAmericas className="mr-3 shrink-0 text-gray-400" />
-
-              <SelectorPaises
-                value={countryCode}
-                onChange={setCountryCode}
-                disabled={loading}
-                required
-                showPlaceholder
-                className="w-full cursor-pointer bg-transparent py-3 text-gray-900 outline-none disabled:cursor-not-allowed"
-              />
-            </div>
-
-            <p className="mt-2 text-xs text-gray-500">
-              Configuraremos la moneda y las opciones de tu tienda.
-            </p>
-          </label>
-        )}
 
         {!isRecovery && !isVerify && (
           <label className="block">
