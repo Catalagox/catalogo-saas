@@ -13,7 +13,7 @@ import GoogleButton from "@/components/marketing/ui/GoogleButton";
 import SelectorPaises from "@/components/ui/SelectorPaises";
 import { supabase } from "@/lib/supabaseClient";
 
-type AuthMode = "login" | "register" | "recovery";
+type AuthMode = "login" | "register" | "recovery" | "verify";
 
 function getSafeRedirect(value: string | null) {
   if (!value) return "/dashboard";
@@ -51,6 +51,14 @@ function translateAuthError(message: string) {
     return "La contraseña no cumple los requisitos de seguridad.";
   }
 
+  if (normalizedMessage.includes("token has expired") || normalizedMessage.includes("otp_expired")) {
+    return "El código venció o ya fue utilizado. Solicita uno nuevo.";
+  }
+
+  if (normalizedMessage.includes("invalid token") || normalizedMessage.includes("otp")) {
+    return "El código no es válido. Revisa los números o solicita uno nuevo.";
+  }
+
   if (normalizedMessage.includes("rate limit")) {
     return "Has realizado demasiados intentos. Espera unos minutos.";
   }
@@ -77,6 +85,8 @@ function AuthForm() {
   const [countryCode, setCountryCode] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -90,6 +100,13 @@ function AuthForm() {
   const isLogin = mode === "login";
   const isRegister = mode === "register";
   const isRecovery = mode === "recovery";
+  const isVerify = mode === "verify";
+
+  useEffect(() => {
+    if (!isVerify || resendCooldown <= 0) return;
+    const timer = window.setTimeout(() => setResendCooldown((v) => Math.max(0, v - 1)), 1000);
+    return () => window.clearTimeout(timer);
+  }, [isVerify, resendCooldown]);
 
   /*
    * Muestra los errores enviados por /auth/callback.
@@ -168,6 +185,7 @@ function AuthForm() {
 
     setPassword("");
     setConfirmPassword("");
+    setOtp("");
     setShowPassword(false);
     setShowConfirmPassword(false);
   };
@@ -250,10 +268,10 @@ function AuthForm() {
     }
 
     if (!data.session) {
-      setSuccessMsg(
-        "Cuenta creada. Revisa tu correo y confirma tu cuenta para continuar.",
-      );
-
+      setMode("verify");
+      setOtp("");
+      setResendCooldown(60);
+      setSuccessMsg("Te enviamos un código de 6 dígitos. Revisa tu correo.");
       setPassword("");
       setConfirmPassword("");
       return;
@@ -261,6 +279,47 @@ function AuthForm() {
 
     router.replace(onboardingPath);
     router.refresh();
+  };
+
+  const handleVerify = async () => {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!/^\d{6}$/.test(otp)) {
+      throw new Error("Introduce los 6 dígitos del código.");
+    }
+
+    const { data, error } = await supabase.auth.verifyOtp({
+      email: normalizedEmail,
+      token: otp,
+      type: "signup",
+    });
+    if (error) throw error;
+    if (!data.user || !data.session) {
+      throw new Error("El correo se verificó, pero no se pudo iniciar sesión. Intenta ingresar.");
+    }
+
+    const destination = await resolveAuthenticatedDestination(data.user.id);
+    router.replace(destination);
+    router.refresh();
+  };
+
+  const handleResendCode = async () => {
+    if (loading || resendCooldown > 0) return;
+    setLoading(true);
+    clearMessages();
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: email.trim().toLowerCase(),
+      });
+      if (error) throw error;
+      setOtp("");
+      setResendCooldown(60);
+      setSuccessMsg("Si la cuenta está pendiente de confirmación, recibirás un nuevo código.");
+    } catch (error: unknown) {
+      setErrorMsg(translateAuthError(error instanceof Error ? error.message : "No se pudo reenviar el código."));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleRecovery = async () => {
@@ -300,6 +359,11 @@ function AuthForm() {
 
       if (isRegister) {
         await handleRegister();
+        return;
+      }
+
+      if (isVerify) {
+        await handleVerify();
         return;
       }
 
@@ -357,13 +421,17 @@ function AuthForm() {
     );
   }
 
-  const title = isLogin
+  const title = isVerify
+    ? "Verifica tu correo"
+    : isLogin
     ? "Bienvenido de nuevo"
     : isRegister
       ? "Crea tu cuenta"
       : "Recupera tu contraseña";
 
-  const description = isLogin
+  const description = isVerify
+    ? `Enviamos un código de 6 dígitos a ${email.trim().toLowerCase()}`
+    : isLogin
     ? "Accede al panel de tu tienda online"
     : isRegister
       ? "Empieza tu prueba gratuita de 7 días"
@@ -377,7 +445,7 @@ function AuthForm() {
         <p className="mt-2 text-gray-500">{description}</p>
       </div>
 
-      {!isRecovery && (
+      {!isRecovery && !isVerify && (
         <>
           <GoogleButton onClick={handleGoogleAuth} disabled={loading} />
 
@@ -413,6 +481,56 @@ function AuthForm() {
         </div>
       )}
 
+      {isVerify ? (
+        <form className="space-y-5" onSubmit={handleSubmit}>
+          <label className="block text-sm font-semibold text-gray-700" htmlFor="verification-code">
+            Código de verificación
+          </label>
+          <input
+            id="verification-code"
+            type="text"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            pattern="[0-9]{6}"
+            maxLength={6}
+            value={otp}
+            onChange={(event) => setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))}
+            placeholder="000000"
+            aria-label="Código de verificación de seis dígitos"
+            disabled={loading}
+            required
+            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-4 text-center text-3xl font-bold tracking-[0.35em] text-gray-900 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500"
+          />
+          <p className="text-center text-xs text-gray-500">
+            Puedes pegar los seis números juntos. No compartas este código.
+          </p>
+          <button
+            type="submit"
+            disabled={loading || otp.length !== 6}
+            className="w-full rounded-xl bg-[#16A34A] py-3 font-semibold text-white transition hover:bg-[#15803D] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {loading ? "Verificando..." : "Verificar correo y continuar"}
+          </button>
+          <div className="text-center text-sm">
+            <button
+              type="button"
+              onClick={handleResendCode}
+              disabled={loading || resendCooldown > 0}
+              className="font-semibold text-green-600 hover:text-green-700 disabled:cursor-not-allowed disabled:text-gray-400"
+            >
+              {resendCooldown > 0 ? `Reenviar código en ${resendCooldown}s` : "Reenviar código"}
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={() => changeMode("login")}
+            disabled={loading}
+            className="w-full text-center text-sm font-semibold text-gray-600 hover:text-gray-900"
+          >
+            Volver a iniciar sesión
+          </button>
+        </form>
+      ) : (
       <form className="space-y-5" onSubmit={handleSubmit}>
         <label className="block">
           <span className="mb-2 block text-sm font-semibold text-gray-700">
@@ -461,7 +579,7 @@ function AuthForm() {
           </label>
         )}
 
-        {!isRecovery && (
+        {!isRecovery && !isVerify && (
           <label className="block">
             <span className="mb-2 block text-sm font-semibold text-gray-700">
               Contraseña
@@ -576,8 +694,9 @@ function AuthForm() {
                 : "Enviar enlace de recuperación"}
         </button>
       </form>
+      )}
 
-      {isRecovery ? (
+      {isVerify ? null : isRecovery ? (
         <div className="mt-6 text-center text-sm">
           <button
             type="button"
